@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Search, Settings, Wifi, WifiOff } from 'lucide-react';
+import { ArrowUp, Loader2, Search, Settings, UserRound, Wifi, WifiOff } from 'lucide-react';
 import { useUi } from '@/store/ui';
+import { useAuth } from '@/store/auth';
 import { Input } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +13,7 @@ export default function Header() {
   const [query, setQuery] = useState('');
   const syncStatus = useUi((s) => s.syncStatus);
   const updateAvailable = useUi((s) => s.updateAvailable);
+  const user = useAuth((s) => s.user);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -73,6 +75,25 @@ export default function Header() {
             {syncStatus === 'offline' ? t('header.offline') : syncStatus === 'syncing' ? t('header.syncing') : t('header.online')}
           </span>
         </span>
+
+        {user ? (
+          <Link
+            to="/subscription"
+            title={user.phone ?? user.email ?? ''}
+            className="flex h-9 items-center gap-2 rounded-lg border border-border bg-card/60 px-3 text-xs font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <UserRound aria-hidden className="size-4 text-primary" />
+            <span className="hidden max-w-32 truncate md:inline" dir="ltr">{user.phone ?? user.email}</span>
+          </Link>
+        ) : (
+          <Link
+            to="/login"
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"
+          >
+            <UserRound aria-hidden className="size-4" />
+            {t('auth.signIn')}
+          </Link>
+        )}
 
         <Link
           to="/settings"

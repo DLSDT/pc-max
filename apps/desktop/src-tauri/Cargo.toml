@@ -1,13 +1,13 @@
 [package]
-name = "game-optimization-hub"
-version = "0.1.0"
-description = "Game Optimization Hub — Windows desktop app"
-authors = ["Game Optimization Hub"]
+name = "pc-max"
+version = "0.3.0"
+description = "PC MAX — premium Windows gaming optimization"
+authors = ["PC MAX"]
 edition = "2021"
 
 # The library is used by both the desktop binary and (optionally) mobile targets.
 [lib]
-name = "game_optimization_hub_lib"
+name = "pc_max_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -17,13 +17,16 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-store = "2"
+tauri-plugin-updater = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+base64 = "0.22"
+sha2 = "0.10"
 
-# Auto-update: the updater plugin needs a signing keypair. Wire it in once the
-# release pipeline exists — see docs/PRODUCTION.md. The app already surfaces
-# "update available" via the API in the meantime.
-# tauri-plugin-updater = "2"
+# Auto-update (Phase 17): the updater plugin requires a signing keypair.
+# Generate one with `npm run tauri signer generate -w @goh/desktop` and publish
+# the PUBLIC key in tauri.conf.json -> plugins.updater.pubkey. Until then the
+# plugin is registered but `check()` returns no updates (graceful no-op).
 
 [profile.release]
 codegen-units = 1

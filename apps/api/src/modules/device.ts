@@ -6,6 +6,7 @@ import { db } from '../db';
 import { games, optimizationProfiles, users, views } from '../db/schema';
 import { badRequest } from '../lib/errors';
 import { okSchema } from '../lib/schemas';
+import { config } from '../config';
 
 export async function deviceModule(app: FastifyInstance) {
   const typed = app.withTypeProvider<ZodTypeProvider>();
@@ -25,7 +26,7 @@ export async function deviceModule(app: FastifyInstance) {
         await db.update(users).set({ lastSeenAt: new Date(), platform }).where(eq(users.id, existing.id));
         return {
           userId: existing.id,
-          deviceId: existing.deviceId,
+          deviceId: existing.deviceId ?? deviceId,
           createdAt: existing.createdAt.toISOString(),
         };
       }
@@ -34,13 +35,16 @@ export async function deviceModule(app: FastifyInstance) {
         .values({ deviceId, platform, appVersion, lastSeenAt: new Date() })
         .returning();
       const row = inserted[0]!;
-      return { userId: row.id, deviceId: row.deviceId, createdAt: row.createdAt.toISOString() };
+      return { userId: row.id, deviceId: row.deviceId ?? deviceId, createdAt: row.createdAt.toISOString() };
     },
   );
 
   typed.post(
     '/views',
     {
+      // Phase 19 — anonymous analytics endpoint gets its own per-IP bound so
+      // view/analytics inflation is capped (the deviceId is client-asserted).
+      config: { rateLimit: { max: config.RATE_LIMIT_VIEWS, timeWindow: '1 minute' } },
       schema: {
         body: ViewEventInput,
         response: { 200: okSchema },

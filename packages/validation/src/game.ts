@@ -85,6 +85,9 @@ export const GameSummary = z.object({
   status: GameStatus,
   featured: z.boolean(),
   defaultProfile: DefaultProfileRef,
+  /** Executable file names used for generic game detection (e.g. ["GTA5.exe"]). */
+  executables: z.array(z.string()).default([]),
+  launcher: z.string().nullable(),
 });
 export type GameSummary = z.infer<typeof GameSummary>;
 
@@ -94,6 +97,10 @@ export const GameDetail = GameSummary.extend({
   developer: z.string().nullable(),
   publisher: z.string().nullable(),
   releaseDate: z.string().nullable(),
+  executables: z.array(z.string()).default([]),
+  steamAppId: z.string().nullable(),
+  epicAppId: z.string().nullable(),
+  launcher: z.string().nullable(),
   images: z.array(GameImage),
   requirements: z.array(GameRequirement),
   tags: z.array(z.object({ slug: z.string(), name: z.string() })),
@@ -161,6 +168,11 @@ export const GameCreateInput = z.object({
   api: z.string().trim().max(100).optional().nullable(),
   technologies: TechnologiesInput,
   performanceRating: z.coerce.number().int().min(0).max(100).default(50),
+  /** Executable file names used for generic game detection (e.g. ["GTA5.exe"]). */
+  executables: z.array(z.string().trim().min(1).max(200)).max(50).optional().default([]),
+  steamAppId: z.string().trim().max(64).optional().nullable(),
+  epicAppId: z.string().trim().max(64).optional().nullable(),
+  launcher: z.enum(['steam', 'epic', 'gog', 'standalone']).optional().nullable(),
   featured: z.boolean().default(false),
   status: GameStatus.default('draft'),
   genreSlugs: z.array(z.string().trim().min(1).max(100)).max(20).optional().default([]),

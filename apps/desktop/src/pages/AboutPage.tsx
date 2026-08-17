@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Gamepad2, Layers, RefreshCw } from 'lucide-react';
+import { Layers, RefreshCw } from 'lucide-react';
 import { config } from '@/lib/config';
 
 export default function AboutPage() {
@@ -8,11 +8,9 @@ export default function AboutPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center gap-4">
-        <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-fuchsia-500 text-primary-foreground shadow-glow [&_svg]:size-7">
-          <Gamepad2 aria-hidden />
-        </div>
+        <img src="/icon.png" alt={t('appName')} className="size-14 rounded-2xl object-contain shadow-sm" draggable={false} />
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('about.title')}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('appName')}</h1>
           <p className="text-xs text-muted-foreground">{t('settings.version', { version: config.appVersion })}</p>
         </div>
       </div>

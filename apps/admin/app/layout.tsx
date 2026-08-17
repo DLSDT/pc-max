@@ -3,16 +3,17 @@ import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
-  title: 'Game Optimization Hub — Admin',
-  description: 'Admin panel for the Game Optimization Hub platform',
+  title: 'PC MAX — Admin',
+  description: 'Admin panel for the PC MAX platform',
+  icons: { icon: '/favicon.ico' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body>
         {children}
-        <Toaster position="bottom-right" theme="dark" />
+        <Toaster position="bottom-right" theme="light" />
       </body>
     </html>
   );

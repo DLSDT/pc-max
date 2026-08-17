@@ -25,6 +25,30 @@ export type ProfileStatus = z.infer<typeof ProfileStatus>;
 export const AdminRole = z.enum(['super_admin', 'admin', 'editor', 'viewer']);
 export type AdminRole = z.infer<typeof AdminRole>;
 
+/** Registered end-user roles. */
+export const UserRole = z.enum(['user', 'moderator', 'support']);
+export type UserRole = z.infer<typeof UserRole>;
+
+/** Registered end-user account status. */
+export const UserStatus = z.enum(['active', 'suspended']);
+export type UserStatus = z.infer<typeof UserStatus>;
+
+/** Subscription plan availability. */
+export const PlanStatus = z.enum(['active', 'inactive']);
+export type PlanStatus = z.infer<typeof PlanStatus>;
+
+/** Lifecycle of a user subscription. */
+export const SubscriptionStatus = z.enum(['pending', 'active', 'expired', 'cancelled', 'suspended', 'refunded']);
+export type SubscriptionStatus = z.infer<typeof SubscriptionStatus>;
+
+/** Lifecycle of a payment. */
+export const PaymentStatus = z.enum(['pending', 'paid', 'failed', 'refunded', 'expired']);
+export type PaymentStatus = z.infer<typeof PaymentStatus>;
+
+/** Supported payment providers (provider-agnostic registry). */
+export const PaymentProvider = z.enum(['mock', 'zarinpal']);
+export type PaymentProvider = z.infer<typeof PaymentProvider>;
+
 export const AppChannel = z.enum(['stable', 'beta']);
 export type AppChannel = z.infer<typeof AppChannel>;
 

@@ -1,0 +1,63 @@
+/**
+ * Provider-agnostic payment abstraction.
+ *
+ * Business logic never talks to a gateway directly — it only depends on this
+ * interface. Adding a new gateway later means implementing `PaymentProvider`
+ * and registering it here; the subscription flow stays untouched.
+ *
+ * Security invariant: subscription activation NEVER trusts the client or the
+ * bare callback. The callback handler calls `verifyPayment` (server-side) and
+ * only then activates the subscription.
+ */
+
+export interface PaymentRequestInput {
+  /** Server-side payment id — used as the provider reference. */
+  referenceId: string;
+  /** Amount in the plan's currency unit (IRR = Rial). */
+  amount: number;
+  currency: string;
+  description: string;
+  /** Where the provider redirects the user after the attempt. */
+  callbackUrl: string;
+}
+
+export interface PaymentRequestResult {
+  /** Provider-side reference (e.g. ZarinPal authority). */
+  providerRef: string;
+  /** Where the user must be sent to pay (null if already paid, e.g. mock). */
+  redirectUrl: string | null;
+  raw: unknown;
+}
+
+export interface PaymentVerifyInput {
+  providerRef: string;
+  amount: number;
+  currency: string;
+}
+
+export interface PaymentVerifyResult {
+  verified: boolean;
+  providerTxId?: string;
+  raw: unknown;
+}
+
+export interface PaymentProvider {
+  readonly name: string;
+  requestPayment(input: PaymentRequestInput): Promise<PaymentRequestResult>;
+  verifyPayment(input: PaymentVerifyInput): Promise<PaymentVerifyResult>;
+}
+
+import { mockProvider } from './mock';
+import { zarinpalProvider } from './zarinpal';
+
+/** Registry — extend here when a new gateway is added. */
+const PROVIDERS: Record<string, () => PaymentProvider> = {
+  mock: () => mockProvider,
+  zarinpal: () => zarinpalProvider,
+};
+
+export function getPaymentProvider(name: string): PaymentProvider {
+  const factory = PROVIDERS[name];
+  if (!factory) throw new Error(`Unknown payment provider: ${name}`);
+  return factory();
+}

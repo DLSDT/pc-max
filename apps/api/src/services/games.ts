@@ -132,6 +132,8 @@ export function toSummary(row: GameRow & {
     status: row.status,
     featured: row.featured,
     defaultProfile: row._defaultProfile ?? null,
+    executables: row.executables ?? [],
+    launcher: row.launcher ?? null,
   };
 }
 

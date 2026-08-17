@@ -1,4 +1,4 @@
-import type { AdminRole } from '@goh/validation';
+import type { AdminRole, UserRole, UserStatus } from '@goh/validation';
 import 'fastify';
 
 declare module 'fastify' {
@@ -9,6 +9,13 @@ declare module 'fastify' {
       email: string;
       name: string;
       role: AdminRole;
+    };
+    /** Authenticated end user (set by the authenticateUser preHandler). */
+    user?: {
+      id: string;
+      email: string;
+      role: UserRole;
+      status: UserStatus;
     };
   }
 }

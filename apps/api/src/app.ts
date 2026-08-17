@@ -11,6 +11,20 @@ import { jsonSchemaTransform, serializerCompiler, validatorCompiler, ZodTypeProv
 import { config } from './config';
 import { errorHandler, AppError, notFound as notFoundError } from './lib/errors';
 import { authModule } from './modules/auth';
+import { authUserModule } from './modules/auth-user';
+import { usersModule } from './modules/users';
+import { favoritesModule } from './modules/favorites';
+import { subscriptionsModule } from './modules/subscriptions';
+import { paymentsModule } from './modules/payments';
+import { adminUsersModule } from './modules/admin-users';
+import { adminSubscriptionsModule } from './modules/admin-subscriptions';
+import { packagesModule } from './modules/packages';
+import { adminPackagesModule } from './modules/admin-packages';
+import { hardwareModule } from './modules/hardware';
+import { adminDevicesModule } from './modules/admin-devices';
+import { adminSecurityModule } from './modules/admin-security';
+import { adminEmailModule } from './modules/admin-email';
+import { adminSettingsModule } from './modules/admin-settings';
 import { deviceModule } from './modules/device';
 import { publicGamesModule } from './modules/public-games';
 import { publicOptimizationsModule } from './modules/public-optimizations';
@@ -20,7 +34,7 @@ import { uploadsModule } from './modules/uploads';
 import { adminGamesModule } from './modules/admin-games';
 import { adminOptimizationsModule } from './modules/admin-optimizations';
 import { adminTaxonomyModule } from './modules/admin-taxonomy';
-import { adminUsersModule } from './modules/admin-admins';
+import { adminUsersModule as adminAccountsModule } from './modules/admin-admins';
 import { adminAnalyticsModule } from './modules/admin-analytics';
 import { adminAuditModule } from './modules/admin-audit';
 import { adminReleasesModule } from './modules/admin-releases';
@@ -55,6 +69,32 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await app.register(cookie);
 
+  // JSON with an empty body (e.g. bodyless DELETE/POST with the json
+  // content-type) is legitimate — parse it as {} instead of erroring.
+  app.addContentTypeParser('application/json', { parseAs: 'buffer' }, (_request, body, done) => {
+    const buf = body as Buffer;
+    if (!buf || buf.length === 0) {
+      done(null, {});
+      return;
+    }
+    try {
+      done(null, JSON.parse(buf.toString('utf8')));
+    } catch (err) {
+      const e = err as Error & { statusCode?: number };
+      e.statusCode = 400; // malformed JSON → 400, never 500
+      done(e);
+    }
+  });
+
+  // Binary uploads (images + optimization package files). Fastify 415s unknown
+  // content-types unless a parser is registered; we buffer the body and let
+  // the upload handlers write it to storage (S3 presign bypasses this).
+  for (const ct of ['application/octet-stream', 'application/zip', 'application/x-tar', 'image/jpeg', 'image/png', 'image/webp']) {
+    app.addContentTypeParser(ct, { parseAs: 'buffer' }, (_request, body, done) => {
+      done(null, body as Buffer);
+    });
+  }
+
   await app.register(swagger, {
     openapi: {
       info: {
@@ -78,8 +118,20 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
   await app.register(swaggerUi, { routePrefix: '/docs' });
 
-  // Serve locally uploaded files (local storage driver only).
+  // Serve locally uploaded files (local storage driver only). Package files
+  // are NEVER served from the public static root — they are only reachable
+  // through the signed /api/v1/uploads/signed/ route. Mirrors production
+  // where the S3 bucket is private and downloads are presigned GETs.
   if (config.STORAGE_DRIVER === 'local') {
+    app.addHook('onRequest', (request, reply, done) => {
+      if (request.raw.url?.startsWith('/uploads/packages/')) {
+        void reply.status(403).send({
+          error: { code: 'FORBIDDEN', message: 'Package files require a signed download link', details: null },
+        });
+        return;
+      }
+      done();
+    });
     await app.register(fastifyStatic, {
       root: path.resolve(config.UPLOAD_DIR),
       prefix: '/uploads/',
@@ -105,10 +157,24 @@ export async function buildApp(): Promise<FastifyInstance> {
   await api.register(uploadsModule, { prefix: '/api/v1' });
 
   await api.register(authModule, { prefix: '/api/v1' });
+  await api.register(authUserModule, { prefix: '/api/v1' });
+  await api.register(usersModule, { prefix: '/api/v1' });
+  await api.register(favoritesModule, { prefix: '/api/v1' });
+  await api.register(subscriptionsModule, { prefix: '/api/v1' });
+  await api.register(paymentsModule, { prefix: '/api/v1' });
+  await api.register(adminUsersModule, { prefix: '/api/v1' });
+  await api.register(adminSubscriptionsModule, { prefix: '/api/v1' });
+  await api.register(packagesModule, { prefix: '/api/v1' });
+  await api.register(adminPackagesModule, { prefix: '/api/v1' });
+  await api.register(hardwareModule, { prefix: '/api/v1' });
+  await api.register(adminDevicesModule, { prefix: '/api/v1' });
+  await api.register(adminSecurityModule, { prefix: '/api/v1' });
+  await api.register(adminSettingsModule, { prefix: '/api/v1' });
+  await api.register(adminEmailModule, { prefix: '/api/v1' });
   await api.register(adminGamesModule, { prefix: '/api/v1' });
   await api.register(adminOptimizationsModule, { prefix: '/api/v1' });
   await api.register(adminTaxonomyModule, { prefix: '/api/v1' });
-  await api.register(adminUsersModule, { prefix: '/api/v1' });
+  await api.register(adminAccountsModule, { prefix: '/api/v1' });
   await api.register(adminAnalyticsModule, { prefix: '/api/v1' });
   await api.register(adminAuditModule, { prefix: '/api/v1' });
   await api.register(adminReleasesModule, { prefix: '/api/v1' });

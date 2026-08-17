@@ -4,23 +4,30 @@
 
 @layer base {
   :root {
-    --background: 250 32% 4%;
-    --foreground: 214 32% 94%;
-    --card: 248 30% 6%;
-    --card-foreground: 214 32% 94%;
-    --primary: 262 84% 62%;
+    /* Premium Light / White + Crimson — centralized design tokens.
+       Change the brand color in ONE place (--primary / --ring) and every
+       component across the app follows. All values are HSL triplets.
+       Palette (premium crimson language):
+         Primary Crimson #8B0000 · Deep Crimson #3A0000
+         Primary Red    #C1121F · Soft Red #FDECEC
+         Background #FFFFFF · Surface #F7F7F7 · Border #E5E7EB */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 0 0% 7%; /* #111111 */
+    --card: 0 0% 97%; /* #F7F7F7 surface */
+    --card-foreground: 0 0% 7%;
+    --primary: 355 83% 41%; /* #C1121F primary red — actions/CTA */
     --primary-foreground: 0 0% 100%;
-    --secondary: 248 25% 11%;
-    --secondary-foreground: 214 25% 88%;
-    --muted: 248 25% 10%;
-    --muted-foreground: 220 12% 58%;
-    --accent: 248 28% 14%;
-    --accent-foreground: 214 32% 94%;
-    --destructive: 0 72% 55%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 16%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 220 9% 46%; /* #6B7280 */
+    --accent: 0 82% 96%; /* #FDECEC soft red tint — active/hover */
+    --accent-foreground: 0 100% 27%; /* #8B0000 primary crimson */
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
-    --border: 247 24% 14%;
-    --input: 247 24% 16%;
-    --ring: 262 84% 62%;
+    --border: 220 13% 91%; /* #E5E7EB */
+    --input: 220 13% 91%;
+    --ring: 355 83% 41%;
     --radius: 0.75rem;
   }
 
@@ -40,26 +47,30 @@
   }
 }
 
-/* Custom scrollbars */
+/* Custom scrollbars (light) */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
-::-webkit-scrollbar-track {
-  background: transparent;
-}
 ::-webkit-scrollbar-thumb {
-  background: hsl(247 24% 16%);
+  background: hsl(220 13% 85%);
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(247 24% 24%);
+  background: hsl(220 13% 75%);
 }
 
-/* Subtle background glow used by the hero + detail pages */
+/* Subtle crimson glow used by the hero + detail pages (light) */
 .bg-glow {
   background:
-    radial-gradient(ellipse 60% 50% at 70% -10%, hsl(262 84% 62% / 0.18), transparent),
-    radial-gradient(ellipse 50% 40% at 10% 110%, hsl(190 90% 55% / 0.08), transparent),
+    radial-gradient(ellipse 60% 50% at 70% -10%, hsl(355 83% 41% / 0.05), transparent),
+    radial-gradient(ellipse 50% 40% at 10% 110%, hsl(0 100% 27% / 0.04), transparent),
     hsl(var(--background));
+}
+
+/* Deep crimson hero gradient — used sparingly for the primary CTA area */
+.bg-crimson-hero {
+  background:
+    radial-gradient(ellipse 90% 70% at 85% -20%, hsl(355 83% 41% / 0.14), transparent),
+    linear-gradient(135deg, hsl(0 100% 27% / 0.06), transparent 55%);
 }

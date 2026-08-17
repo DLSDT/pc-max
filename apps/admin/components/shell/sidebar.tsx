@@ -13,6 +13,12 @@ import {
   ScrollText,
   ShieldCheck,
   Layers,
+  CreditCard,
+  BadgeCheck,
+  PackageOpen,
+  MonitorSmartphone,
+  ShieldAlert,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AdminMe } from '@goh/types';
@@ -28,6 +34,14 @@ const NAV = [
   { href: '/tags', label: 'Tags', icon: Tags, perm: 'games.read' },
   { href: '/optimization-categories', label: 'Optimization Categories', icon: Layers, perm: 'optimizations.read' },
   { href: '/versions', label: 'App Versions', icon: Rocket, perm: 'releases.read' },
+  { href: '/users', label: 'Users', icon: Users, perm: 'users.read' },
+  { href: '/subscriptions', label: 'Subscriptions', icon: BadgeCheck, perm: 'subscriptions.read' },
+  { href: '/subscriptions/plans', label: 'Subscription Plans', icon: CreditCard, perm: 'subscriptions.read' },
+  { href: '/payments', label: 'Payments', icon: CreditCard, perm: 'payments.read' },
+  { href: '/packages', label: 'Optimization Packages', icon: PackageOpen, perm: 'packages.read' },
+  { href: '/devices', label: 'Devices', icon: MonitorSmartphone, perm: 'devices.read' },
+  { href: '/security', label: 'Security', icon: ShieldAlert, perm: 'settings.read' },
+  { href: '/settings', label: 'Settings', icon: SlidersHorizontal, perm: 'settings.read' },
   { href: '/admins', label: 'Admins', icon: Users, perm: 'admins.manage' },
   { href: '/audit', label: 'Audit Log', icon: ScrollText, perm: 'audit.read' },
 ] as const;

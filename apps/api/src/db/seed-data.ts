@@ -97,7 +97,7 @@ export const BASE_SETTINGS: SettingDef[] = [
 ];
 
 export const GAMES: SeedGame[] = [
-  {
+{
     name: 'Grand Theft Auto V',
     slug: 'gta-v',
     tagline: 'Three criminals. One impossible heist.',
@@ -124,7 +124,7 @@ export const GAMES: SeedGame[] = [
       { key: 'distance-scaling', name: 'Distance Scaling', category: 'graphics', options: ['Low', 'Medium', 'High', 'Very High'], values: { 'maximum-fps': 'Medium', balanced: 'High', 'high-quality': 'Very High', 'ultra-quality': 'Very High' } },
     ],
   },
-  {
+{
     name: 'Red Dead Redemption',
     slug: 'red-dead-redemption',
     tagline: 'The Wild West, reborn.',
@@ -145,7 +145,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i7-4770K / AMD Ryzen 5 1500X', gpu: 'NVIDIA RTX 2070 / AMD RX 5700 XT', ramGb: 12, storageGb: 12, directx: 'DirectX 12' },
     },
   },
-  {
+{
     name: 'Red Dead Redemption 2',
     slug: 'red-dead-redemption-2',
     tagline: 'Outlaws for life.',
@@ -167,7 +167,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i7-4770K / AMD Ryzen 5 1500X', gpu: 'NVIDIA GTX 1060 6GB / AMD RX 480 4GB', ramGb: 12, storageGb: 150, directx: 'DirectX 12' },
     },
   },
-  {
+{
     name: 'Elden Ring',
     slug: 'elden-ring',
     tagline: 'Rise, Tarnished.',
@@ -189,7 +189,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 11 64-bit', cpu: 'Intel Core i7-8700K / AMD Ryzen 5 3600X', gpu: 'NVIDIA GTX 1070 8GB / AMD RX Vega 56', ramGb: 16, storageGb: 60, directx: 'DirectX 12' },
     },
   },
-  {
+{
     name: 'Dying Light',
     slug: 'dying-light',
     tagline: 'Stay human. Stay alive.',
@@ -210,7 +210,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i5-4670K / AMD FX-8350', gpu: 'NVIDIA GTX 780 / AMD R9 290', ramGb: 8, storageGb: 40, directx: 'DirectX 11' },
     },
   },
-  {
+{
     name: 'Call of Duty: Modern Warfare II',
     slug: 'call-of-duty-modern-warfare-ii',
     tagline: 'The task force is back.',
@@ -231,7 +231,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i5-6600K / AMD Ryzen 5 1600X', gpu: 'NVIDIA RTX 3060 / AMD RX 6600 XT', ramGb: 16, storageGb: 125, directx: 'DirectX 12' },
     },
   },
-  {
+{
     name: 'Stellar Blade',
     slug: 'stellar-blade',
     tagline: 'Humanity\'s last hope.',
@@ -252,7 +252,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 11 64-bit', cpu: 'Intel Core i7-9700K / AMD Ryzen 7 3700X', gpu: 'NVIDIA RTX 2070 Super / AMD RX 6700 XT', ramGb: 16, storageGb: 35, directx: 'DirectX 12' },
     },
   },
-  {
+{
     name: 'Star Wars Outlaws',
     slug: 'star-wars-outlaws',
     tagline: 'Outlaw it. Live it.',
@@ -274,49 +274,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 11 64-bit', cpu: 'Intel Core i5-10400 / AMD Ryzen 5 5600X', gpu: 'NVIDIA RTX 3080 / AMD RX 6800 XT', ramGb: 16, storageGb: 65, directx: 'DirectX 12' },
     },
   },
-  {
-    name: 'DOOM',
-    slug: 'doom',
-    tagline: 'Rip and tear.',
-    description:
-      'The legendary first-person shooter returns. Demons have invaded a Union Aerospace Corporation facility on Mars — and only the Doom Slayer can stop them. Blistering speed, brutal glory kills, and a 60 FPS baseline that defined a generation.',
-    developer: 'id Software',
-    publisher: 'Bethesda Softworks',
-    releaseDate: '2016-05-13',
-    engine: 'id Tech 6',
-    api: 'Vulkan',
-    genres: ['fps', 'shooter'],
-    tags: ['singleplayer', 'esports'],
-    technologies: {},
-    rating: 91,
-    hue: 0,
-    requirements: {
-      minimum: { os: 'Windows 7 64-bit', cpu: 'Intel Core i5-2400 / AMD FX-8320', gpu: 'NVIDIA GTX 670 2GB / AMD R9 280 3GB', ramGb: 8, storageGb: 55, directx: 'DirectX 11' },
-      recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i7-3770 / AMD FX-8350', gpu: 'NVIDIA GTX 970 4GB / AMD R9 290 4GB', ramGb: 8, storageGb: 55, directx: 'Vulkan' },
-    },
-  },
-  {
-    name: 'Kingdom Come: Deliverance',
-    slug: 'kingdom-come-deliverance',
-    tagline: 'History is written by the victors.',
-    description:
-      'A medieval RPG without dragons and magic — historically accurate and deeply immersive. As Henry, a blacksmith\'s son, forge your destiny in a 15th-century Bohemia torn apart by civil war.',
-    developer: 'Warhorse Studios',
-    publisher: 'Deep Silver',
-    releaseDate: '2018-02-13',
-    engine: 'CryEngine',
-    api: 'DirectX 11',
-    genres: ['action', 'rpg'],
-    tags: ['singleplayer', 'story-rich'],
-    technologies: { fsr: true },
-    rating: 82,
-    hue: 32,
-    requirements: {
-      minimum: { os: 'Windows 7 64-bit', cpu: 'Intel Core i5-2500K / AMD FX-8350', gpu: 'NVIDIA GTX 660 / AMD R9 270', ramGb: 8, storageGb: 70, directx: 'DirectX 11' },
-      recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i7-3770 / AMD Ryzen 5 1600', gpu: 'NVIDIA GTX 1060 6GB / AMD RX 580', ramGb: 16, storageGb: 70, directx: 'DirectX 11' },
-    },
-  },
-  {
+{
     name: 'Deathloop',
     slug: 'deathloop',
     tagline: 'Kill the loop. Break the cycle.',
@@ -337,49 +295,7 @@ export const GAMES: SeedGame[] = [
       recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i7-9700K / AMD Ryzen 7 3700X', gpu: 'NVIDIA RTX 2060 / AMD RX 5700 XT', ramGb: 16, storageGb: 30, directx: 'DirectX 12' },
     },
   },
-  {
-    name: 'High on Life',
-    slug: 'high-on-life',
-    tagline: 'A talking gun. A whole lot of trouble.',
-    description:
-      'A comedy first-person shooter from Squanch Games, co-created by Justin Roiland. Save humanity from an alien cartel with a squad of talking guns — each with their own personality, quirks and one-liners.',
-    developer: 'Squanch Games',
-    publisher: 'Squanch Games',
-    releaseDate: '2022-12-13',
-    engine: 'Unreal Engine 4',
-    api: 'DirectX 12',
-    genres: ['fps', 'comedy'],
-    tags: ['singleplayer'],
-    technologies: { dlss: true, fsr: true },
-    rating: 78,
-    hue: 125,
-    requirements: {
-      minimum: { os: 'Windows 10 64-bit', cpu: 'Intel Core i5-4430 / AMD FX-6300', gpu: 'NVIDIA GTX 1060 3GB / AMD RX 580', ramGb: 8, storageGb: 50, directx: 'DirectX 12' },
-      recommended: { os: 'Windows 10 64-bit', cpu: 'Intel Core i5-9400 / AMD Ryzen 5 2600', gpu: 'NVIDIA RTX 2060 / AMD RX 5700', ramGb: 16, storageGb: 50, directx: 'DirectX 12' },
-    },
-  },
-  {
-    name: 'LEGO Batman: The Videogame',
-    slug: 'lego-batman',
-    tagline: 'Build Gotham\'s destiny.',
-    description:
-      'The caped crusader gets the LEGO treatment. Fight through Gotham City as Batman and Robin, capturing classic villains brick by brick in this family-friendly action-platformer from Traveller\'s Tales.',
-    developer: 'Traveller\'s Tales',
-    publisher: 'Warner Bros. Interactive',
-    releaseDate: '2008-09-23',
-    engine: 'Traveller\'s Tales Engine',
-    api: 'DirectX 9',
-    genres: ['platformer', 'action'],
-    tags: ['classic', 'co-op'],
-    technologies: {},
-    rating: 76,
-    hue: 55,
-    requirements: {
-      minimum: { os: 'Windows XP', cpu: 'Intel Pentium 4 2.4 GHz / AMD Athlon XP', gpu: 'DirectX 9 compatible 128 MB', ramGb: 1, storageGb: 5, directx: 'DirectX 9' },
-      recommended: { os: 'Windows 7 64-bit', cpu: 'Intel Core 2 Duo / AMD Athlon 64 X2', gpu: 'NVIDIA GeForce 7900 / AMD Radeon X1800', ramGb: 2, storageGb: 5, directx: 'DirectX 9' },
-    },
-  },
-  {
+{
     name: 'Lords of the Fallen',
     slug: 'lords-of-the-fallen',
     tagline: 'Two realms. One fate.',

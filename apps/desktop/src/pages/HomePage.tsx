@@ -1,71 +1,199 @@
+import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, MonitorCog } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Cpu, Gauge, HardDrive, MemoryStick, MonitorCog, ScanSearch, Wrench, Zap } from 'lucide-react';
 import { useHome } from '@/hooks/useLibrary';
-import { Badge } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 import { CardSkeleton } from '@/components/CardSkeleton';
 import GameCard from '@/components/GameCard';
+import HardwarePanel from '@/components/HardwarePanel';
 import { GameGrid, Section } from '@/components/Section';
-import { HARDWARE_TIER_LABEL } from '@/lib/labels';
+import { useHardware } from '@/store/hardware';
+import { gpuLabel } from '@/lib/hardware';
+import { getApplied } from '@/lib/backup';
+import { useWinOpt, computeScore as winScore } from '@/store/winopt';
+import { useLibrary } from '@/store/library';
+
+/** Real dashboard score from detected hardware + applied optimizations. */
+function dashboardScore(hw: { profile: { cpu?: string | null; ramGb?: number | null; vramMb?: number | null } | null }, gameApplied: number, windowsApplied: number) {
+  const p = hw.profile;
+  if (!p) return null;
+  const cores = parseInt(p.cpu ?? '', 10) || 0;
+  const ram = p.ramGb ?? 0;
+  const vram = p.vramMb ?? 0;
+  const base = 30 + Math.min(cores, 8) * 2 + Math.min(ram, 32) * (15 / 32) + Math.min(vram, 16384) * (15 / 16384);
+  const score = Math.round(Math.min(100, base + (gameApplied > 0 ? 5 : 0) + (windowsApplied > 0 ? 5 : 0)));
+  const label = score >= 85 ? 'excellent' : score >= 65 ? 'good' : score >= 45 ? 'fair' : 'attention';
+  return { score, label };
+}
 
 export default function HomePage() {
   const { t } = useTranslation();
   const { data, isLoading } = useHome();
+  const hw = useHardware();
+  const library = useLibrary((s) => s.games);
+  const winOptScan = useWinOpt((s) => s.scan);
+  const scanSystem = useWinOpt((s) => s.scanSystem);
+
+  useEffect(() => {
+    void scanSystem();
+  }, [scanSystem]);
+
+  const gameApplied = getApplied().length;
+  const windowsApplied = (winOptScan?.appliedIds.length ?? 0) + (winOptScan && winOptScan.supported ? 0 : 0);
+
+  const score = useMemo(() => dashboardScore(hw, gameApplied, windowsApplied), [hw.profile, gameApplied, windowsApplied]);
+  const winScoreResult = winScore(winOptScan);
 
   const popular = data?.popular ?? [];
   const recentlyAdded = data?.recentlyAdded ?? [];
-  const hero = data?.featured[0] ?? popular[0];
+  const libraryCount = Object.keys(library).length;
+
+  const optimized = gameApplied > 0 || windowsApplied > 0;
 
   return (
-    <div className="space-y-10">
-      {/* Hero */}
-      {isLoading && !hero ? (
-        <div className="h-72 animate-pulse rounded-2xl border border-border bg-secondary" />
-      ) : hero ? (
-        <section className="relative overflow-hidden rounded-2xl border border-border bg-card">
-          {hero.coverUrl && (
-            <img
-              src={hero.coverUrl}
-              alt=""
-              aria-hidden
-              className="absolute inset-0 size-full scale-110 object-cover opacity-25 blur-2xl"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
+    <div className="space-y-8">
+      {/* Welcome */}
+      <header className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <img src="/icon.png" alt="" aria-hidden className="size-12 rounded-xl object-contain shadow-glow-sm" draggable={false} />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('appName')}</h1>
+            <p className="text-sm text-muted-foreground">{t('home.tagline')}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={optimized ? 'success' : 'warning'}>
+            {optimized ? t('dashboard.optimized') : t('dashboard.needsAttention')}
+          </Badge>
+        </div>
+      </header>
 
-          <div className="relative flex min-h-72 flex-col justify-end gap-4 p-8 sm:p-10">
-            <Badge variant="default" className="w-fit">
-              {hero.genres[0]?.name ?? 'Featured'}
-            </Badge>
-            <h1 className="max-w-xl text-3xl font-bold tracking-tight sm:text-4xl">{hero.name}</h1>
-            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{hero.tagline}</p>
-
-            {hero.defaultProfile && (
-              <div className="flex flex-wrap gap-2 text-xs">
-                <Badge variant="secondary">
-                  {t('home.heroFps', { fps: hero.defaultProfile.targetFps ?? '—' })}
-                </Badge>
-                <Badge variant="secondary">
-                  {t('home.heroPreset', { preset: hero.defaultProfile.name })}
-                </Badge>
-                <Badge variant="secondary">
-                  {HARDWARE_TIER_LABEL[hero.defaultProfile.hardwareTier ?? 'mid_range']}
-                </Badge>
-              </div>
-            )}
-
-            <div className="mt-2 flex gap-3">
-              <Link
-                to={`/games/${hero.slug}`}
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground shadow-glow-sm transition-colors hover:bg-primary/90"
-              >
-                {t('home.viewOptimization')}
-                <ArrowRight aria-hidden className="rtl:rotate-180" />
-              </Link>
+      {/* Score + primary CTA */}
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="absolute inset-0 bg-crimson-hero" />
+        <div className="relative flex flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
+          <div className="flex items-center gap-5">
+            <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-primary/20 bg-white shadow-sm">
+              {score ? (
+                <>
+                  <span className="text-3xl font-bold text-primary">{score.score}</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t('dashboard.score')}</span>
+                </>
+              ) : (
+                <ScanSearch aria-hidden className="size-8 text-muted-foreground" />
+              )}
+            </div>
+            <div className="space-y-1">
+              {score ? (
+                <>
+                  <p className="text-lg font-semibold">{t(`dashboard.scoreLabel.${score.label}`)}</p>
+                  <p className="max-w-sm text-sm text-muted-foreground">{t('dashboard.scoreHint')}</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-lg font-semibold">{t('dashboard.noHardware')}</p>
+                  <p className="max-w-sm text-sm text-muted-foreground">{t('dashboard.noHardwareHint')}</p>
+                </>
+              )}
             </div>
           </div>
-        </section>
-      ) : null}
+          <Link to="/windows-optimizer">
+            <Button size="lg" className="gap-2 shadow-glow-sm">
+              <Zap aria-hidden className="size-4" />
+              {t('dashboard.optimizeNow')}
+              <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* System overview */}
+      <Section title={t('dashboard.systemOverview')}>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SystemTile icon={<Cpu aria-hidden className="size-5" />} label={t('hardware.cpu')} value={hw.profile?.cpu ?? '—'} />
+          <SystemTile icon={<MemoryStick aria-hidden className="size-5" />} label={t('hardware.gpu')} value={hw.profile ? (gpuLabel(hw.profile) ?? '—') : '—'} />
+          <SystemTile icon={<Gauge aria-hidden className="size-5" />} label={t('hardware.ram')} value={hw.profile?.ramGb != null ? `${hw.profile.ramGb} GB` : '—'} />
+          <SystemTile icon={<HardDrive aria-hidden className="size-5" />} label={t('hardware.vram')} value={hw.profile?.vramMb != null ? `${hw.profile.vramMb} MB` : '—'} />
+        </div>
+        <HardwarePanel compact />
+      </Section>
+
+      {/* Optimization status */}
+      <Section title={t('dashboard.optimizationStatus')}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link
+            to="/windows-optimizer"
+            className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
+          >
+            <div className="flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground [&_svg]:size-6">
+              <Wrench aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">{t('dashboard.windowsOptimization')}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {winOptScan === null
+                  ? t('dashboard.scanFirst')
+                  : !winOptScan.supported
+                    ? t('dashboard.windowsUnavailable')
+                    : windowsApplied > 0
+                      ? t('dashboard.appliedCount', { count: windowsApplied })
+                      : winScoreResult
+                        ? t('dashboard.windowsReady', { count: winScoreResult.score })
+                        : t('dashboard.scanFirst')}
+              </p>
+            </div>
+            <ArrowRight aria-hidden className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
+          </Link>
+
+          <Link
+            to="/library"
+            className="group flex items-center gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/30"
+          >
+            <div className="flex size-11 items-center justify-center rounded-xl bg-accent text-accent-foreground [&_svg]:size-6">
+              <MonitorCog aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold">{t('dashboard.gameOptimization')}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {gameApplied > 0
+                  ? t('dashboard.appliedCount', { count: gameApplied })
+                  : libraryCount > 0
+                    ? t('dashboard.gamesInLibrary', { count: libraryCount })
+                    : t('dashboard.noGames')}
+              </p>
+            </div>
+            <ArrowRight aria-hidden className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
+          </Link>
+        </div>
+      </Section>
+
+      {/* Recommended for you — honest */}
+      <Section title={t('home.recommendedForYou')}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <RecommendTile
+            icon={<ScanSearch aria-hidden className="size-5" />}
+            title={t('dashboard.recDetect')}
+            body={t('dashboard.recDetectHint')}
+            action={hw.profile ? undefined : () => void hw.detect()}
+            actionLabel={hw.profile ? undefined : t('hardware.detect')}
+          />
+          <RecommendTile
+            icon={<Wrench aria-hidden className="size-5" />}
+            title={t('dashboard.recWindows')}
+            body={t('dashboard.recWindowsHint')}
+            to="/windows-optimizer"
+            actionLabel={t('dashboard.openWindows')}
+          />
+          <RecommendTile
+            icon={<MonitorCog aria-hidden className="size-5" />}
+            title={t('dashboard.recGames')}
+            body={t('dashboard.recGamesHint')}
+            to="/library"
+            actionLabel={t('dashboard.openGames')}
+          />
+        </div>
+      </Section>
 
       {/* Popular */}
       <Section
@@ -95,22 +223,51 @@ export default function HomePage() {
           </GameGrid>
         )}
       </Section>
-
-      {/* Recommended for your PC — modular placeholder until hardware detection ships */}
-      <Section title={t('home.recommendedForYou')}>
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border bg-card/40 px-6 py-12 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground [&_svg]:size-6">
-            <MonitorCog aria-hidden />
-          </div>
-          <p className="max-w-md text-sm text-muted-foreground">{t('home.recommendedPlaceholder')}</p>
-          <Link
-            to="/games"
-            className="inline-flex h-8 items-center rounded-md border border-border bg-secondary px-3 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
-          >
-            {t('games.title')}
-          </Link>
-        </div>
-      </Section>
     </div>
   );
+}
+
+function SystemTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+      <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground [&_svg]:size-5">{icon}</div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="truncate text-sm font-semibold">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function RecommendTile({
+  icon,
+  title,
+  body,
+  to,
+  action,
+  actionLabel,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  to?: string;
+  action?: (() => void) | null;
+  actionLabel?: string;
+}) {
+  const inner = (
+    <div className="flex h-full flex-col items-start gap-3 rounded-xl border border-border bg-card p-5">
+      <div className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground [&_svg]:size-5">{icon}</div>
+      <div>
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
+      </div>
+      {action && actionLabel && (
+        <button type="button" onClick={action} className="mt-auto inline-flex items-center gap-1 text-xs font-medium text-primary">
+          {actionLabel}
+          <ArrowRight aria-hidden className="size-3 rtl:rotate-180" />
+        </button>
+      )}
+    </div>
+  );
+  return to ? <Link to={to} className="h-full">{inner}</Link> : inner;
 }

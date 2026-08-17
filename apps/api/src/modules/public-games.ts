@@ -10,6 +10,8 @@ import { db } from '../db';
 import { categories, gameCategories, gameImages, games, gameTags, gameRequirements, tags } from '../db/schema';
 import { notFound } from '../lib/errors';
 import { paginationMeta } from '../lib/http';
+import { catalogCache } from '../lib/ttl-cache';
+import { config } from '../config';
 import {
   attachGameMetadata,
   categoriesWithCounts,
@@ -22,6 +24,75 @@ import {
 export async function publicGamesModule(app: FastifyInstance) {
   const typed = app.withTypeProvider<ZodTypeProvider>();
 
+  async function listGames(q: string | undefined, genre: string | undefined, year: string | number | undefined, techs: string[] | undefined, sort: string | undefined, page: number, limit: number) {
+    const where: ReturnType<typeof and>[] = [publishedGameWhere()];
+
+    if (q) {
+      const pattern = `%${q}%`;
+      const byTags = db
+        .select({ gameId: gameTags.gameId })
+        .from(gameTags)
+        .innerJoin(tags, eq(gameTags.tagId, tags.id))
+        .where(ilike(tags.name, pattern));
+      const byGenres = db
+        .select({ gameId: gameCategories.gameId })
+        .from(gameCategories)
+        .innerJoin(categories, eq(gameCategories.categoryId, categories.id))
+        .where(ilike(categories.name, pattern));
+      where.push(
+        or(
+          ilike(games.name, pattern),
+          ilike(games.slug, pattern),
+          ilike(games.tagline, pattern),
+          ilike(games.developer, pattern),
+          inArray(games.id, byTags),
+          inArray(games.id, byGenres),
+        )!,
+      );
+    }
+
+    if (genre) {
+      const genreIds = db
+        .select({ gameId: gameCategories.gameId })
+        .from(gameCategories)
+        .innerJoin(categories, eq(gameCategories.categoryId, categories.id))
+        .where(eq(categories.slug, genre));
+      where.push(inArray(games.id, genreIds));
+    }
+
+    if (year) where.push(sql`extract(year from ${games.releaseDate}) = ${year}`);
+
+    for (const tech of techs ?? []) {
+      where.push(sql`(${games.technologies} ->> '${sql.raw(tech)}')::boolean = true`);
+    }
+
+    const orderBy =
+      sort === 'popular'
+        ? desc(games.viewCount)
+        : sort === 'new'
+          ? desc(games.releaseDate)
+          : sort === 'rating'
+            ? desc(games.performanceRating)
+            : asc(games.name);
+
+    const totalRows = await db.select({ n: count() }).from(games).where(and(...where));
+    const total = Number(totalRows[0]?.n ?? 0);
+
+    const rows = await db
+      .select()
+      .from(games)
+      .where(and(...where))
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    const enriched = await attachGameMetadata(rows);
+    return {
+      data: enriched.map(toSummary),
+      meta: paginationMeta(page, limit, total),
+    };
+  }
+
   typed.get(
     '/games',
     {
@@ -29,73 +100,23 @@ export async function publicGamesModule(app: FastifyInstance) {
     },
     async (request) => {
       const { q, genre, year, techs, sort, page, limit } = request.query;
+      return listGames(q, genre, year, techs, sort, page, limit);
+    },
+  );
 
-      const where: ReturnType<typeof and>[] = [publishedGameWhere()];
-
-      if (q) {
-        const pattern = `%${q}%`;
-        const byTags = db
-          .select({ gameId: gameTags.gameId })
-          .from(gameTags)
-          .innerJoin(tags, eq(gameTags.tagId, tags.id))
-          .where(ilike(tags.name, pattern));
-        const byGenres = db
-          .select({ gameId: gameCategories.gameId })
-          .from(gameCategories)
-          .innerJoin(categories, eq(gameCategories.categoryId, categories.id))
-          .where(ilike(categories.name, pattern));
-        where.push(
-          or(
-            ilike(games.name, pattern),
-            ilike(games.slug, pattern),
-            ilike(games.tagline, pattern),
-            ilike(games.developer, pattern),
-            inArray(games.id, byTags),
-            inArray(games.id, byGenres),
-          )!,
-        );
-      }
-
-      if (genre) {
-        const genreIds = db
-          .select({ gameId: gameCategories.gameId })
-          .from(gameCategories)
-          .innerJoin(categories, eq(gameCategories.categoryId, categories.id))
-          .where(eq(categories.slug, genre));
-        where.push(inArray(games.id, genreIds));
-      }
-
-      if (year) where.push(sql`extract(year from ${games.releaseDate}) = ${year}`);
-
-      for (const tech of techs ?? []) {
-        where.push(sql`(${games.technologies} ->> '${sql.raw(tech)}')::boolean = true`);
-      }
-
-      const orderBy =
-        sort === 'popular'
-          ? desc(games.viewCount)
-          : sort === 'new'
-            ? desc(games.releaseDate)
-            : sort === 'rating'
-              ? desc(games.performanceRating)
-              : asc(games.name);
-
-      const totalRows = await db.select({ n: count() }).from(games).where(and(...where));
-      const total = Number(totalRows[0]?.n ?? 0);
-
-      const rows = await db
-        .select()
-        .from(games)
-        .where(and(...where))
-        .orderBy(orderBy)
-        .limit(limit)
-        .offset((page - 1) * limit);
-
-      const enriched = await attachGameMetadata(rows);
-      return {
-        data: enriched.map(toSummary),
-        meta: paginationMeta(page, limit, total),
-      };
+  // Cached variant (Phase 16) — the storefront list is hot and read-mostly;
+  // the desktop's offline-first sync uses it. TTL + Cache-Control headers keep
+  // even the cold /games path from hammering PostgreSQL.
+  typed.get(
+    '/games/cached',
+    {
+      schema: { querystring: GamesQuery, response: { 200: GameListResponse } },
+    },
+    async (request, reply) => {
+      const { q, genre, year, techs, sort, page, limit } = request.query;
+      const payload = await catalogCache.get(`games:${request.url}`, () => listGames(q, genre, year, techs, sort, page, limit));
+      void reply.header('cache-control', `public, max-age=${config.CATALOG_CACHE_TTL}`);
+      return payload;
     },
   );
 
@@ -151,6 +172,10 @@ export async function publicGamesModule(app: FastifyInstance) {
           }))
           .sort((a, b) => (a.tier === 'minimum' ? -1 : 1)),
         tags: (enriched as unknown as { _tags?: { slug: string; name: string }[] })._tags ?? [],
+        executables: game.executables ?? [],
+        steamAppId: game.steamAppId ?? null,
+        epicAppId: game.epicAppId ?? null,
+        launcher: game.launcher ?? null,
         viewCount: game.viewCount,
         createdAt: iso(game.createdAt)!,
         updatedAt: iso(game.updatedAt)!,
@@ -231,6 +256,54 @@ export async function publicGamesModule(app: FastifyInstance) {
         recentlyAdded: recent.map(toSummary),
         categories: cats,
       };
+    },
+  );
+
+  // Cached variant (Phase 16) — the desktop's offline-first sync hits this.
+  typed.get(
+    '/home/cached',
+    {
+      schema: {
+        response: { 200: HomeResponse },
+      },
+    },
+    async (_request, reply) => {
+      const payload = await catalogCache.get('home', async () => {
+        const [featuredRows, popularRows, recentRows, cats] = await Promise.all([
+          db
+            .select()
+            .from(games)
+            .where(and(publishedGameWhere(), eq(games.featured, true)))
+            .orderBy(desc(games.viewCount))
+            .limit(5),
+          db
+            .select()
+            .from(games)
+            .where(publishedGameWhere())
+            .orderBy(desc(games.viewCount))
+            .limit(12),
+          db
+            .select()
+            .from(games)
+            .where(publishedGameWhere())
+            .orderBy(desc(games.createdAt))
+            .limit(12),
+          categoriesWithCounts(),
+        ]);
+        const [featured, popular, recent] = await Promise.all([
+          attachGameMetadata(featuredRows),
+          attachGameMetadata(popularRows),
+          attachGameMetadata(recentRows),
+        ]);
+        return {
+          featured: featured.map(toSummary),
+          popular: popular.map(toSummary),
+          recentlyAdded: recent.map(toSummary),
+          categories: cats,
+        };
+      });
+      void reply.header('cache-control', `public, max-age=${config.CATALOG_CACHE_TTL}`);
+      return payload;
     },
   );
 }

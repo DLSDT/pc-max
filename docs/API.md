@@ -9,8 +9,9 @@ The API contract is defined once in `packages/validation` (Zod) and shared by ev
 - **Success:** `{ "data": …, "meta": { page, limit, total } }` (meta on paginated lists)
 - **Error:** `{ "error": { "code", "message", "details" } }` — 400 validation, 401 unauthenticated, 403 forbidden, 404 not found, 409 conflict, 429 rate-limited, 500 internal
 - **Auth:** `Authorization: Bearer <accessToken>` on admin routes
-- **Rate limit:** 300 req/min/IP by default (per `RATE_LIMIT_MAX`)
+- **Rate limit:** 300 req/min/IP by default (per `RATE_LIMIT_MAX`). Rate-limited requests return **429 `RATE_LIMITED`** (never 500). The anonymous analytics endpoint `/views` has its own stricter per-IP bound (`RATE_LIMIT_VIEWS`, default 120/min) and `/auth/password/forgot` allows 10/min.
 - **Content headers:** `Cache-Control`/ETag on public GETs; images are CDN URLs
+- **Monitoring:** with `SENTRY_DSN` set, unhandled 500s and payment-verification failures are captured (redacted — secrets stripped, emails masked, query strings dropped)
 
 ## Public endpoints (desktop app, anonymous)
 
@@ -86,6 +87,126 @@ The API contract is defined once in `packages/validation` (Zod) and shared by ev
 | PATCH/DELETE | `/admin/admins/:id` | Update role / delete |
 | GET | `/admin/dashboard` | Stats: total/active users, games, profiles, top games, recent additions |
 | GET | `/admin/audit-logs` | Paged audit trail |
+
+## Account endpoints (desktop app, end users)
+
+```
+POST /auth/register        # { email, username?, password } → { accessToken, user } + refresh cookie
+POST /auth/login           # { email, password } → { accessToken, user } + refresh cookie
+POST /auth/refresh         # rotate refresh cookie → new access token
+POST /auth/logout          # revoke session
+POST /auth/password/forgot # { email } → always ok; resetToken returned in non-production
+POST /auth/password/reset  # { token, newPassword } → revokes all sessions
+GET  /auth/me              # current profile
+GET  /me                   # profile
+PATCH /me                  # { username? }
+GET  /me/subscription      # { subscription, entitlements, isActive } — server-side entitlement check
+GET  /me/devices           # registered devices
+POST /me/devices           # { deviceId (≥16 chars), name?, platform } — plan device limit enforced
+DELETE /me/devices/:id     # soft-revoke a device
+```
+
+## Subscription & payment endpoints
+
+```
+GET  /subscriptions/plans                          # active plans (public storefront)
+POST /subscriptions/purchase                       # { planId, idempotencyKey } → payment + redirect URL (idempotent)
+GET  /payments/:provider/callback?authority=&paymentId=   # provider redirect target — server-side verify + activate
+POST /payments/:provider/callback                  # same, JSON body (provider: mock | zarinpal)
+```
+
+Activation is **always server-side**: the callback re-verifies the payment with
+`PaymentProvider.verifyPayment` before the subscription becomes active. The
+`mock` provider auto-verifies (dev/tests); `zarinpal` uses the v4 REST API
+(sandbox by default). Payments are idempotent via `idempotencyKey` and repeated
+callbacks are harmless.
+
+## Admin: users, subscriptions, plans, payments
+
+```
+GET    /admin/users?q=&status=&page=&limit=        # search email/username/deviceId
+GET    /admin/users/:id                            # detail + devices + subscriptions
+PATCH  /admin/users/:id                            # { status: active|suspended, username? }
+GET    /admin/subscriptions?status=&page=&limit=   # join user + plan
+PATCH  /admin/subscriptions/:id                    # { status?, extendDays? }
+GET    /admin/subscriptions/plans                  # all plans (incl. inactive)
+POST   /admin/subscriptions/plans                  # create plan (fully dynamic)
+PATCH  /admin/subscriptions/plans/:id              # edit price/duration/deviceLimit/features/status
+DELETE /admin/subscriptions/plans/:id              # soft-disable (status → inactive)
+GET    /admin/payments?page=&limit=                # transactions with user + plan context
+POST   /admin/payments/manual-grant                # { userId, planId, durationDays? } support flow
+```
+
+Permissions: `users.read/write`, `subscriptions.read/write`, `payments.read`
+(super_admin/admin manage; viewer reads only).
+
+## Hardware, packages & optimization engine (Phases 7–11)
+
+```
+# User hardware profile (desktop auto-uploads after detection)
+PUT /me/hardware                # { cpu?, gpuVendor?, gpuModel?, vramMb?, ramGb?, windowsVersion?, arch?, resolution?, driverVersion? }
+GET /me/hardware                # latest stored profile
+
+# Compatibility engine (public — runs server-side, deterministic scoring)
+POST /hardware/recommend        # { gameSlug, hardware } → { recommended?, alternatives, reasons, scored }
+
+# Packages (public storefront + entitlement-gated download)
+GET  /games/:slug/packages                  # published packages for a game
+GET  /games/:slug/packages/:packageSlug     # detail + manifest (no URLs)
+POST /games/:slug/packages/:packageSlug/download   # 403 without premium_optimization; else manifest + per-file SIGNED URLs
+GET  /api/v1/uploads/signed/:exp/:sig/:objectKey   # local driver — HMAC-validated, TTL-bounded file fetch
+GET  /admin/packages/:id/versions                  # release history (manifest snapshot per publish)
+
+# Admin — packages (create → upload → complete(hash) → publish)
+GET    /admin/packages?gameId=&status=&page=&limit=
+GET    /admin/packages/:id
+POST   /admin/packages                       # { gameId, name, slug, gpuVendor, gpuFamily?, minVramMb?, minRamGb?, minWindows?, arch, targetFps?, ... }
+PATCH  /admin/packages/:id
+DELETE /admin/packages/:id                   # soft delete
+POST   /admin/packages/:id/archive
+POST   /admin/packages/:id/publish           # { changeNote? } → semver bump + manifest snapshot
+POST   /admin/packages/:id/files/presign     # { filename, size } → { uploadUrl, objectKey } (local PUT or S3 presigned)
+PUT    /uploads/packages/put/:key            # direct upload (local driver; extension allowlist enforced)
+POST   /admin/packages/:id/files/complete    # { storageKey, filename, size, destination, operation } → server-computed SHA-256
+DELETE /admin/packages/:id/files/:fileId
+
+# Admin — ops (Phase 7)
+GET    /admin/devices?page=&limit=           # all users' registered devices
+POST   /admin/devices/:id/revoke
+GET    /admin/security/login-attempts?page=&limit=&outcome=   # failed/successful login audit
+GET    /admin/settings                       # remote config (announcement, maintenance, min version)
+PUT    /admin/settings                       # { settings: { announcement?, maintenance_mode?, min_app_version? } }
+GET    /config                               # public — desktop fetches on every sync (no rebuild needed)
+```
+
+Package files are restricted to a safe extension allowlist (never executables),
+SHA-256 is computed **server-side** at finalize time, and download is always
+entitlement-gated — the desktop never decides premium status.
+
+**Secure downloads (Phase 12):** file URLs in the download response are
+short-lived **signed** links (`expiresIn` seconds). Local driver: HMAC-SHA256
+signature + expiry validated constant-time at `/api/v1/uploads/signed/...`;
+S3/R2 driver: presigned GET against the private bucket. The raw object path is
+never public (403 on `/uploads/packages/*` locally; private bucket on S3).
+Configure `DOWNLOAD_SIGNING_SECRET` (mandatory in production) and
+`DOWNLOAD_URL_TTL` (default 900s).
+
+**Backup/restore (Phase 13, desktop):** applied packages are recorded locally;
+Settings → Backups snapshots them (with favorites + language) and Restore
+re-verifies each package server-side. Desktop-side only — see `lib/backup.ts`.
+
+**Caching (Phase 16):** the desktop sync hits the cached variants —
+`GET /home/cached` and `GET /games/cached` (catalog TTL 30s) — and
+`GET /subscriptions/plans` + `GET /config` are served from the config cache
+(TTL 60s). All four return `Cache-Control` headers. Cache is invalidated after
+admin edits (games, plans, settings). Backend: in-process TTL cache, or shared
+Redis when `REDIS_URL` is set (graceful fallback on failure).
+
+**Production (Phase 21):** `docker build -f apps/api/Dockerfile .` builds a
+slim image that runs migrations (`node dist/db/migrate.js`) then serves
+(`node dist/index.js`). `infrastructure/docker-compose.yml` brings up
+postgres + minio + redis + the API. Windows installer via
+`.github/workflows/build-windows.yml` (NSIS `.exe`).
 
 ## RBAC matrix
 

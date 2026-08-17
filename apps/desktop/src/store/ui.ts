@@ -26,6 +26,10 @@ interface UiState {
 
   updateAvailable: boolean;
   setUpdateAvailable: (v: boolean) => void;
+
+  /** Running version is below the server-mandated minimum (blocking banner). */
+  updateRequired: boolean;
+  setUpdateRequired: (v: boolean) => void;
 }
 
 const EMPTY_FILTERS: GamesFilters = { q: '', genre: '', year: '', techs: [] };
@@ -48,6 +52,9 @@ export const useUi = create<UiState>()(
 
       updateAvailable: false,
       setUpdateAvailable: (updateAvailable) => set({ updateAvailable }),
+
+      updateRequired: false,
+      setUpdateRequired: (updateRequired) => set({ updateRequired }),
     }),
     {
       name: 'goh_ui',

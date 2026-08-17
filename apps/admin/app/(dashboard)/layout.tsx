@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile sidebar */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-60 border-r bg-card p-3">
             <button className="mb-3 flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent" onClick={() => setMobileOpen(false)}>
               <X className="h-4 w-4" />
@@ -61,7 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)}>
               <Menu className="h-4 w-4" />
             </Button>
-            <div className="text-sm font-medium text-muted-foreground">Game Optimization Hub</div>
+            <div className="text-sm font-medium text-muted-foreground">PC MAX</div>
           </div>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />

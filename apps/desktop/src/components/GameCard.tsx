@@ -6,13 +6,26 @@ import type { GameSummary } from '@goh/types';
 import { cache } from '@/lib/cache';
 import { useIsFavorite } from '@/hooks/useFavorites';
 import { CARD_TECHS, TECH_LABELS } from '@/lib/labels';
+import { gameIconUrl } from '@/lib/gameIcons';
+import { toggleFavorite } from '@/lib/favorites';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui';
 
 function Cover({ game }: { game: GameSummary }) {
+  const icon = gameIconUrl(game.slug);
   return (
     <div className="relative aspect-[3/4] w-full overflow-hidden bg-secondary">
-      {game.coverUrl ? (
+      {icon ? (
+        // Real bundled artwork — shown over the gradient tile.
+        <div className="flex size-full items-center justify-center bg-gradient-to-br from-secondary via-card to-primary/20 p-6">
+          <img
+            src={icon}
+            alt={`${game.name} icon`}
+            loading="lazy"
+            className="max-h-full w-auto object-contain transition-transform duration-500 group-hover:scale-105"
+          />
+        </div>
+      ) : game.coverUrl ? (
         <img
           src={game.coverUrl}
           alt={`${game.name} cover`}
@@ -50,11 +63,12 @@ export default function GameCard({ game }: { game: GameSummary }) {
 
   const techs = CARD_TECHS.filter((flag) => game.technologies[flag]);
 
-  function toggleFavorite(e: MouseEvent) {
+  function onToggleFavorite(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (isFavorite) cache.removeFavorite(game.id);
-    else cache.addFavorite(game);
+    void toggleFavorite(game).catch(() => {
+      /* optimistic update rolled back inside toggleFavorite */
+    });
   }
 
   return (
@@ -73,7 +87,7 @@ export default function GameCard({ game }: { game: GameSummary }) {
 
       <button
         type="button"
-        onClick={toggleFavorite}
+        onClick={onToggleFavorite}
         aria-label={isFavorite ? t('card.unfavorite') : t('card.favorite')}
         aria-pressed={isFavorite}
         className={cn(

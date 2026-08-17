@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import path from 'node:path';
 import EmbeddedPostgres from 'embedded-postgres';
 import type { FastifyInstance } from 'fastify';
+import { resolveSlugs, scanIconDir, slugifyFolder } from '../scripts/import-catalog';
 
 // Use a unique port + fresh data dir per run so crashed runs never leave stale state.
 const PG_PORT = 55000 + Math.floor(Math.random() * 2000);
@@ -17,6 +18,10 @@ process.env.PUBLIC_API_URL = `http://127.0.0.1:${PG_PORT}`;
 process.env.UPLOAD_DIR = './data/test-uploads';
 process.env.ADMIN_BOOTSTRAP_EMAIL = 'admin@test.local';
 process.env.ADMIN_BOOTSTRAP_PASSWORD = 'TestPass123!';
+// The whole suite runs from one inject() IP and fires >300 requests inside the
+// default 1-minute window. Raise the per-IP ceiling for tests only — the
+// security suite still explicitly asserts that route limits return 429.
+process.env.RATE_LIMIT_MAX = '10000';
 
 let pg: EmbeddedPostgres;
 let app: FastifyInstance;
@@ -27,7 +32,7 @@ async function inject(method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: 
     url,
     payload: opts.body === undefined ? undefined : JSON.stringify(opts.body),
     headers: {
-      'content-type': 'application/json',
+      ...(opts.body === undefined ? {} : { 'content-type': 'application/json' }),
       ...(opts.token ? { authorization: `Bearer ${opts.token}` } : {}),
     },
   });
@@ -70,6 +75,23 @@ beforeAll(async () => {
   };
 }, 180_000);
 
+/** Request an OTP (dev exposure enabled in test env) and return the code. */
+async function requestOtp(identifier: string, purpose: 'register' | 'reset'): Promise<string> {
+  const res = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier, purpose } });
+  expect(res.status).toBe(200);
+  const devCode = (res.json as { devCode?: string }).devCode;
+  if (!devCode) throw new Error('OTP devCode was not exposed — OTP_EXPOSE must be true in tests');
+  return devCode;
+}
+
+/** Register a user via the unified email-or-phone + OTP flow. */
+async function registerUser(identifier: string, password: string, username?: string) {
+  const otp = await requestOtp(identifier, 'register');
+  return inject('POST', '/api/v1/auth/register', {
+    body: { identifier, username, password, otp },
+  });
+}
+
 afterAll(async () => {
   if (pg) await pg.stop();
 });
@@ -90,8 +112,8 @@ describe('public API', () => {
     expect(res.status).toBe(200);
     const data = res.json as { featured: unknown[]; popular: unknown[]; recentlyAdded: unknown[]; categories: unknown[] };
     expect(data.featured.length).toBeGreaterThan(0);
-    expect(data.popular.length).toBe(12);
-    expect(data.recentlyAdded.length).toBe(12);
+    expect(data.popular.length).toBe(10);
+    expect(data.recentlyAdded.length).toBe(10);
     expect(data.categories.length).toBeGreaterThan(0);
   });
 
@@ -105,8 +127,8 @@ describe('public API', () => {
     const byTag = await inject('GET', '/api/v1/games?q=difficult');
     expect((byTag.json.data as unknown[]).length).toBeGreaterThan(0);
 
-    const bySlug = await inject('GET', '/api/v1/games?q=doom');
-    expect((bySlug.json.data as { slug: string }[]).some((g) => g.slug === 'doom')).toBe(true);
+    const bySlug = await inject('GET', '/api/v1/games?q=dying-light');
+    expect((bySlug.json.data as { slug: string }[]).some((g) => g.slug === 'dying-light')).toBe(true);
   });
 
   it('filters by technology flags', async () => {
@@ -146,8 +168,8 @@ describe('public API', () => {
     const full = await inject('GET', '/api/v1/sync');
     expect(full.status).toBe(200);
     const data = full.json as { games: unknown[]; profiles: unknown[]; contentUpdatedAt: string | null };
-    expect(data.games.length).toBe(14);
-    expect(data.profiles.length).toBe(56);
+    expect(data.games.length).toBe(10);
+    expect(data.profiles.length).toBe(40);
     expect(data.contentUpdatedAt).not.toBeNull();
 
     const delta = await inject('GET', `/api/v1/sync?since=${encodeURIComponent(data.contentUpdatedAt!)}`);
@@ -203,8 +225,8 @@ describe('admin API', () => {
     const res = await inject('GET', '/api/v1/admin/dashboard', { token });
     expect(res.status).toBe(200);
     const stats = (res.json as { stats: { totalGames: number; totalProfiles: number } }).stats;
-    expect(stats.totalGames).toBe(14);
-    expect(stats.totalProfiles).toBe(56);
+    expect(stats.totalGames).toBe(10);
+    expect(stats.totalProfiles).toBe(40);
   });
 
   it('lets the admin add a game and the public API sees it immediately (no rebuild)', async () => {
@@ -442,3 +464,1212 @@ describe('edge cases', () => {
     expect(sync.profiles.some((p) => p.slug === target.slug && p.deleted)).toBe(true);
   });
 });
+
+describe('user accounts & auth (phone + OTP)', () => {
+  let token: string;
+  let userId: string;
+  const phone = '+989121112233';
+  const password = 'StrongPass123!';
+
+  beforeAll(async () => {
+    const reg = await registerUser(phone, password, 'accounttest');
+    expect(reg.status).toBe(201);
+    token = (reg.json as { accessToken: string }).accessToken;
+    userId = (reg.json as { user: { id: string } }).user.id;
+  });
+
+  it('serves the profile from the access token (normalized phone)', async () => {
+    const me = await inject('GET', '/api/v1/auth/me', { token });
+    expect(me.status).toBe(200);
+    expect((me.json as { phone: string }).phone).toBe(phone);
+    expect((me.json as { phoneVerified: boolean }).phoneVerified).toBe(true);
+  });
+
+  it('normalizes equivalent phone formats to the same account', async () => {
+    for (const variant of ['09121112233', '+989121112233', '989121112233']) {
+      const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: variant, password } });
+      expect(login.status).toBe(200);
+    }
+  });
+
+  it('rejects duplicate registration (same phone, any format)', async () => {
+    // The duplicate check runs BEFORE OTP verification server-side, so no fresh
+    // OTP is needed here (requesting one would also trip the resend cooldown).
+    const dup = await inject('POST', '/api/v1/auth/register', {
+      body: { identifier: '09121112233', username: 'accounttest2', password, otp: '000000' },
+    });
+    expect(dup.status).toBe(409);
+  });
+
+  it('rejects registration with a wrong OTP', async () => {
+    await requestOtp('+989129998877', 'register');
+    const bad = await inject('POST', '/api/v1/auth/register', {
+      body: { identifier: '+989129998877', username: 'badotp', password, otp: '000000' },
+    });
+    expect(bad.status).toBe(400);
+  });
+
+  it('logs in and refreshes with rotation', async () => {
+    const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: phone, password } });
+    expect(login.status).toBe(200);
+
+    const cookie = (await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      payload: JSON.stringify({ identifier: phone, password }),
+      headers: { 'content-type': 'application/json' },
+    })).cookies.find((c) => c.name === 'goh_user_refresh');
+    expect(cookie).toBeTruthy();
+
+    const refresh = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/refresh',
+      headers: { cookie: `goh_user_refresh=${cookie!.value}` },
+    });
+    expect(refresh.statusCode).toBe(200);
+
+    // Old (rotated) refresh token must be rejected.
+    const reuse = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/refresh',
+      headers: { cookie: `goh_user_refresh=${cookie!.value}` },
+    });
+    expect(reuse.statusCode).toBe(401);
+  });
+
+  it('locks the account after repeated failed logins', async () => {
+    for (let i = 0; i < 5; i++) {
+      const bad = await inject('POST', '/api/v1/auth/login', {
+        body: { identifier: phone, password: 'WrongPass!' },
+      });
+      expect(bad.status).toBe(401);
+    }
+    const locked = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: phone, password },
+    });
+    expect(locked.status).toBe(429);
+    expect((locked.json.error as { code: string }).code).toBe('ACCOUNT_LOCKED');
+  });
+
+  it('resets the password via OTP and invalidates old sessions', async () => {
+    const forgot = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: phone } });
+    expect(forgot.status).toBe(200);
+    const otp = (forgot.json as { devCode?: string }).devCode;
+    expect(otp).toBeTruthy();
+
+    // A token issued BEFORE the reset must die with it (token-version bump).
+    const preResetLogin = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: phone, password: 'StrongPass123!' },
+    });
+    const preResetToken = (preResetLogin.json as { accessToken: string }).accessToken;
+
+    const reset = await inject('POST', '/api/v1/auth/password/reset', {
+      body: { identifier: phone, otp: otp!, newPassword: 'NewStrongPass456!' },
+    });
+    expect(reset.status).toBe(200);
+
+    const meWithOldToken = await inject('GET', '/api/v1/auth/me', { token: preResetToken });
+    expect(meWithOldToken.status).toBe(401);
+
+    const oldPass = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: phone, password: 'StrongPass123!' },
+    });
+    expect(oldPass.status).toBe(401);
+
+    const newPass = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: phone, password: 'NewStrongPass456!' },
+    });
+    expect(newPass.status).toBe(200);
+
+    // OTP reuse must fail.
+    const reuse = await inject('POST', '/api/v1/auth/password/reset', {
+      body: { identifier: phone, otp: otp!, newPassword: 'AnotherPass789!' },
+    });
+    expect(reuse.status).toBe(400);
+  });
+
+  it('registers and logs in with an EMAIL identifier (unified login)', async () => {
+    const email = 'gamer@example.com';
+    const otp = await requestOtp(email, 'register');
+    const reg = await inject('POST', '/api/v1/auth/register', {
+      body: { identifier: email, username: 'emailgamer', password: 'EmailPass123!', otp },
+    });
+    expect(reg.status).toBe(201);
+    const user = (reg.json as { user: { email: string; phone: string | null; emailVerified: boolean } }).user;
+    expect(user.email).toBe(email);
+    expect(user.phone).toBeNull();
+    expect(user.emailVerified).toBe(true);
+
+    const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: email, password: 'EmailPass123!' } });
+    expect(login.status).toBe(200);
+
+    // Email normalization: uppercase + whitespace resolve to the same account.
+    const normLogin = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: '  GAMER@Example.COM ', password: 'EmailPass123!' },
+    });
+    expect(normLogin.status).toBe(200);
+  });
+
+  it('rejects duplicate email registration and invalid identifiers', async () => {
+    const dup = await inject('POST', '/api/v1/auth/register', {
+      body: { identifier: 'gamer@example.com', username: 'emailgamer2', password: 'EmailPass123!', otp: '000000' },
+    });
+    expect(dup.status).toBe(409);
+
+    const invalidEmail = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: 'not-an-email', purpose: 'register' } });
+    expect(invalidEmail.status).toBe(400);
+    const invalidPhone = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: 'abc', purpose: 'register' } });
+    expect(invalidPhone.status).toBe(400);
+    const badLogin = await inject('POST', '/api/v1/auth/login', { body: { identifier: '???', password: 'x' } });
+    expect(badLogin.status).toBe(400);
+  });
+
+  it('resets a password by EMAIL with OTP and kills old access tokens', async () => {
+    const email = 'resetme@example.com';
+    const otp = await requestOtp(email, 'register');
+    await inject('POST', '/api/v1/auth/register', {
+      body: { identifier: email, username: 'resetgamer', password: 'FirstPass123!', otp },
+    });
+    const preLogin = await inject('POST', '/api/v1/auth/login', { body: { identifier: email, password: 'FirstPass123!' } });
+    expect(preLogin.status).toBe(200);
+    const oldToken = (preLogin.json as { accessToken: string }).accessToken;
+
+    // Forgot-password accepts the same unified identifier (no enumeration).
+    const forgot = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: email } });
+    expect(forgot.status).toBe(200);
+    expect((forgot.json as { devCode?: string }).devCode).toBeTruthy();
+    const resetCode = (forgot.json as { devCode: string }).devCode;
+
+    const reset = await inject('POST', '/api/v1/auth/password/reset', {
+      body: { identifier: email, otp: resetCode, newPassword: 'SecondPass456!' },
+    });
+    expect(reset.status).toBe(200);
+
+    // Old access token dies with the reset.
+    const meOld = await inject('GET', '/api/v1/auth/me', { token: oldToken });
+    expect(meOld.status).toBe(401);
+
+    // Old password dead, new password works.
+    const oldPass = await inject('POST', '/api/v1/auth/login', { body: { identifier: email, password: 'FirstPass123!' } });
+    expect(oldPass.status).toBe(401);
+    const newPass = await inject('POST', '/api/v1/auth/login', { body: { identifier: email, password: 'SecondPass456!' } });
+    expect(newPass.status).toBe(200);
+
+    // Forgot for an unknown identifier still succeeds with a decoy code.
+    const decoy = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: 'nobody@example.com' } });
+    expect(decoy.status).toBe(200);
+  });
+
+  it('keeps existing phone-only accounts working via the unified identifier', async () => {
+    const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: '+989121112233', password: 'NewStrongPass456!' } });
+    expect(login.status).toBe(200);
+  });
+
+  it('suspends a user → login and existing tokens stop working', async () => {
+    // Re-login first (previous test changed the password; lockout cleared on success).
+    const login = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: phone, password: 'NewStrongPass456!' },
+    });
+    const freshToken = (login.json as { accessToken: string }).accessToken;
+
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    const adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+
+    const suspend = await inject('PATCH', `/api/v1/admin/users/${userId}`, {
+      token: adminToken,
+      body: { status: 'suspended' },
+    });
+    expect(suspend.status).toBe(200);
+
+    const me = await inject('GET', '/api/v1/auth/me', { token: freshToken });
+    expect(me.status).toBe(403);
+
+    const loginSuspended = await inject('POST', '/api/v1/auth/login', {
+      body: { identifier: phone, password: 'NewStrongPass456!' },
+    });
+    expect(loginSuspended.status).toBe(401);
+
+    // Restore for later suites.
+    await inject('PATCH', `/api/v1/admin/users/${userId}`, { token: adminToken, body: { status: 'active' } });
+  });
+
+  it('enforces admin permissions (viewer cannot read users)', async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    const adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+    const list = await inject('GET', '/api/v1/admin/users', { token: adminToken });
+    expect(list.status).toBe(200);
+    expect((list.json.data as unknown[]).length).toBeGreaterThan(0);
+
+    const createViewer = await inject('POST', '/api/v1/admin/admins', {
+      token: adminToken,
+      body: { email: 'viewer2@test.local', name: 'Viewer', password: 'ViewerPass123!', role: 'viewer' },
+    });
+    expect(createViewer.status).toBe(201);
+
+    const viewerLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'viewer2@test.local', password: 'ViewerPass123!' },
+    });
+    const viewerToken = (viewerLogin.json as { accessToken: string }).accessToken;
+
+    // Viewers may read users but cannot modify them.
+    const canRead = await inject('GET', '/api/v1/admin/users', { token: viewerToken });
+    expect(canRead.status).toBe(200);
+    const denied = await inject('PATCH', `/api/v1/admin/users/${userId}`, {
+      token: viewerToken,
+      body: { status: 'suspended' },
+    });
+    expect(denied.status).toBe(403);
+  });
+});
+
+describe('favorites (persistent, user-specific)', () => {
+  const phone = '+989120000008';
+  let token: string;
+  let otherToken: string;
+  let gameId: string;
+
+  beforeAll(async () => {
+    const reg = await registerUser(phone, 'FavPass123!', 'favuser');
+    token = (reg.json as { accessToken: string }).accessToken;
+    const other = await registerUser('+989120000009', 'FavPass123!', 'favother');
+    otherToken = (other.json as { accessToken: string }).accessToken;
+    const games = (await inject('GET', '/api/v1/games?q=dying-light')).json as { data: { id: string }[] };
+    gameId = games.data[0]!.id;
+  });
+
+  it('adds, lists and removes favorites', async () => {
+    const add = await inject('PUT', `/api/v1/favorites/${gameId}`, { token });
+    expect(add.status).toBe(200);
+    expect((add.json as { favorited: boolean }).favorited).toBe(true);
+
+    const list = (await inject('GET', '/api/v1/favorites', { token })).json as { data: { id: string }[] };
+    expect(list.data.some((g) => g.id === gameId)).toBe(true);
+
+    // Idempotent duplicate add → still one row.
+    await inject('PUT', `/api/v1/favorites/${gameId}`, { token });
+    const again = (await inject('GET', '/api/v1/favorites', { token })).json as { data: unknown[] };
+    expect(again.data.filter((g) => (g as { id: string }).id === gameId).length).toBe(1);
+
+    const remove = await inject('DELETE', `/api/v1/favorites/${gameId}`, { token });
+    expect(remove.status).toBe(200);
+    expect((remove.json as { favorited: boolean }).favorited).toBe(false);
+
+    const after = (await inject('GET', '/api/v1/favorites', { token })).json as { data: { id: string }[] };
+    expect(after.data.some((g) => g.id === gameId)).toBe(false);
+  });
+
+  it('favorites are user-specific (no cross-user leakage)', async () => {
+    await inject('PUT', `/api/v1/favorites/${gameId}`, { token });
+    const mine = (await inject('GET', '/api/v1/favorites', { token })).json as { data: { id: string }[] };
+    const others = (await inject('GET', '/api/v1/favorites', { token: otherToken })).json as { data: { id: string }[] };
+    expect(mine.data.some((g) => g.id === gameId)).toBe(true);
+    expect(others.data.some((g) => g.id === gameId)).toBe(false);
+    await inject('DELETE', `/api/v1/favorites/${gameId}`, { token });
+  });
+
+  it('rejects favoriting an unknown game', async () => {
+    const res = await inject('PUT', '/api/v1/favorites/00000000-0000-4000-8000-000000000000', { token });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('subscriptions & payments (Phase 5-6)', () => {
+  let adminToken: string;
+  let userToken: string;
+  let userId: string;
+  let planId: string;
+  let paymentId: string;
+
+  beforeAll(async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+
+    const reg = await registerUser('+989120000001', 'SubPass123!', 'substest');
+    userToken = (reg.json as { accessToken: string }).accessToken;
+    userId = (reg.json as { user: { id: string } }).user.id;
+  });
+
+  it('serves the seeded plans publicly', async () => {
+    const plans = await inject('GET', '/api/v1/subscriptions/plans');
+    expect(plans.status).toBe(200);
+    const data = (plans.json as { data: { slug: string; price: number }[] }).data;
+    expect(data.length).toBe(4);
+    expect(data.map((p) => p.slug)).toEqual(['1-month', '3-months', '6-months', '12-months']);
+    const fresh = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    planId = fresh.data[0]!.id;
+  });
+
+  it('creates a plan in the admin and it appears in the public storefront', async () => {
+    const create = await inject('POST', '/api/v1/admin/subscriptions/plans', {
+      token: adminToken,
+      body: {
+        name: '2 Weeks Trial',
+        slug: '2-weeks-trial',
+        durationDays: 14,
+        price: 99_000,
+        currency: 'IRR',
+        deviceLimit: 1,
+        features: ['premium_optimization'],
+        status: 'active',
+        sortOrder: 0,
+      },
+    });
+    expect(create.status).toBe(201);
+
+    const pub = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { slug: string }[] };
+    expect(pub.data.some((p) => p.slug === '2-weeks-trial')).toBe(true);
+  });
+
+  it('purchases with the mock provider and activates only after server-side verification', async () => {
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: userToken,
+      body: { planId, idempotencyKey: 'subs-test-key-0001' },
+    });
+    expect(purchase.status).toBe(200);
+    const res = purchase.json as { paymentId: string; redirectUrl: string; status: string };
+    expect(res.redirectUrl).toContain('/api/v1/payments/mock/callback');
+    paymentId = res.paymentId;
+
+    // Not active until the callback verifies.
+    const before = (await inject('GET', '/api/v1/me/subscription', { token: userToken })).json as { isActive: boolean };
+    expect(before.isActive).toBe(false);
+
+    const callback = await inject('POST', '/api/v1/payments/mock/callback', {
+      body: { paymentId },
+    });
+    expect(callback.status).toBe(200);
+    expect((callback.json as { ok: boolean }).ok).toBe(true);
+
+    const after = (await inject('GET', '/api/v1/me/subscription', { token: userToken })).json as {
+      isActive: boolean;
+      entitlements: { feature: string }[];
+    };
+    expect(after.isActive).toBe(true);
+    expect(after.entitlements.map((e) => e.feature)).toContain('premium_optimization');
+  });
+
+  it('is idempotent — same idempotency key returns the same payment, double callback is harmless', async () => {
+    const again = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: userToken,
+      body: { planId, idempotencyKey: 'subs-test-key-0001' },
+    });
+    expect(again.status).toBe(200);
+    expect((again.json as { paymentId: string }).paymentId).toBe(paymentId);
+
+    const repeatCallback = await inject('POST', '/api/v1/payments/mock/callback', {
+      body: { paymentId },
+    });
+    expect(repeatCallback.status).toBe(200);
+    expect((repeatCallback.json as { ok: boolean }).ok).toBe(true);
+  });
+
+  it('enforces the device limit from the active plan', async () => {
+    const first = await inject('POST', '/api/v1/me/devices', {
+      token: userToken,
+      body: { deviceId: 'device-one-0000000000000001', name: 'PC 1' },
+    });
+    expect(first.status).toBe(201);
+
+    // Plan is 1-month (deviceLimit 1) → second device rejected.
+    const second = await inject('POST', '/api/v1/me/devices', {
+      token: userToken,
+      body: { deviceId: 'device-two-0000000000000002', name: 'PC 2' },
+    });
+    expect(second.status).toBe(409);
+    expect((second.json.error as { code: string }).code).toBe('CONFLICT');
+
+    // Upgrade to 6-months (deviceLimit 2) → the second slot opens up.
+    const sixMonth = ((await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { slug: string; id: string }[] }).data.find(
+      (p) => p.slug === '6-months',
+    )!;
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: userToken,
+      body: { planId: sixMonth.id, idempotencyKey: 'subs-test-key-0002' },
+    });
+    const pid = (purchase.json as { paymentId: string }).paymentId;
+    await inject('POST', '/api/v1/payments/mock/callback', { body: { paymentId: pid } });
+
+    const secondRetry = await inject('POST', '/api/v1/me/devices', {
+      token: userToken,
+      body: { deviceId: 'device-two-0000000000000002', name: 'PC 2' },
+    });
+    expect(secondRetry.status).toBe(201);
+
+    // Both slots used → third is rejected.
+    const third = await inject('POST', '/api/v1/me/devices', {
+      token: userToken,
+      body: { deviceId: 'device-three-0000000000000003', name: 'PC 3' },
+    });
+    expect(third.status).toBe(409);
+
+    // Revoking frees a slot.
+    const devicesList = (await inject('GET', '/api/v1/me/devices', { token: userToken })).json as { data: { id: string }[] };
+    const target = devicesList.data[0]!;
+    const revoke = await inject('DELETE', `/api/v1/me/devices/${target.id}`, { token: userToken });
+    expect(revoke.status).toBe(200);
+
+    const fourth = await inject('POST', '/api/v1/me/devices', {
+      token: userToken,
+      body: { deviceId: 'device-four-0000000000000004', name: 'PC 4' },
+    });
+    expect(fourth.status).toBe(201);
+  });
+
+  it('lets admins extend and cancel subscriptions', async () => {
+    const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
+      data: { id: string; expirationDate: string; userEmail: string }[];
+    };
+    const anyActive = list.data.find((s) => s.userEmail === '+989120000001')!;
+    const before = new Date(anyActive.expirationDate).getTime();
+
+    const extend = await inject('PATCH', `/api/v1/admin/subscriptions/${anyActive.id}`, {
+      token: adminToken,
+      body: { extendDays: 30 },
+    });
+    expect(extend.status).toBe(200);
+    const after = new Date((extend.json as { expirationDate: string }).expirationDate).getTime();
+    expect(after).toBeGreaterThan(before);
+
+    const cancel = await inject('PATCH', `/api/v1/admin/subscriptions/${anyActive.id}`, {
+      token: adminToken,
+      body: { status: 'cancelled' },
+    });
+    expect(cancel.status).toBe(200);
+  });
+
+  it('lets admins grant a manual subscription (support flow)', async () => {
+    const plan = ((await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] }).data[1]!;
+    const grant = await inject('POST', '/api/v1/admin/payments/manual-grant', {
+      token: adminToken,
+      body: { userId, planId: plan.id, durationDays: 7 },
+    });
+    expect(grant.status).toBe(200);
+
+    const me = (await inject('GET', '/api/v1/me/subscription', { token: userToken })).json as { isActive: boolean };
+    expect(me.isActive).toBe(true);
+  });
+
+  it('lists payments in the admin panel with user + plan context', async () => {
+    const list = (await inject('GET', '/api/v1/admin/payments', { token: adminToken })).json as {
+      data: { userEmail: string; status: string; planName: string }[];
+    };
+    expect(list.data.length).toBeGreaterThan(0);
+    const mine = list.data.find((p) => p.userEmail === '+989120000001');
+    expect(mine?.status).toBe('paid');
+  });
+});
+
+describe('optimization packages & compatibility (Phase 9-11)', () => {
+  let adminToken: string;
+  let premiumToken: string;
+  let freeToken: string;
+  let gameId: string;
+  let pkgId: string;
+
+  beforeAll(async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+
+    // Premium user (active subscription).
+    const reg = await registerUser('+989120000002', 'PkgPass123!', 'pkgpremium');
+    premiumToken = (reg.json as { accessToken: string }).accessToken;
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: premiumToken,
+      body: { planId: plans.data[0]!.id, idempotencyKey: 'pkg-suite-0001' },
+    });
+    const pid = (purchase.json as { paymentId: string }).paymentId;
+    await inject('POST', '/api/v1/payments/mock/callback', { body: { paymentId: pid } });
+
+    // Free user.
+    const freeReg = await registerUser('+989120000003', 'PkgPass123!', 'pkgfree');
+    freeToken = (freeReg.json as { accessToken: string }).accessToken;
+
+    // A game to attach packages to.
+    const game = (await inject('GET', '/api/v1/games?q=dying-light')).json as { data: { id: string; slug: string }[] };
+    gameId = game.data[0]!.id;
+  });
+
+  it('creates a draft package, hidden from the public storefront', async () => {
+    const create = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: {
+        gameId,
+        name: 'NVIDIA RTX 30 High FPS',
+        slug: 'rtx30-high-fps',
+        gpuVendor: 'nvidia',
+        gpuFamily: 'rtx 30',
+        minVramMb: 4096,
+        minRamGb: 8,
+        minWindows: '10.0.19041',
+        targetResolution: '1080p',
+        targetFps: 60,
+      },
+    });
+    expect(create.status).toBe(201);
+    pkgId = (create.json as { id: string }).id;
+
+    const publicList = (await inject('GET', '/api/v1/games/dying-light/packages')).json as { data: unknown[] };
+    expect(publicList.data.length).toBe(0);
+  });
+
+  it('rejects unsafe files (executables, path traversal)', async () => {
+    const presignExe = await inject('POST', `/api/v1/admin/packages/${pkgId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'evil.exe', size: 100 },
+    });
+    expect(presignExe.status).toBe(400);
+
+    const presign = await inject('POST', `/api/v1/admin/packages/${pkgId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'settings.cfg', size: 64 },
+    });
+    expect(presign.status).toBe(200);
+    const { objectKey } = presign.json as { objectKey: string };
+
+    const badDest = await inject('POST', `/api/v1/admin/packages/${pkgId}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: objectKey, filename: 'settings.cfg', size: 64, destination: '../../evil', operation: 'replace' },
+    });
+    expect(badDest.status).toBe(400);
+  });
+
+  it('uploads a file and computes the SHA-256 server-side', async () => {
+    const content = Buffer.from('dummy optimization config v1\n');
+    const presign = (await inject('POST', `/api/v1/admin/packages/${pkgId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'settings.cfg', size: content.length },
+    })).json as { uploadUrl: string; objectKey: string };
+    const key = presign.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+
+    const put = await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(content.length) },
+      payload: content,
+    });
+    expect(put.statusCode).toBe(201);
+
+    const complete = await inject('POST', `/api/v1/admin/packages/${pkgId}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: presign.objectKey, filename: 'settings.cfg', size: content.length, destination: 'Profiles/settings.cfg', operation: 'replace' },
+    });
+    expect(complete.status).toBe(200);
+
+    const { createHash } = await import('node:crypto');
+    const expected = createHash('sha256').update(content).digest('hex');
+    expect((complete.json as { sha256: string }).sha256).toBe(expected);
+
+    const files = (await inject('GET', `/api/v1/admin/packages/${pkgId}/files`, { token: adminToken })).json as { data: { filename: string; sha256: string }[] };
+    expect(files.data).toHaveLength(1);
+    expect(files.data[0]!.sha256).toBe(expected);
+  });
+
+  it('publishes the package (semver bump) and gates downloads behind entitlements', async () => {
+    const publish = await inject('POST', `/api/v1/admin/packages/${pkgId}/publish`, {
+      token: adminToken,
+      body: { changeNote: 'first release' },
+    });
+    expect(publish.status).toBe(200);
+    expect((publish.json as { version: string; status: string }).version).toBe('1.0.1');
+    expect((publish.json as { status: string }).status).toBe('published');
+
+    const publicList = (await inject('GET', '/api/v1/games/dying-light/packages')).json as { data: { slug: string; version: string }[] };
+    expect(publicList.data.some((p) => p.slug === 'rtx30-high-fps')).toBe(true);
+
+    // Free user → 403.
+    const denied = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: freeToken });
+    expect(denied.status).toBe(403);
+
+    // Premium user → manifest with verified hashes + short-lived SIGNED URLs.
+    const download = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(download.status).toBe(200);
+    const body = download.json as {
+      package: { name: string };
+      files: { filename: string; sha256: string; url: string; destination: string; expiresIn: number }[];
+    };
+    expect(body.package.name).toBe('NVIDIA RTX 30 High FPS');
+    expect(body.files[0]!.destination).toBe('Profiles/settings.cfg');
+    expect(body.files[0]!.sha256).toMatch(/^[a-f0-9]{64}$/);
+    // Phase 12 — URLs must be signed (TTL-bounded), never the bare public object.
+    expect(body.files[0]!.url).toContain('/api/v1/uploads/signed/');
+    expect(body.files[0]!.expiresIn).toBeGreaterThan(0);
+  });
+
+  it('revokes entitlements immediately on admin suspend and restores on re-activate (no premium window)', async () => {
+    const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
+      data: { id: string; userEmail: string; status: string }[];
+    };
+    const sub = list.data.find((s) => s.userEmail === '+989120000002')!;
+
+    const suspend = await inject('PATCH', `/api/v1/admin/subscriptions/${sub.id}`, {
+      token: adminToken,
+      body: { status: 'suspended' },
+    });
+    expect(suspend.status).toBe(200);
+
+    // The entitlement join requires subscription.status = 'active' — suspend
+    // must cut downloads off immediately, server-side, with no window.
+    const denied = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(denied.status).toBe(403);
+    const me = (await inject('GET', '/api/v1/me/subscription', { token: premiumToken })).json as { isActive: boolean };
+    expect(me.isActive).toBe(false);
+
+    // Re-activating restores access for the remaining period (reversible).
+    const reactivate = await inject('PATCH', `/api/v1/admin/subscriptions/${sub.id}`, {
+      token: adminToken,
+      body: { status: 'active' },
+    });
+    expect(reactivate.status).toBe(200);
+    const allowed = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(allowed.status).toBe(200);
+  });
+
+  it('pushes entitlement expiry forward when an admin extends a subscription', async () => {
+    const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
+      data: { id: string; userEmail: string; expirationDate: string }[];
+    };
+    const sub = list.data.find((s) => s.userEmail === '+989120000002')!;
+
+    const extend = await inject('PATCH', `/api/v1/admin/subscriptions/${sub.id}`, {
+      token: adminToken,
+      body: { extendDays: 45 },
+    });
+    expect(extend.status).toBe(200);
+    const newExpiry = new Date((extend.json as { expirationDate: string }).expirationDate).getTime();
+
+    // The entitlements rows must be pushed to the new expiry too, otherwise the
+    // entitlement join (min of both dates) would cut the user off early.
+    const { db } = await import('../db');
+    const { entitlements } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    const ent = await db.query.entitlements.findFirst({ where: eq(entitlements.subscriptionId, sub.id) });
+    expect(ent).not.toBeUndefined();
+    expect(ent!.expiresAt.getTime()).toBe(newExpiry);
+
+    const allowed = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(allowed.status).toBe(200);
+  });
+
+  it('serves signed downloads and rejects tampered/expired/raw links (Phase 12)', async () => {
+    const download = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    const body = download.json as { files: { filename: string; url: string; sha256: string }[] };
+    const signedUrl = body.files[0]!.url;
+    const apiBase = signedUrl.split('/api/v1')[0]!;
+    const pathOnly = signedUrl.replace(apiBase, '');
+
+    // Valid signed link serves the file bytes with a hash we already verified.
+    const served = await app.inject({ method: 'GET', url: pathOnly });
+    expect(served.statusCode).toBe(200);
+    expect(served.headers['content-disposition']).toContain('attachment');
+
+    // Tampered signature → rejected.
+    const tampered = pathOnly.replace(/\/[a-f0-9]{64}\//, '/0000000000000000000000000000000000000000000000000000000000000000/');
+    const bad = await app.inject({ method: 'GET', url: tampered });
+    expect(bad.statusCode).toBe(403);
+
+    // Expired link (timestamp in the past) → rejected.
+    const m = /signed\/(\d+)\/([a-f0-9]{64})\/(.+)$/.exec(pathOnly);
+    expect(m).not.toBeNull();
+    const expiredPath = `/api/v1/uploads/signed/1/${m![2]}/${m![3]}`;
+    const expired = await app.inject({ method: 'GET', url: expiredPath });
+    expect(expired.statusCode).toBe(403);
+
+    // Raw object path is never publicly served (local driver blocks it).
+    const raw = await app.inject({ method: 'GET', url: `/uploads/${m![3]}` });
+    expect(raw.statusCode).toBe(403);
+  });
+
+  it('exposes the release history (manifest snapshot per version)', async () => {
+    const versions = await inject('GET', `/api/v1/admin/packages/${pkgId}/versions`, { token: adminToken });
+    expect(versions.status).toBe(200);
+    const rows = versions.json as { data: { version: string; changeNote: string | null; files: { sha256: string }[] }[] };
+    expect(rows.data.length).toBeGreaterThanOrEqual(1);
+    expect(rows.data[0]!.version).toBe('1.0.1');
+    expect(rows.data[0]!.files[0]!.sha256).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('supersedes re-uploaded files — live manifest has one row per destination, version snapshots keep history', async () => {
+    // v2 of the same file: re-upload `settings.cfg` with different content.
+    const v2content = Buffer.from('dummy optimization config v2 (supersedes v1)\n');
+    const presign = (await inject('POST', `/api/v1/admin/packages/${pkgId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'settings.cfg', size: v2content.length },
+    })).json as { uploadUrl: string; objectKey: string };
+    const key = presign.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+    await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(v2content.length) },
+      payload: v2content,
+    });
+    const complete = await inject('POST', `/api/v1/admin/packages/${pkgId}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: presign.objectKey, filename: 'settings.cfg', size: v2content.length, destination: 'Profiles/settings.cfg', operation: 'replace' },
+    });
+    expect(complete.status).toBe(200);
+    const v2hash = (complete.json as { sha256: string }).sha256;
+
+    const publish = await inject('POST', `/api/v1/admin/packages/${pkgId}/publish`, { token: adminToken, body: { changeNote: 'v2' } });
+    expect(publish.status).toBe(200);
+
+    // Live download manifest: exactly one row per destination, serving v2's hash.
+    const download = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(download.status).toBe(200);
+    const files = (download.json as { files: { destination: string; sha256: string }[] }).files;
+    expect(files.filter((f) => f.destination === 'Profiles/settings.cfg')).toHaveLength(1);
+    expect(files.find((f) => f.destination === 'Profiles/settings.cfg')!.sha256).toBe(v2hash);
+
+    // Version history keeps both snapshots (v1 hash still auditable).
+    const versions = (await inject('GET', `/api/v1/admin/packages/${pkgId}/versions`, { token: adminToken })).json as {
+      data: { version: string; files: { sha256: string }[] }[];
+    };
+    expect(versions.data.length).toBeGreaterThanOrEqual(2);
+    const v1Snapshot = versions.data[versions.data.length - 1]!;
+    expect(v1Snapshot.files[0]!.sha256).not.toBe(v2hash);
+  });
+
+  it('recommends the best package for the detected hardware', async () => {
+    // Add an AMD package too.
+    const amd = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { gameId, name: 'AMD Radeon Balanced', slug: 'amd-balanced', gpuVendor: 'amd', gpuFamily: 'radeon', targetFps: 60 },
+    });
+    const amdId = (amd.json as { id: string }).id;
+    const amdContent = Buffer.from('amd settings v1\n');
+    const presign = (await inject('POST', `/api/v1/admin/packages/${amdId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'amd.ini', size: amdContent.length },
+    })).json as { uploadUrl: string; objectKey: string };
+    const key = presign.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+    await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(amdContent.length) },
+      payload: amdContent,
+    });
+    await inject('POST', `/api/v1/admin/packages/${amdId}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: presign.objectKey, filename: 'amd.ini', size: amdContent.length, destination: 'amd.ini' },
+    });
+    await inject('POST', `/api/v1/admin/packages/${amdId}/publish`, { token: adminToken, body: {} });
+
+    const nvidiaRec = await inject('POST', '/api/v1/hardware/recommend', {
+      body: {
+        gameSlug: 'dying-light',
+        hardware: { gpuVendor: 'nvidia', gpuModel: 'NVIDIA GeForce RTX 3060', vramMb: 12288, ramGb: 16, windowsVersion: '10.0.22631', arch: 'x64' },
+      },
+    });
+    expect(nvidiaRec.status).toBe(200);
+    expect((nvidiaRec.json as { recommended: { slug: string } }).recommended?.slug).toBe('rtx30-high-fps');
+
+    const amdRec = await inject('POST', '/api/v1/hardware/recommend', {
+      body: {
+        gameSlug: 'dying-light',
+        hardware: { gpuVendor: 'amd', gpuModel: 'AMD Radeon RX 6700 XT', vramMb: 12288, ramGb: 16 },
+      },
+    });
+    expect((amdRec.json as { recommended: { slug: string } }).recommended?.slug).toBe('amd-balanced');
+
+    // Low-end NVIDIA below the NVIDIA package minimums → nothing compatible
+    // (the AMD package excludes NVIDIA hardware by vendor).
+    const lowEnd = await inject('POST', '/api/v1/hardware/recommend', {
+      body: { gameSlug: 'dying-light', hardware: { gpuVendor: 'nvidia', gpuModel: 'GT 1030', vramMb: 2048, ramGb: 4 } },
+    });
+    const low = lowEnd.json as { recommended: { slug: string } | null; reasons: string[] };
+    expect(low.recommended).toBeNull();
+    expect(low.reasons.length).toBeGreaterThan(0);
+  });
+});
+
+describe('multi-game isolation (universal catalog)', () => {
+  // Game A = dying-light (already has packages from the suite above).
+  // Game B = gta-v — this suite proves packages/manifests/hashes/history stay
+  // strictly per-game and that cross-game lookups/downloads are rejected.
+  let adminToken: string;
+  let premiumToken: string;
+  let pkgBId: string;
+  const pkgBSlug = 'gta-v-ultra-fps';
+
+  beforeAll(async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+
+    const reg = await registerUser('+989120000099', 'IsoPass123!', 'isopremium');
+    premiumToken = (reg.json as { accessToken: string }).accessToken;
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: premiumToken,
+      body: { planId: plans.data[0]!.id, idempotencyKey: 'iso-suite-0001' },
+    });
+    const pid = (purchase.json as { paymentId: string }).paymentId;
+    await inject('POST', '/api/v1/payments/mock/callback', { body: { paymentId: pid } });
+  });
+
+  it('creates + publishes a package for game B with its own manifest hash', async () => {
+    const gta = (await inject('GET', '/api/v1/games?q=gta-v')).json as { data: { id: string }[] };
+    const gameBId = gta.data[0]!.id;
+
+    const create = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { gameId: gameBId, name: 'GTA V Ultra FPS', slug: pkgBSlug, gpuVendor: 'nvidia', targetFps: 144 },
+    });
+    expect(create.status).toBe(201);
+    pkgBId = (create.json as { id: string }).id;
+
+    const content = Buffer.from('gta-v optimization settings v1\n');
+    const presign = (await inject('POST', `/api/v1/admin/packages/${pkgBId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'settings.xml', size: content.length },
+    })).json as { uploadUrl: string; objectKey: string };
+    const key = presign.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+    await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(content.length) },
+      payload: content,
+    });
+    const complete = await inject('POST', `/api/v1/admin/packages/${pkgBId}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: presign.objectKey, filename: 'settings.xml', size: content.length, destination: 'Profiles/settings.xml', operation: 'replace' },
+    });
+    expect(complete.status).toBe(200);
+
+    const publish = await inject('POST', `/api/v1/admin/packages/${pkgBId}/publish`, {
+      token: adminToken,
+      body: { changeNote: 'gta v first release' },
+    });
+    expect(publish.status).toBe(200);
+  });
+
+  it('keeps per-game package lists isolated', async () => {
+    const gtaList = (await inject('GET', '/api/v1/games/gta-v/packages')).json as { data: { slug: string }[] };
+    expect(gtaList.data.some((p) => p.slug === pkgBSlug)).toBe(true);
+    expect(gtaList.data.some((p) => p.slug === 'rtx30-high-fps')).toBe(false);
+
+    const dlList = (await inject('GET', '/api/v1/games/dying-light/packages')).json as { data: { slug: string }[] };
+    expect(dlList.data.some((p) => p.slug === pkgBSlug)).toBe(false);
+  });
+
+  it('rejects cross-game package lookups and downloads (IDOR-safe)', async () => {
+    // Game A's endpoint must never resolve game B's package.
+    const lookup = await inject('GET', '/api/v1/games/dying-light/packages/gta-v-ultra-fps');
+    expect(lookup.status).toBe(404);
+
+    // Even a premium user cannot download game B's package through game A.
+    const download = await inject('POST', '/api/v1/games/dying-light/packages/gta-v-ultra-fps/download', {
+      token: premiumToken,
+    });
+    expect(download.status).toBe(404);
+  });
+
+  it('keeps per-game hashes and version snapshots distinct', async () => {
+    const gtaPkg = (await inject('GET', '/api/v1/games/gta-v/packages/gta-v-ultra-fps')).json as {
+      package: { version: string };
+      manifest: { filename: string; sha256: string }[];
+    };
+    const dlPkg = (await inject('GET', '/api/v1/games/dying-light/packages/rtx30-high-fps')).json as {
+      package: { version: string };
+      manifest: { filename: string; sha256: string }[];
+    };
+
+    // Versions are independent per game (the dying-light suite re-published
+    // to v2 later; gta-v stayed at v1) — the point is they are NOT shared.
+    expect(gtaPkg.package.version).toBeTruthy();
+    expect(dlPkg.package.version).toBeTruthy();
+    expect(gtaPkg.manifest[0]!.sha256).not.toBe(dlPkg.manifest[0]!.sha256);
+    expect(gtaPkg.manifest[0]!.filename).toBe('settings.xml');
+    expect(dlPkg.manifest[0]!.filename).toBe('settings.cfg');
+  });
+});
+
+describe('hardware, devices & settings (Phase 7 & 10)', () => {
+  let adminToken: string;
+  let userToken: string;
+
+  beforeAll(async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+
+    const reg = await registerUser('+989120000004', 'HwPass123!', 'hwtest');
+    userToken = (reg.json as { accessToken: string }).accessToken;
+  });
+
+  it('stores and returns the hardware profile', async () => {
+    const put = await inject('PUT', '/api/v1/me/hardware', {
+      token: userToken,
+      body: {
+        cpu: 'AMD Ryzen 5 5500U',
+        gpuVendor: 'nvidia',
+        gpuModel: 'NVIDIA GeForce RTX 3050 Laptop',
+        vramMb: 4096,
+        ramGb: 16,
+        windowsVersion: 'Microsoft Windows 11 Pro 10.0.22631',
+        arch: 'x64',
+        resolution: '1920x1080',
+        driverVersion: '31.0.15.4633',
+      },
+    });
+    expect(put.status).toBe(200);
+    expect((put.json as { gpuModel: string }).gpuModel).toContain('RTX 3050');
+
+    const get = await inject('GET', '/api/v1/me/hardware', { token: userToken });
+    expect(get.status).toBe(200);
+    expect((get.json as { ramGb: number }).ramGb).toBe(16);
+  });
+
+  it('lists and revokes devices in the admin panel', async () => {
+    const device = await inject('POST', '/api/v1/me/devices', {
+      token: userToken,
+      body: { deviceId: 'hw-device-00000000000000000001', name: 'HW Test PC' },
+    });
+    expect(device.status).toBe(201);
+    const deviceId = (device.json as { id: string }).id;
+
+    const list = (await inject('GET', '/api/v1/admin/devices', { token: adminToken })).json as {
+      data: { id: string; userEmail: string | null }[];
+    };
+    expect(list.data.some((d) => d.id === deviceId && d.userEmail === '+989120000004')).toBe(true);
+
+    const revoke = await inject('POST', `/api/v1/admin/devices/${deviceId}/revoke`, { token: adminToken });
+    expect(revoke.status).toBe(200);
+  });
+
+  it('publishes remote settings that the public /config reflects', async () => {
+    const put = await inject('PUT', '/api/v1/admin/settings', {
+      token: adminToken,
+      body: { settings: { announcement: { enabled: true, text: 'Test announcement' } } },
+    });
+    expect(put.status).toBe(200);
+
+    const cfg = (await inject('GET', '/api/v1/config')).json as { data: { announcement: { enabled: boolean; text: string } } };
+    expect(cfg.data.announcement.enabled).toBe(true);
+    expect(cfg.data.announcement.text).toBe('Test announcement');
+  });
+
+  it('exposes failed login attempts to the admin', async () => {
+    await inject('POST', '/api/v1/auth/login', { body: { identifier: '+989120000004', password: 'WrongPass!' } });
+    const attempts = (await inject('GET', '/api/v1/admin/security/login-attempts', { token: adminToken })).json as {
+      data: { email: string; success: boolean }[];
+    };
+    expect(attempts.data.some((a) => a.email === '+989120000004' && !a.success)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 19 — Security Audit (OWASP-focused regression tests)
+// ---------------------------------------------------------------------------
+describe('security audit (Phase 19)', () => {
+  let adminToken: string;
+  let aliceToken: string;
+  let bobToken: string;
+  let aliceDeviceId: string;
+  let planPrice: number;
+  let planId: string;
+
+  async function registerUser(phone: string, username: string) {
+    const otpRes = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: phone, purpose: 'register' } });
+    expect(otpRes.status).toBe(200);
+    const otp = (otpRes.json as { devCode?: string }).devCode;
+    const reg = await inject('POST', '/api/v1/auth/register', {
+      body: { identifier: phone, username, password: 'SecPass123!', otp },
+    });
+    expect(reg.status).toBe(201);
+    return (reg.json as { accessToken: string }).accessToken;
+  }
+
+  beforeAll(async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+    aliceToken = await registerUser('+989120000005', 'alicesec');
+    bobToken = await registerUser('+989120000006', 'bobsec');
+
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string; price: number }[] };
+    planId = plans.data[0]!.id;
+    planPrice = plans.data[0]!.price;
+
+    const device = await inject('POST', '/api/v1/me/devices', {
+      token: aliceToken,
+      body: { deviceId: 'alice-sec-device-00000001', name: 'Alice PC' },
+    });
+    aliceDeviceId = (device.json as { id: string }).id;
+  });
+
+  it('blocks cross-user IDOR on device management', async () => {
+    // Bob cannot revoke Alice's device (route is scoped to the caller).
+    const revoke = await inject('DELETE', `/api/v1/me/devices/${aliceDeviceId}`, { token: bobToken });
+    expect(revoke.status).toBe(404);
+
+    // Bob cannot see Alice's devices.
+    const bobDevices = (await inject('GET', '/api/v1/me/devices', { token: bobToken })).json as { data: { deviceId: string }[] };
+    expect(bobDevices.data.some((d) => d.deviceId === 'alice-sec-device-00000001')).toBe(false);
+
+    // Each /me returns only the caller's profile.
+    const aliceMe = (await inject('GET', '/api/v1/me', { token: aliceToken })).json as { phone: string };
+    const bobMe = (await inject('GET', '/api/v1/me', { token: bobToken })).json as { phone: string };
+    expect(aliceMe.phone).toBe('+989120000005');
+    expect(bobMe.phone).toBe('+989120000006');
+  });
+
+  it('rejects price manipulation — the server prices from the plan table, never the client', async () => {
+    // Client smuggles a discounted amount in the body — it must be ignored.
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: bobToken,
+      body: { planId, idempotencyKey: 'sec-price-key-0001', amount: 1 },
+    });
+    expect(purchase.status).toBe(200);
+
+    const payments = (await inject('GET', '/api/v1/admin/payments', { token: adminToken })).json as {
+      data: { amount: number; userEmail: string }[];
+    };
+    const row = payments.data.find((p) => p.userEmail === '+989120000006');
+    expect(row).toBeTruthy();
+    expect(row!.amount).toBe(planPrice);
+    expect(row!.amount).not.toBe(1);
+
+    // Fabricated plan id → 404, never a silent discount.
+    const fake = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: bobToken,
+      body: { planId: '00000000-0000-4000-8000-000000000000', idempotencyKey: 'sec-price-key-0002' },
+    });
+    expect(fake.status).toBe(404);
+  });
+
+  it('requires the HttpOnly refresh cookie (CSRF posture)', async () => {
+    // No cookie at all → 401. The refresh token is never a bearer secret in JS.
+    const noCookie = await app.inject({ method: 'POST', url: '/api/v1/auth/refresh' });
+    expect(noCookie.statusCode).toBe(401);
+
+    // A random cookie value is not a valid session → 401.
+    const forged = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/refresh',
+      headers: { cookie: `goh_user_refresh=${'f'.repeat(96)}` },
+    });
+    expect(forged.statusCode).toBe(401);
+  });
+
+  it('returns 429 (never 500) when a route rate limit is exceeded', async () => {
+    // /auth/password/forgot has a per-route limit of 10/min. The reset test
+    // consumed one; hammer the rest and verify rejection is a clean 429.
+    const results = [];
+    for (let i = 0; i < 11; i++) {
+      const res = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: '+989120000007' } });
+      results.push(res.status);
+    }
+    expect(results.some((s) => s === 429)).toBe(true);
+    expect(results.every((s) => s !== 500)).toBe(true);
+  });
+
+  it('does not leak admin data through the public API', async () => {
+    const games = (await inject('GET', '/api/v1/games')).json as { data: unknown[] };
+    // Public responses must be plain arrays of summaries, not raw DB rows.
+    const first = games.data[0] as Record<string, unknown>;
+    expect(first).not.toHaveProperty('adminNotes');
+    expect(first).not.toHaveProperty('viewCount');
+
+    const unauthorized = await inject('GET', '/api/v1/admin/users', {});
+    expect(unauthorized.status).toBe(401);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Game catalog importer — directory-driven, deterministic, idempotent.
+// ---------------------------------------------------------------------------
+describe('game catalog importer (directory-driven)', () => {
+  it('scans the real icon pack with unique deterministic slugs and zero missing icons', () => {
+    const iconDir = path.resolve(__dirname, '../../../../icon/game icon');
+    const fs = awaitImportFs();
+    const mkdtemp = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'goh-icons-'));
+    // Symlink the real pack into a temp dir so the scan is fully isolated.
+    fs.symlinkSync(iconDir, path.join(mkdtemp, 'pack'), 'dir');
+    const { entries, missingIcons, duplicates } = scanIconDir(path.join(mkdtemp, 'pack'));
+    expect(entries.length).toBeGreaterThan(200);
+    expect(missingIcons.length).toBe(0);
+    // The pack contains two folder-name collisions (Assassin's Creed Syndicate
+    // and Dragon Age Inquisition each exist in two spellings); they are resolved
+    // deterministically with `-2` suffixes, never silently dropped.
+    expect(duplicates).toBe(2);
+    const slugs = new Set(entries.map((e) => e.slug));
+    expect(slugs.size).toBe(entries.length);
+    // Determinism: scanning twice yields identical assignments.
+    const again = scanIconDir(path.join(mkdtemp, 'pack'));
+    expect(again.entries.map((e) => e.slug)).toEqual(entries.map((e) => e.slug));
+    fs.rmSync(mkdtemp, { recursive: true, force: true });
+  });
+
+  it('slugifies folder names deterministically and resolves collisions', () => {
+    expect(slugifyFolder('Grand Theft Auto V')).toBe('grand-theft-auto-v');
+    expect(slugifyFolder('ELDEN RING — Shadow of the Erdtree!')).toBe('elden-ring-shadow-of-the-erdtree');
+    expect(slugifyFolder('  Alan   Wake 2  ')).toBe('alan-wake-2');
+    const { slugs, duplicates } = resolveSlugs(['Test Game', 'test game', 'Test Game!']);
+    expect(slugs.get('Test Game')).toBe('test-game');
+    expect(slugs.get('test game')).toBe('test-game-2');
+    expect(slugs.get('Test Game!')).toBe('test-game-3');
+    expect(duplicates).toBe(2);
+  });
+
+  it('imports idempotently into the database (3 runs → still 3 games, 0 duplicates)', async () => {
+    const fs = await import('node:fs');
+    const os = await import('node:os');
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'goh-import-'));
+    const out = path.join(tmp, 'icons-out');
+    // Three fake icon folders, each with a tiny valid PNG.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    for (const folder of ['Alpha Test', 'Beta Test', 'Gamma Test']) {
+      const dir = path.join(tmp, 'icons', folder);
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, 'favicon.png'), png);
+    }
+    const { importCatalog } = await import('../scripts/import-catalog');
+    const run = () =>
+      importCatalog({ iconDir: path.join(tmp, 'icons'), outputDir: out, convertIcons: false });
+
+    const first = await run();
+    expect(first.foldersFound).toBe(3);
+    expect(first.gamesImported).toBe(3);
+    expect(first.databaseErrors).toEqual([]);
+
+    const second = await run();
+    expect(second.gamesImported).toBe(0);
+    expect(second.gamesAlreadyPresent).toBe(3);
+    expect(second.foldersFound).toBe(3);
+
+    const third = await run();
+    expect(third.gamesImported).toBe(0);
+    expect(third.gamesAlreadyPresent).toBe(3);
+
+    const { db } = await import('../db');
+    const { games } = await import('../db/schema');
+    const { inArray } = await import('drizzle-orm');
+    const rows = await db.select().from(games).where(inArray(games.slug, ['alpha-test', 'beta-test', 'gamma-test']));
+    expect(rows.length).toBe(3);
+    expect(new Set(rows.map((r) => r.slug)).size).toBe(3);
+
+    // Cleanup so later suites aren't affected.
+    await db.delete(games).where(inArray(games.slug, ['alpha-test', 'beta-test', 'gamma-test']));
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+});
+
+function awaitImportFs() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('node:fs') as typeof import('node:fs');
+}

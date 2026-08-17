@@ -1,10 +1,54 @@
 import { sql } from 'drizzle-orm';
 import { config } from '../config';
 import { db, pool } from './index';
-import { admins, categories, games, gameCategories, gameImages, gameRequirements, gameTags, optimizationCategories, optimizationOptions, optimizationProfiles, optimizationSettings, tags } from './schema';
+import { admins, categories, games, gameCategories, gameImages, gameRequirements, gameTags, optimizationCategories, optimizationOptions, optimizationProfiles, optimizationSettings, subscriptionPlans, tags, users } from './schema';
 import { BROWSE_CATEGORIES, GAMES, OPTIMIZATION_CATEGORIES, PROFILES, PROFILE_SLUGS, settingsForGame, TAGS } from './seed-data';
 import { DEFAULT_TECHNOLOGIES } from '../services/games';
 import { hashPassword } from '../lib/password';
+
+/** Default subscription plans (fully editable from the admin panel). */
+const DEFAULT_PLANS = [
+  {
+    name: '1 Month',
+    slug: '1-month',
+    description: 'One month of premium optimization access.',
+    durationDays: 30,
+    price: 299_000,
+    deviceLimit: 1,
+    features: ['premium_optimization', 'automatic_hardware_detection', 'one_click_optimization'],
+    sortOrder: 1,
+  },
+  {
+    name: '3 Months',
+    slug: '3-months',
+    description: 'Three months of premium optimization access — save vs monthly.',
+    durationDays: 90,
+    price: 799_000,
+    deviceLimit: 1,
+    features: ['premium_optimization', 'automatic_hardware_detection', 'one_click_optimization'],
+    sortOrder: 2,
+  },
+  {
+    name: '6 Months',
+    slug: '6-months',
+    description: 'Half a year of premium optimization access.',
+    durationDays: 180,
+    price: 1_490_000,
+    deviceLimit: 2,
+    features: ['premium_optimization', 'automatic_hardware_detection', 'one_click_optimization', 'priority_support'],
+    sortOrder: 3,
+  },
+  {
+    name: '12 Months',
+    slug: '12-months',
+    description: 'A full year of premium optimization access — best value.',
+    durationDays: 365,
+    price: 2_690_000,
+    deviceLimit: 3,
+    features: ['premium_optimization', 'automatic_hardware_detection', 'one_click_optimization', 'priority_support'],
+    sortOrder: 4,
+  },
+] as const;
 
 /** SVG placeholder image (dark premium gradient + title). Used as cover/background. */
 function svgImage(title: string, hue: number, width: number, height: number, fontSize: number): string {
@@ -162,6 +206,60 @@ async function seedGame(gameIndex: number) {
   process.stdout.write(`  ✓ ${game.name} (${game.slug})\n`);
 }
 
+/** Idempotent — safe to call on every boot (existing plans are skipped). */
+export async function ensureSubscriptionPlans(): Promise<void> {
+  for (const plan of DEFAULT_PLANS) {
+    const existing = await db.query.subscriptionPlans.findFirst({ where: sql`${subscriptionPlans.slug} = ${plan.slug}` });
+    if (existing) continue;
+    await db.insert(subscriptionPlans).values({
+      name: plan.name,
+      slug: plan.slug,
+      description: plan.description,
+      durationDays: plan.durationDays,
+      price: plan.price,
+      currency: 'IRR',
+      deviceLimit: plan.deviceLimit,
+      features: [...plan.features],
+      status: 'active',
+      sortOrder: plan.sortOrder,
+    });
+  }
+  process.stdout.write(`  ✓ Ensured ${DEFAULT_PLANS.length} subscription plans\n`);
+}
+
+/**
+ * Idempotent — creates the demo account only if it does not exist.
+ *
+ * Handles the email→phone migration: if a legacy account exists for the demo
+ * email but has no phone yet, it is upgraded IN PLACE (same user id, so
+ * subscriptions / favorites / devices / payment history stay attached) instead
+ * of inserting a duplicate row.
+ */
+export async function ensureDemoUser(): Promise<void> {
+  const phone = '+989120000000';
+  const email = 'demo@goh.local';
+  const existing = await db.query.users.findFirst({ where: sql`${users.phone} = ${phone} OR ${users.email} = ${email}` });
+  if (existing) {
+    if (!existing.phone) {
+      await db.update(users).set({ phone, phoneVerified: true }).where(sql`${users.id} = ${existing.id}`);
+      process.stdout.write(`  ✓ Upgraded legacy demo account to phone: ${phone}\n`);
+    } else {
+      process.stdout.write(`  ✓ Demo user already exists: ${phone}\n`);
+    }
+    return;
+  }
+  await db.insert(users).values({
+    phone,
+    phoneVerified: true,
+    email,
+    username: 'gamer',
+    passwordHash: await hashPassword('Demo123!'),
+    role: 'user',
+    status: 'active',
+  });
+  process.stdout.write(`  ✓ Created demo user: ${phone} / Demo123!\n`);
+}
+
 async function seedBootstrapAdmin() {
   const existing = await db.query.admins.findFirst({
     where: sql`${admins.email} = ${config.ADMIN_BOOTSTRAP_EMAIL}`,
@@ -185,11 +283,13 @@ export async function runSeed(): Promise<void> {
   await clearContentTables();
   await seedTaxonomy();
   for (let i = 0; i < GAMES.length; i++) await seedGame(i);
+  await ensureSubscriptionPlans();
+  await ensureDemoUser();
   await seedBootstrapAdmin();
 }
 
 async function main() {
-  process.stdout.write('🌱 Seeding Game Optimization Hub database…\n');
+  process.stdout.write('🌱 Seeding PC MAX database…\n');
   await runSeed();
   process.stdout.write(`✅ Seeded ${GAMES.length} games, ${GAMES.length * 4} optimization profiles.\n`);
   await pool.end();

@@ -4,25 +4,27 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 96%;
-    --card: 222 44% 8%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 44% 9%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 263 90% 64%;
+    /* Premium Light / White + Crimson — centralized design tokens
+       (mirrors apps/desktop/src/index.css). */
+    --background: 0 0% 100%; /* #FFFFFF */
+    --foreground: 222 47% 11%; /* #111827 */
+    --card: 0 0% 97%; /* #F8F9FA surface */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 357 92% 47%; /* #E50914 crimson */
     --primary-foreground: 0 0% 100%;
-    --secondary: 217 33% 14%;
-    --secondary-foreground: 210 40% 92%;
-    --muted: 217 33% 13%;
-    --muted-foreground: 215 20% 62%;
-    --accent: 217 33% 16%;
-    --accent-foreground: 210 40% 96%;
-    --destructive: 0 72% 51%;
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 222 47% 15%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 215 16% 42%;
+    --accent: 357 84% 95%;
+    --accent-foreground: 357 84% 38%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 16%;
-    --input: 217 33% 18%;
-    --ring: 263 90% 64%;
+    --border: 220 13% 91%; /* #E5E7EB */
+    --input: 220 13% 91%;
+    --ring: 357 92% 50%;
     --radius: 0.6rem;
   }
 
@@ -36,7 +38,7 @@
   }
 }
 
-/* Thin dark scrollbars */
+/* Thin light scrollbars */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -49,5 +51,5 @@
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(217 33% 24%);
+  background: hsl(220 13% 78%);
 }

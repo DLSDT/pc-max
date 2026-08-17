@@ -8,6 +8,48 @@
       "when": 1786925256387,
       "tag": "0000_reflective_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786947491936,
+      "tag": "0001_tan_nitro",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786949315781,
+      "tag": "0002_brown_grim_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786990239974,
+      "tag": "0003_flashy_ken_ellis",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786993947995,
+      "tag": "0004_unique_surge",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787000000005,
+      "tag": "0005_pc_max_identifier",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787100000006,
+      "tag": "0006_pc_max_email_games",
+      "breakpoints": true
     }
   ]
 }

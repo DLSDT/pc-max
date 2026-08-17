@@ -1,11 +1,215 @@
+mod winopt;
+
+use base64::Engine;
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use std::fs;
+use std::path::{Component, Path, PathBuf};
+#[cfg(target_os = "windows")]
+use std::process::Command;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::Manager;
+use winopt::{ApplyResult, RealOs, RecoveryReport, ScanResult, SnapshotMeta, SnapshotStore};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![app_version])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .setup(|app| {
+            // Crash recovery: if the previous session was interrupted mid
+            // Windows-optimization, roll it back before the UI mounts.
+            let dir = snapshot_dir(app.handle());
+            let store = SnapshotStore::new(dir.clone());
+            let report = winopt::recover_interrupted(&RealOs, &dir, &store);
+            if report.interrupted {
+                eprintln!("[winopt] recovery: {}", report.message);
+            }
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            app_version,
+            detect_hardware,
+            detect_games,
+            apply_game_files,
+            windows_scan,
+            windows_apply,
+            windows_restore,
+            windows_snapshots,
+            windows_recover
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+/// Snapshot storage lives in the app data dir (never inside a game folder).
+fn snapshot_dir(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from(".").join("pcmax-data"))
+        .join("winopt")
+}
+
+// ---------------------------------------------------------------------------
+// Windows Optimizer commands (thin wrappers over the winopt engine)
+// ---------------------------------------------------------------------------
+
+#[tauri::command]
+fn windows_scan(app: tauri::AppHandle) -> Result<ScanResult, String> {
+    let dir = snapshot_dir(&app);
+    let store = SnapshotStore::new(dir);
+    let info = winopt::detect_system_info();
+    Ok(winopt::scan(&RealOs, &info, &store))
+}
+
+#[tauri::command]
+fn windows_apply(
+    app: tauri::AppHandle,
+    profile: String,
+    tweak_ids: Vec<String>,
+) -> Result<ApplyResult, String> {
+    if tweak_ids.is_empty() {
+        return Err("no optimizations selected".into());
+    }
+    if tweak_ids.len() > 20 {
+        return Err("too many optimizations selected".into());
+    }
+    let dir = snapshot_dir(&app);
+    let store = SnapshotStore::new(dir.clone());
+    Ok(winopt::apply(&RealOs, &store, &dir, &profile, &tweak_ids))
+}
+
+#[tauri::command]
+fn windows_restore(app: tauri::AppHandle, snapshot_id: String) -> Result<usize, String> {
+    let dir = snapshot_dir(&app);
+    let store = SnapshotStore::new(dir);
+    winopt::restore_snapshot(&RealOs, &store, &snapshot_id)
+}
+
+#[tauri::command]
+fn windows_snapshots(app: tauri::AppHandle) -> Result<Vec<SnapshotMeta>, String> {
+    let dir = snapshot_dir(&app);
+    let store = SnapshotStore::new(dir);
+    Ok(store.list())
+}
+
+#[tauri::command]
+fn windows_recover(app: tauri::AppHandle) -> Result<RecoveryReport, String> {
+    let dir = snapshot_dir(&app);
+    let store = SnapshotStore::new(dir.clone());
+    Ok(winopt::recover_interrupted(&RealOs, &dir, &store))
+}
+
+/// A known executable the catalog maps to a supported game.
+#[derive(Deserialize)]
+struct KnownExecutable {
+    slug: String,
+    name: String,
+    exe: String,
+}
+
+/// A game found on disk by the generic detection pass.
+#[derive(Serialize, Debug, PartialEq)]
+struct GameDetection {
+    slug: String,
+    name: String,
+    path: String,
+    executable: String,
+}
+
+/// Steam library folders discovered from `libraryfolders.vdf` (best-effort).
+fn steam_library_roots() -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let candidates = [
+        r"C:\Program Files (x86)\Steam",
+        r"C:\Program Files\Steam",
+        r"D:\Steam",
+        r"D:\SteamLibrary",
+        r"E:\Steam",
+        r"E:\SteamLibrary",
+    ];
+    for base in candidates {
+        let vdf = Path::new(base).join("steamapps/libraryfolders.vdf");
+        if let Ok(text) = fs::read_to_string(&vdf) {
+            // Lines like:  "1"   "D:\\Games"
+            for line in text.lines() {
+                let parts: Vec<&str> = line.split('"').collect();
+                if parts.len() >= 5 && parts[1].chars().all(|c| c.is_ascii_digit()) {
+                    let p = parts[3].replace("\\\\", "\\");
+                    if !p.is_empty() {
+                        out.push(PathBuf::from(p).join("steamapps/common"));
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Generic, data-driven game detection.
+///
+/// Scans a bounded set of candidate roots (Program Files, Steam library
+/// folders, user paths) for any of the catalog-supplied executable names. The
+/// scan is at most two levels deep — fast, never walks the whole disk.
+/// Returns every (root, executable) match; the caller merges results into the
+/// user's library.
+#[tauri::command]
+fn detect_games(roots: Vec<String>, known: Vec<KnownExecutable>) -> Vec<GameDetection> {
+    let mut roots: Vec<PathBuf> = roots.into_iter().map(PathBuf::from).collect();
+    roots.extend(steam_library_roots());
+    roots.sort();
+    roots.dedup();
+
+    let mut found: Vec<GameDetection> = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    for root in roots {
+        // Root itself, then immediate subdirectories (bounded depth 2).
+        let mut dirs = vec![root.clone()];
+        if let Ok(entries) = fs::read_dir(&root) {
+            for e in entries.flatten() {
+                let p = e.path();
+                if p.is_dir() {
+                    dirs.push(p);
+                }
+            }
+        }
+        for dir in dirs {
+            // Index this directory's file names once (case-insensitive) so a
+            // catalog entry never misses because of casing (Windows is
+            // case-insensitive, Linux is not — we match on both).
+            let mut files: Vec<(String, String)> = Vec::new(); // (lowercase, real)
+            if let Ok(entries) = fs::read_dir(&dir) {
+                for e in entries.flatten() {
+                    let p = e.path();
+                    if p.is_file() {
+                        if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
+                            files.push((name.to_lowercase(), name.to_string()));
+                        }
+                    }
+                }
+            }
+            for k in &known {
+                if Path::new(&k.exe).extension().is_none() {
+                    continue; // detection is executable-name based
+                }
+                let wanted = k.exe.to_lowercase();
+                if let Some((_, real)) = files.iter().find(|(low, _)| low == &wanted) {
+                    let key = (dir.to_string_lossy().to_lowercase(), k.slug.clone());
+                    if seen.insert(key) {
+                        found.push(GameDetection {
+                            slug: k.slug.clone(),
+                            name: k.name.clone(),
+                            path: dir.to_string_lossy().to_string(),
+                            executable: real.clone(),
+                        });
+                    }
+                }
+            }
+        }
+    }
+    found
 }
 
 /// The packaged app version — used by the About screen and future update flows.
@@ -13,3 +217,299 @@ pub fn run() {
 fn app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
+
+/// Privacy-conscious hardware snapshot. Only the fields needed for optimization
+/// compatibility are collected — never device serials, IDs or personal data.
+#[derive(Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct HardwareInfo {
+    cpu: Option<String>,
+    gpu_model: Option<String>,
+    gpu_vendor: Option<String>,
+    vram_mb: Option<u64>,
+    ram_gb: Option<u64>,
+    windows_version: Option<String>,
+    arch: Option<String>,
+    resolution: Option<String>,
+    driver_version: Option<String>,
+}
+
+fn powershell(script: &str) -> Option<String> {
+    #[cfg(target_os = "windows")]
+    {
+        let out = Command::new("powershell")
+            .args(["-NoProfile", "-NonInteractive", "-Command", script])
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        let text = String::from_utf8_lossy(&out.stdout).trim().to_string();
+        if text.is_empty() {
+            None
+        } else {
+            Some(text)
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = script;
+        None
+    }
+}
+
+/// GPU vendor inference from the adapter name (same rules as the server).
+fn infer_vendor(model: &str) -> &'static str {
+    let m = model.to_lowercase();
+    if m.contains("nvidia") || m.contains("geforce") || m.contains("rtx") || m.contains("gtx") {
+        "nvidia"
+    } else if m.contains("radeon") || m.contains("amd") || m.contains("rx ") {
+        "amd"
+    } else if m.contains("intel") || m.contains("arc") || m.contains("uhd") || m.contains("iris") {
+        "intel"
+    } else {
+        "unknown"
+    }
+}
+
+// ---------------------------------------------------------------------------
+// One-Click Optimization — file apply (Phase 14)
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GameFilePayload {
+    destination: String,
+    content_base64: String,
+    sha256: String,
+}
+
+/// Extensions optimization packages may write. Mirrors the server allowlist —
+/// executables and scripts are NEVER allowed.
+const ALLOWED_EXT: &[&str] = &[
+    "cfg", "ini", "txt", "json", "xml", "toml", "preset", "pak", "bin", "dat", "dll",
+    "fx", "nvpreset", "sig", "profile", "settings", "upd", "blend", "lut", "csv", "yml",
+    "yaml", "log",
+];
+
+/// Resolve `destination` relative to `game_dir`, rejecting any traversal or
+/// absolute path. Returns None when unsafe.
+fn safe_destination(game_dir: &Path, destination: &str) -> Option<PathBuf> {
+    if destination.starts_with('/') || destination.contains("..") || destination.contains('\\') {
+        return None;
+    }
+    // Reject Windows drive-letter prefixes ("C:/...") on every platform — on
+    // Unix `C:` is just a normal component, so is_absolute() would not catch it.
+    if destination.len() > 1 && destination.as_bytes()[1] == b':' {
+        return None;
+    }
+    let path = Path::new(destination);
+    if path.is_absolute() {
+        return None;
+    }
+    for comp in path.components() {
+        match comp {
+            Component::Normal(c) => {
+                // Reject hidden/dotfile names in any segment — packages should
+                // never touch dotfiles or OS-level hidden entries.
+                if c.to_string_lossy().starts_with('.') {
+                    return None;
+                }
+            }
+            _ => return None,
+        }
+    }
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_ascii_lowercase())?;
+    if !ALLOWED_EXT.contains(&ext.as_str()) {
+        return None;
+    }
+    Some(game_dir.join(path))
+}
+
+/// Apply verified optimization files atomically: back up any existing target,
+/// write temp + rename, and roll everything back if any step fails.
+#[tauri::command]
+fn apply_game_files(game_dir: String, files: Vec<GameFilePayload>) -> Result<serde_json::Value, String> {
+    let base = PathBuf::from(&game_dir);
+    if !base.is_dir() {
+        return Err(format!("Game directory not found: {game_dir}"));
+    }
+
+    // A manifest must address each file exactly once — otherwise the last
+    // payload silently wins and the backup bookkeeping is ambiguous.
+    {
+        let mut seen = std::collections::HashSet::new();
+        for f in &files {
+            if !seen.insert(f.destination.clone()) {
+                return Err(format!("Duplicate destination: {}", f.destination));
+            }
+        }
+    }
+
+    // Phase 1 — validate destinations and verify checksums PURELY (no filesystem
+    // mutation yet). A corrupt or hostile package must not even create a backup
+    // directory or touch a single byte.
+    let mut staged: Vec<(PathBuf, Vec<u8>)> = Vec::new();
+    for f in &files {
+        let Some(target) = safe_destination(&base, &f.destination) else {
+            return Err(format!("Unsafe destination: {}", f.destination));
+        };
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(&f.content_base64)
+            .map_err(|_| format!("Invalid base64 for {}", f.destination))?;
+        let mut hasher = Sha256::new();
+        hasher.update(&bytes);
+        let actual = format!("{:x}", hasher.finalize());
+        if !actual.eq_ignore_ascii_case(&f.sha256) {
+            return Err(format!(
+                "Checksum mismatch for {} — expected {}, got {}",
+                f.destination, f.sha256, actual
+            ));
+        }
+        staged.push((target, bytes));
+    }
+
+    // Phase 2 — snapshot the originals. The stamp is second+nanosecond so two
+    // installs within the same second never share a backup snapshot.
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| format!("{}-{}", d.as_secs(), d.subsec_nanos()))
+        .unwrap_or_else(|_| "0-0".to_string());
+    let backup_root = base.join(".goh-backup").join(stamp);
+    let mut originals: Vec<(PathBuf, PathBuf)> = Vec::new(); // (target, backup)
+    for (f, (target, _)) in files.iter().zip(staged.iter()) {
+        if target.exists() {
+            let backup = backup_root.join(&f.destination);
+            if let Some(parent) = backup.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            let _ = fs::copy(target, &backup);
+            originals.push((target.clone(), backup));
+        }
+    }
+
+    // Apply atomically (temp + rename per file); roll back on failure.
+    let mut applied: Vec<PathBuf> = Vec::new();
+    for (i, (target, bytes)) in staged.iter().enumerate() {
+        if let Some(parent) = target.parent() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                rollback(&originals, &applied, &backup_root);
+                return Err(format!("Cannot create {}: {e}", parent.display()));
+            }
+        }
+        let tmp = target.with_extension(format!("{}.goh-tmp-{i}", tmp_ext(target)));
+        if let Err(e) = fs::write(&tmp, bytes) {
+            rollback(&originals, &applied, &backup_root);
+            return Err(format!("Cannot write {}: {e}", target.display()));
+        }
+        if let Err(e) = fs::rename(&tmp, target) {
+            let _ = fs::remove_file(&tmp);
+            rollback(&originals, &applied, &backup_root);
+            return Err(format!("Cannot replace {}: {e}", target.display()));
+        }
+        applied.push(target.clone());
+    }
+
+    Ok(serde_json::json!({
+        "applied": staged.len(),
+        "backupDir": backup_root.to_string_lossy().to_string(),
+    }))
+}
+
+fn tmp_ext(target: &Path) -> String {
+    target
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("bin")
+        .to_string()
+}
+
+/// Undo a partially-applied batch: restore originals from the backup root and
+/// remove any files we already wrote.
+fn rollback(originals: &[(PathBuf, PathBuf)], applied: &[PathBuf], backup_root: &Path) {
+    for target in applied {
+        let _ = fs::remove_file(target);
+    }
+    for (target, backup) in originals {
+        if backup.exists() {
+            if let Some(parent) = target.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            let _ = fs::copy(backup, target);
+        }
+    }
+    let _ = fs::remove_dir_all(backup_root);
+}
+
+/// Detect CPU / GPU / VRAM / RAM / Windows / resolution on Windows.
+/// On other platforms returns a mostly-empty snapshot (browser preview, CI).
+#[tauri::command]
+fn detect_hardware() -> HardwareInfo {
+    let mut info = HardwareInfo::default();
+
+    #[cfg(target_os = "windows")]
+    {
+        info.cpu = powershell("(Get-CimInstance Win32_Processor).Name");
+        info.windows_version = powershell(
+            "((Get-CimInstance Win32_OperatingSystem).Caption + ' ' + (Get-CimInstance Win32_OperatingSystem).Version)",
+        );
+        info.arch = std::env::consts::ARCH
+            .to_string()
+            .replace("x86_64", "x64")
+            .into();
+        info.ram_gb = powershell(
+            "[math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)",
+        )
+        .and_then(|v| v.parse::<u64>().ok());
+
+        // Primary display adapter (first video controller).
+        if let Some(gpu_line) = powershell(
+            "Get-CimInstance Win32_VideoController | Select-Object -First 1 Name,AdapterRAM,DriverVersion | Format-List",
+        ) {
+            let mut name = None;
+            let mut vram_bytes: Option<u64> = None;
+            let mut driver = None;
+            for line in gpu_line.lines() {
+                let Some((key, value)) = line.split_once(':') else {
+                    continue;
+                };
+                let value = value.trim();
+                match key.trim() {
+                    "Name" => name = Some(value.to_string()),
+                    "AdapterRAM" => vram_bytes = value.parse::<u64>().ok(),
+                    "DriverVersion" => driver = Some(value.to_string()),
+                    _ => {}
+                }
+            }
+            info.gpu_model = name.clone();
+            info.driver_version = driver;
+            // AdapterRAM is in bytes; Win32_VideoController caps at 4 GB, so for
+            // larger VRAM we fall back to the adapter's current mode depth.
+            info.vram_mb = vram_bytes.map(|b| b / 1024 / 1024);
+            if let Some(model) = &info.gpu_model {
+                info.gpu_vendor = Some(infer_vendor(model).to_string());
+            }
+        }
+
+        // Current desktop resolution.
+        info.resolution = powershell(
+            "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.ToString()",
+        );
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        info.arch = std::env::consts::ARCH
+            .to_string()
+            .replace("x86_64", "x64")
+            .into();
+    }
+
+    info
+}
+
+#[cfg(test)]
+mod tests;

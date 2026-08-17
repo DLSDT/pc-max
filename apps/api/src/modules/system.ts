@@ -60,7 +60,7 @@ export async function systemModule(app: FastifyInstance) {
         .from(games)
         .limit(1);
       return {
-        appName: 'Game Optimization Hub',
+        appName: 'PC MAX',
         apiVersion: 'v1',
         contentUpdatedAt: contentUpdatedAt[0]?.m ?? null,
       };

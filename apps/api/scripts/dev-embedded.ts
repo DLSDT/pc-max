@@ -65,10 +65,24 @@ async function main() {
   const [{ sql }, { games }] = await Promise.all([import('drizzle-orm'), import('../src/db/schema')]);
   const [{ n }] = await db.select({ n: sql<number>`count(*)::int`.as('n') }).from(games);
   if (Number(n) === 0) {
-    console.log('🌱 Empty database — seeding demo content (14 games, 56 profiles)…');
+    console.log('🌱 Empty database — seeding demo content (10 games, 40 profiles)…');
     await runSeed();
   } else {
     console.log(`🌱 Database already seeded (${Number(n)} games) — skipping seed.`);
+    // Upgraded installations: ensure the commercial defaults exist (idempotent).
+    const { ensureSubscriptionPlans, ensureDemoUser } = await import('../src/db/seed');
+    await ensureSubscriptionPlans();
+    await ensureDemoUser();
+  }
+
+  // Full catalog: idempotently import every game from the icon pack. Runs only
+  // while the catalog is incomplete (re-running is always safe).
+  const [{ importCatalog }] = await Promise.all([import('../src/scripts/import-catalog')]);
+  const [{ count: gameCount }] = await db.select({ count: sql<number>`count(*)::int`.as('count') }).from(games);
+  if (Number(gameCount) < 280) {
+    console.log('📦 Importing full game catalog from the icon pack…');
+    const summary = await importCatalog({ convertIcons: false });
+    console.log(`   folders=${summary.foldersFound} imported=${summary.gamesImported} existing=${summary.gamesAlreadyPresent} errors=${summary.databaseErrors.length}`);
   }
 
   const app = await buildApp();
@@ -79,10 +93,16 @@ async function main() {
   console.log(`   Admin:      ${process.env.ADMIN_BOOTSTRAP_EMAIL} / ${process.env.ADMIN_BOOTSTRAP_PASSWORD}`);
   console.log('   Ctrl+C to stop (stops the embedded database cleanly).\n');
 
+  let shuttingDown = false;
   const shutdown = async () => {
-    await app.close();
-    await pool.end();
-    await pg.stop();
+    if (shuttingDown) return; // SIGINT+SIGTERM both fire on some shells — guard.
+    shuttingDown = true;
+    try {
+      await app.close();
+    } finally {
+      await pool.end();
+      await pg.stop();
+    }
     process.exit(0);
   };
   process.on('SIGINT', shutdown);

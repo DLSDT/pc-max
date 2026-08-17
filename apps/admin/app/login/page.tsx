@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Gamepad2 className="h-6 w-6" />
           </div>
-          <CardTitle className="text-xl">Game Optimization Hub</CardTitle>
+          <CardTitle className="text-xl">PC MAX</CardTitle>
           <CardDescription>Sign in to the admin panel</CardDescription>
         </CardHeader>
         <CardContent>

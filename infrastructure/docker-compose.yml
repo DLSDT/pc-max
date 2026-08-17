@@ -31,6 +31,53 @@ services:
     volumes:
       - goh_minio:/data
 
+  redis:
+    image: redis:7-alpine
+    container_name: goh-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - goh_redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: goh-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://goh:goh@postgres:5432/goh
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-in-production-please-32chars}
+      DOWNLOAD_SIGNING_SECRET: ${DOWNLOAD_SIGNING_SECRET:-change-me-in-production-please-32chars}
+      PUBLIC_API_URL: http://localhost:4000
+      STORAGE_DRIVER: local
+      UPLOAD_DIR: /app/uploads
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@gamehub.local}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-Admin123!}
+      PAYMENT_PROVIDER: mock
+    ports:
+      - '4000:4000'
+    volumes:
+      - goh_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://localhost:4000/api/v1/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
 volumes:
   goh_pgdata:
   goh_minio:
+  goh_redis:
+  goh_uploads:

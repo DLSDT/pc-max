@@ -1,6 +1,6 @@
-# Game Optimization Hub
+# PC MAX
 
-A production-ready gaming optimization platform. Browse a library of games, view per-game **recommended graphics settings** and optimization profiles (Maximum FPS → Ultra Quality) — all delivered dynamically from a backend, so **new games and optimizations appear without rebuilding the desktop app**.
+PC MAX is a production-ready, premium Windows gaming optimization platform. Browse a library of games, view per-game **recommended graphics settings** and optimization profiles (Maximum FPS → Ultra Quality) — all delivered dynamically from a backend, so **new games and optimizations appear without rebuilding the desktop app**.
 
 Three surfaces, one API, one database:
 

@@ -1,7 +1,7 @@
-import { randomUUID } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from '../config';
 import type { ImageType } from '@goh/validation';
@@ -24,8 +24,33 @@ export interface PresignResult {
  */
 export interface StorageDriver {
   presignUpload(kind: ImageType, contentType: string, size: number): Promise<PresignResult>;
+  /** Presign an upload for an optimization package file. */
+  presignPackageUpload(filename: string, size: number): Promise<PresignResult>;
   /** Resolve a stored object key to its public URL. */
   publicUrl(objectKey: string): string;
+  /**
+   * Short-lived, capability-bounded URL for downloading one object. The local
+   * driver issues an HMAC-signed URL validated by the API; S3 issues a
+   * presigned GET. Package files are NEVER exposed via bare publicUrl.
+   */
+  signDownload(objectKey: string, ttlSeconds: number): Promise<string>;
+}
+
+// ---------------------------------------------------------------------------
+// Signed-URL helpers (local driver)
+// ---------------------------------------------------------------------------
+
+function signToken(objectKey: string, expiresAt: number): string {
+  return createHmac('sha256', config.DOWNLOAD_SIGNING_SECRET).update(`${objectKey}|${expiresAt}`).digest('hex');
+}
+
+/** Validate a signed token — constant-time compare, rejects expired links. */
+export function verifySignedDownload(objectKey: string, expiresAt: number, signature: string): boolean {
+  if (!Number.isInteger(expiresAt) || expiresAt < Math.floor(Date.now() / 1000)) return false;
+  const expected = Buffer.from(signToken(objectKey, expiresAt), 'hex');
+  const given = Buffer.from(signature, 'hex');
+  if (expected.length !== given.length) return false;
+  return timingSafeEqual(expected, given);
 }
 
 // ---------------------------------------------------------------------------
@@ -45,8 +70,22 @@ class LocalStorageDriver implements StorageDriver {
     return { uploadUrl, objectKey, publicUrl };
   }
 
+  async presignPackageUpload(filename: string): Promise<PresignResult> {
+    const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const objectKey = `packages/${randomUUID()}/${safe}`;
+    const publicUrl = this.publicUrl(objectKey);
+    const uploadUrl = `${this.baseUrl}/api/v1/uploads/packages/put/${objectKey}`;
+    return { uploadUrl, objectKey, publicUrl };
+  }
+
   publicUrl(objectKey: string): string {
     return `${this.baseUrl}/uploads/${objectKey}`;
+  }
+
+  async signDownload(objectKey: string, ttlSeconds: number): Promise<string> {
+    const expiresAt = Math.floor(Date.now() / 1000) + ttlSeconds;
+    const sig = signToken(objectKey, expiresAt);
+    return `${this.baseUrl}/api/v1/uploads/signed/${expiresAt}/${sig}/${objectKey}`;
   }
 
   resolveDiskPath(objectKey: string): string {
@@ -98,8 +137,21 @@ class S3StorageDriver implements StorageDriver {
     return { uploadUrl, objectKey, publicUrl: this.publicUrl(objectKey) };
   }
 
+  async presignPackageUpload(filename: string, size: number): Promise<PresignResult> {
+    const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const objectKey = `packages/${randomUUID()}/${safe}`;
+    const command = new PutObjectCommand({ Bucket: this.bucket, Key: objectKey, ContentLength: size });
+    const uploadUrl = await getSignedUrl(this.client, command, { expiresIn: 60 * 10 });
+    return { uploadUrl, objectKey, publicUrl: this.publicUrl(objectKey) };
+  }
+
   publicUrl(objectKey: string): string {
     return `${this.publicBase}/${objectKey}`;
+  }
+
+  async signDownload(objectKey: string, ttlSeconds: number): Promise<string> {
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: objectKey });
+    return getSignedUrl(this.client, command, { expiresIn: ttlSeconds });
   }
 }
 

@@ -27,6 +27,7 @@ import {
 } from '../db/schema';
 import { conflict, notFound } from '../lib/errors';
 import { recordAudit } from '../lib/audit';
+import { catalogCache } from '../lib/ttl-cache';
 import { requirePermission } from '../lib/auth-middleware';
 import { ok, paginationMeta } from '../lib/http';
 import { anyObjectSchema } from '../lib/schemas';
@@ -207,6 +208,10 @@ export async function adminGamesModule(app: FastifyInstance) {
           }))
           .sort((a, b) => (a.tier === 'minimum' ? -1 : 1)),
         tags: (enriched as unknown as { _tags?: { slug: string; name: string }[] })._tags ?? [],
+        executables: game.executables ?? [],
+        steamAppId: game.steamAppId ?? null,
+        epicAppId: game.epicAppId ?? null,
+        launcher: game.launcher ?? null,
         viewCount: game.viewCount,
         createdAt: iso(game.createdAt)!,
         updatedAt: iso(game.updatedAt)!,
@@ -241,6 +246,10 @@ export async function adminGamesModule(app: FastifyInstance) {
           api: input.api ?? null,
           technologies: { ...DEFAULT_TECHNOLOGIES, ...input.technologies },
           performanceRating: input.performanceRating,
+          executables: input.executables ?? [],
+          steamAppId: input.steamAppId ?? null,
+          epicAppId: input.epicAppId ?? null,
+          launcher: input.launcher ?? null,
           featured: input.featured,
           status: input.status,
         })
@@ -250,6 +259,8 @@ export async function adminGamesModule(app: FastifyInstance) {
       await linkCategories(game.id, input.genreSlugs);
       await linkTags(game.id, input.tagSlugs);
       await recordAudit(request, { action: 'game.create', entityType: 'game', entityId: game.id, after: scrub(game) });
+      await catalogCache.invalidate('games:');
+      await catalogCache.invalidate('home');
 
       void reply.code(201);
       return getDetail(game.id);
@@ -274,7 +285,8 @@ export async function adminGamesModule(app: FastifyInstance) {
       const patch: Record<string, unknown> = {};
       for (const key of [
         'name', 'slug', 'tagline', 'description', 'developer', 'publisher',
-        'engine', 'api', 'performanceRating', 'featured', 'status',
+        'engine', 'api', 'performanceRating', 'executables', 'steamAppId',
+        'epicAppId', 'launcher', 'featured', 'status',
       ] as const) {
         if (input[key] !== undefined) patch[key] = input[key];
       }
@@ -291,6 +303,8 @@ export async function adminGamesModule(app: FastifyInstance) {
       if (input.tagSlugs !== undefined) await linkTags(game.id, input.tagSlugs);
 
       await recordAudit(request, { action: 'game.update', entityType: 'game', entityId: game.id, before, after: scrub(updatedGame) });
+      await catalogCache.invalidate('games:');
+      await catalogCache.invalidate('home');
       return getDetail(game.id);
     },
   );
@@ -308,6 +322,8 @@ export async function adminGamesModule(app: FastifyInstance) {
       const game = await findGameById(request.params.id);
       await db.update(games).set({ deletedAt: new Date(), updatedAt: new Date() }).where(eq(games.id, game.id));
       await recordAudit(request, { action: 'game.delete', entityType: 'game', entityId: game.id, before: scrub(game) });
+      await catalogCache.invalidate('games:');
+      await catalogCache.invalidate('home');
       return { ok: true };
     },
   );
@@ -327,6 +343,8 @@ export async function adminGamesModule(app: FastifyInstance) {
       const before = scrub(game);
       await db.update(games).set({ status: request.body.status, updatedAt: new Date() }).where(eq(games.id, game.id));
       await recordAudit(request, { action: 'game.publish', entityType: 'game', entityId: game.id, before, after: { status: request.body.status } });
+      await catalogCache.invalidate('games:');
+      await catalogCache.invalidate('home');
       return { ok: true };
     },
   );
@@ -434,6 +452,10 @@ async function getDetail(id: string) {
     developer: game.developer,
     publisher: game.publisher,
     releaseDate: game.releaseDate ? game.releaseDate.toISOString() : null,
+    executables: game.executables ?? [],
+    steamAppId: game.steamAppId ?? null,
+    epicAppId: game.epicAppId ?? null,
+    launcher: game.launcher ?? null,
     images: imageRows.map((img) => ({ id: img.id, type: img.type, url: img.url, objectKey: img.objectKey, altText: img.altText, sortOrder: img.sortOrder })),
     requirements: reqRows.map((r) => ({ tier: r.tier, os: r.os, cpu: r.cpu, gpu: r.gpu, ramGb: r.ramGb, storageGb: r.storageGb, directx: r.directx, notes: r.notes })).sort((a, b) => (a.tier === 'minimum' ? -1 : 1)),
     tags: (enriched as unknown as { _tags?: { slug: string; name: string }[] })._tags ?? [],

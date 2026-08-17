@@ -14,6 +14,61 @@ export type {
   ViewEventInput,
   AdminCreateInput,
   AdminUpdateInput,
+  RegisterInput,
+  UserLoginInput,
+  UserPublic,
+  UserAuthResponse,
+  OtpSendInput,
+  OtpSendResponse,
+  PasswordForgotInput,
+  PasswordResetInput,
+  PasswordResetResponse,
+  UserUpdateInput,
+  AdminUserUpdateInput,
+  FavoriteParams,
+  FavoriteMutationResponse,
+} from '@goh/validation';
+
+export type {
+  SubscriptionPlanPublic,
+  SubscriptionPlanInput,
+  SubscriptionPlanUpdateInput,
+  PurchaseInput,
+  PurchaseResponse,
+  EntitlementPublic,
+  MySubscription,
+  DeviceInput,
+  DevicePublic,
+  ManualSubscriptionInput,
+  AdminSubscriptionPatch,
+} from '@goh/validation';
+
+export type {
+  PaymentCallbackInput,
+  PaymentPublic,
+  PaymentVerifyResponse,
+} from '@goh/validation';
+
+export type {
+  PackageGpuVendor,
+  PackageArch,
+  FileOperation,
+  OptimizationPackageInput,
+  OptimizationPackageUpdateInput,
+  PackagePublishInput,
+  PackagePresignInput,
+  PackageFileCompleteInput,
+  PackagePublic,
+  PackageFilePublic,
+  PackageDownloadResponse,
+  PackageListResponse,
+} from '@goh/validation';
+
+export type {
+  HardwareProfileInput,
+  HardwareProfilePublic,
+  HardwareRecommendInput,
+  HardwareRecommendResponse,
 } from '@goh/validation';
 
 export type {

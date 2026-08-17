@@ -6,6 +6,6 @@
  */
 export const config = {
   apiUrl: (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4000/api/v1',
-  appVersion: '0.1.0',
+  appVersion: '0.3.0',
   syncIntervalMs: 5 * 60 * 1000,
 } as const;

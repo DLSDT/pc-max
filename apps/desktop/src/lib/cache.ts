@@ -39,6 +39,8 @@ export interface CacheStore {
   isFavorite(gameId: string): boolean;
   addFavorite(game: GameSummary): void;
   removeFavorite(gameId: string): void;
+  /** Replace the whole list (server sync for signed-in users). */
+  setFavorites(games: GameSummary[]): void;
 
   getRecent(): GameDetail[];
   addRecent(game: GameDetail): void;
@@ -58,6 +60,9 @@ interface CacheShape {
   profiles: Record<string, OptimizationProfile[]>;
   profileVersions: Record<string, Record<string, string>>;
   favorites: Record<string, GameSummary>;
+  /** Derived from `favorites` — kept as a stable reference between mutations
+   *  so it can be used as a useSyncExternalStore snapshot. */
+  favoritesList: GameSummary[];
   recent: GameDetail[];
   lastSync: string | null;
   deviceId: string;
@@ -74,6 +79,7 @@ function emptyShape(): CacheShape {
     profiles: {},
     profileVersions: {},
     favorites: {},
+    favoritesList: [],
     recent: [],
     lastSync: null,
     deviceId: '',
@@ -96,6 +102,8 @@ export const cache: CacheStore = (() => {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) state = { ...emptyShape(), ...(JSON.parse(raw) as CacheShape) };
+      // Backward compatibility: caches saved before `favoritesList` existed.
+      if (!state.favoritesList) state.favoritesList = Object.values(state.favorites);
     } catch {
       state = emptyShape();
     }
@@ -185,14 +193,22 @@ export const cache: CacheStore = (() => {
       save();
     },
 
-    getFavorites: () => Object.values(state.favorites),
+    getFavorites: () => state.favoritesList,
     isFavorite: (gameId) => Boolean(state.favorites[gameId]),
     addFavorite: (game) => {
       state.favorites[game.id] = game;
+      state.favoritesList = Object.values(state.favorites);
       save();
     },
     removeFavorite: (gameId) => {
       delete state.favorites[gameId];
+      state.favoritesList = Object.values(state.favorites);
+      save();
+    },
+    setFavorites: (games) => {
+      state.favorites = {};
+      for (const g of games) state.favorites[g.id] = g;
+      state.favoritesList = Object.values(state.favorites);
       save();
     },
 

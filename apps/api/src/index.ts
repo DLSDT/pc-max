@@ -1,8 +1,10 @@
 import { buildApp } from './app';
 import { config } from './config';
 import { pool } from './db';
+import { initMonitoring } from './lib/monitoring';
 
 async function main() {
+  initMonitoring();
   const app = await buildApp();
 
   const shutdown = async (signal: string) => {

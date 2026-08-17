@@ -34,7 +34,19 @@ export function GameForm({ initial, onSaved }: GameFormProps) {
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState<Partial<GameCreateInput>>(() => {
-    if (!initial) return { technologies: {}, featured: false, status: 'draft', performanceRating: 60, genreSlugs: [], tagSlugs: [] };
+    if (!initial)
+      return {
+        technologies: {} as GameCreateInput['technologies'],
+        featured: false,
+        status: 'draft' as const,
+        performanceRating: 60,
+        executables: [] as string[],
+        steamAppId: '',
+        epicAppId: '',
+        launcher: '' as GameCreateInput['launcher'],
+        genreSlugs: [] as string[],
+        tagSlugs: [] as string[],
+      };
     return {
       name: initial.name,
       slug: initial.slug,
@@ -45,6 +57,10 @@ export function GameForm({ initial, onSaved }: GameFormProps) {
       releaseDate: initial.releaseDate?.slice(0, 10) ?? '',
       engine: initial.engine ?? '',
       api: initial.api ?? '',
+      executables: initial.executables ?? [],
+      steamAppId: initial.steamAppId ?? '',
+      epicAppId: initial.epicAppId ?? '',
+      launcher: (initial.launcher ?? '') as GameCreateInput['launcher'],
       technologies: initial.technologies,
       performanceRating: initial.performanceRating,
       featured: initial.featured,
@@ -85,6 +101,10 @@ export function GameForm({ initial, onSaved }: GameFormProps) {
         publisher: form.publisher || null,
         engine: form.engine || null,
         api: form.api || null,
+        executables: (form.executables ?? []).filter(Boolean),
+        steamAppId: form.steamAppId || null,
+        epicAppId: form.epicAppId || null,
+        launcher: form.launcher || null,
       };
       if (initial) {
         const updated = await apiFetch<GameDetail>(`/admin/games/${initial.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
@@ -206,6 +226,45 @@ export function GameForm({ initial, onSaved }: GameFormProps) {
                 <Checkbox checked={Boolean(form.featured)} onCheckedChange={(v) => set('featured', Boolean(v))} />
                 Featured on Home
               </label>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base">Game Detection</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="executables">Executable names</Label>
+                <Input
+                  id="executables"
+                  value={(form.executables ?? []).join(', ')}
+                  onChange={(e) => set('executables', e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
+                  placeholder="GTA5.exe, PlayGTAV.exe"
+                />
+                <p className="text-xs text-muted-foreground">Comma-separated .exe names used by the desktop app to detect the game on disk.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="steamAppId">Steam App ID</Label>
+                  <Input id="steamAppId" value={form.steamAppId ?? ''} onChange={(e) => set('steamAppId', e.target.value)} placeholder="271590" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="epicAppId">Epic App ID</Label>
+                  <Input id="epicAppId" value={form.epicAppId ?? ''} onChange={(e) => set('epicAppId', e.target.value)} placeholder="luna" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="launcher">Launcher</Label>
+                  <Select value={form.launcher ?? ''} onValueChange={(v) => set('launcher', v as GameCreateInput['launcher'])}>
+                    <SelectTrigger id="launcher"><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">—</SelectItem>
+                      <SelectItem value="steam">Steam</SelectItem>
+                      <SelectItem value="epic">Epic Games</SelectItem>
+                      <SelectItem value="gog">GOG</SelectItem>
+                      <SelectItem value="standalone">Standalone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

@@ -26,5 +26,12 @@ export const config = {
     '/versions/:path*',
     '/admins/:path*',
     '/audit/:path*',
+    '/users/:path*',
+    '/subscriptions/:path*',
+    '/payments/:path*',
+    '/packages/:path*',
+    '/devices/:path*',
+    '/security/:path*',
+    '/settings/:path*',
   ],
 };

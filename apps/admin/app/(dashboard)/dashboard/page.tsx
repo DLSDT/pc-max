@@ -74,8 +74,8 @@ export default function DashboardPage() {
               <AreaChart data={data.dailyViews} margin={{ left: -20, right: 8, top: 8 }}>
                 <defs>
                   <linearGradient id="views" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(263 90% 64%)" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="hsl(263 90% 64%)" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(357 92% 47%)" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="hsl(357 92% 47%)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 33% 16%)" />
@@ -84,7 +84,7 @@ export default function DashboardPage() {
                 <Tooltip
                   contentStyle={{ background: 'hsl(222 44% 9%)', border: '1px solid hsl(217 33% 16%)', borderRadius: 8, fontSize: 12 }}
                 />
-                <Area type="monotone" dataKey="views" stroke="hsl(263 90% 64%)" fill="url(#views)" strokeWidth={2} />
+                <Area type="monotone" dataKey="views" stroke="hsl(357 92% 47%)" fill="url(#views)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

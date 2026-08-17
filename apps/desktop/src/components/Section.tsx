@@ -10,7 +10,8 @@ export function Section({
   className,
 }: {
   title: string;
-  action?: { to: string; label: string };
+  /** Link action, or a button action when `onClick` is provided. */
+  action?: { to: string; label: string } | { onClick: () => void; label: string };
   children: ReactNode;
   className?: string;
 }) {
@@ -18,15 +19,25 @@ export function Section({
     <section className={cn('space-y-4', className)}>
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">{title}</h2>
-        {action && (
-          <Link
-            to={action.to}
-            className="inline-flex items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            {action.label}
-            <ChevronRight aria-hidden className="size-3.5 rtl:rotate-180" />
-          </Link>
-        )}
+        {action &&
+          ('to' in action ? (
+            <Link
+              to={action.to}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              {action.label}
+              <ChevronRight aria-hidden className="size-3.5 rtl:rotate-180" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={action.onClick}
+              className="inline-flex items-center gap-0.5 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              {action.label}
+              <ChevronRight aria-hidden className="size-3.5 rtl:rotate-180" />
+            </button>
+          ))}
       </div>
       {children}
     </section>

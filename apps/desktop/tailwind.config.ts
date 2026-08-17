@@ -42,8 +42,8 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        glow: '0 0 24px hsl(var(--primary) / 0.35)',
-        'glow-sm': '0 0 12px hsl(var(--primary) / 0.25)',
+        glow: '0 0 24px hsl(var(--primary) / 0.16)',
+        'glow-sm': '0 0 12px hsl(var(--primary) / 0.12)',
       },
       keyframes: {
         'fade-up': {

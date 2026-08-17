@@ -55,7 +55,7 @@ export async function authModule(app: FastifyInstance) {
   typed.post(
     '/admin/auth/login',
     {
-      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       schema: {
         body: AdminLoginInput,
         response: { 200: AuthResponse },

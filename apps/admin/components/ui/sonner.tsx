@@ -7,7 +7,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>;
 export function Toaster(props: ToasterProps) {
   return (
     <Sonner
-      theme={props.theme ?? 'dark'}
+      theme={props.theme ?? 'light'}
       className="toaster group"
       toastOptions={{
         classNames: {

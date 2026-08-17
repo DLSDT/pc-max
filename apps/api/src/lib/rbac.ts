@@ -20,6 +20,19 @@ export const PERMISSIONS = {
   'releases.read': ['super_admin', 'admin', 'editor', 'viewer'],
   'releases.write': ['super_admin', 'admin'],
   'admins.manage': ['super_admin'],
+  'users.read': ['super_admin', 'admin', 'editor', 'viewer'],
+  'users.write': ['super_admin', 'admin'],
+  'subscriptions.read': ['super_admin', 'admin', 'editor', 'viewer'],
+  'subscriptions.write': ['super_admin', 'admin'],
+  'payments.read': ['super_admin', 'admin', 'viewer'],
+  'packages.read': ['super_admin', 'admin', 'editor', 'viewer'],
+  'packages.write': ['super_admin', 'admin', 'editor'],
+  'packages.publish': ['super_admin', 'admin'],
+  'packages.delete': ['super_admin', 'admin'],
+  'devices.read': ['super_admin', 'admin', 'viewer'],
+  'devices.write': ['super_admin', 'admin'],
+  'settings.read': ['super_admin', 'admin', 'viewer'],
+  'settings.write': ['super_admin'],
 } as const;
 
 export type Permission = keyof typeof PERMISSIONS;
