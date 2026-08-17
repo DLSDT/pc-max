@@ -1,0 +1,36 @@
+# Local development infrastructure for Game Optimization Hub.
+# Run: docker compose up -d
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: goh-postgres
+    environment:
+      POSTGRES_USER: goh
+      POSTGRES_PASSWORD: goh
+      POSTGRES_DB: goh
+    ports:
+      - '5432:5432'
+    volumes:
+      - goh_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U goh -d goh']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: goh-minio
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: goh
+      MINIO_ROOT_PASSWORD: goh-secret-key-123
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - goh_minio:/data
+
+volumes:
+  goh_pgdata:
+  goh_minio:

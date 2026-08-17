@@ -1,0 +1,246 @@
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+
+/**
+ * i18n setup. English is the default locale; the Persian locale file is
+ * scaffolded so the UI is RTL-ready (see index.css `[dir='rtl']` handling and
+ * the language switch in Settings).
+ */
+void i18n.use(initReactI18next).init({
+  resources: {
+    en: {
+      translation: {
+        appName: 'Game Optimization Hub',
+        sidebar: {
+          home: 'Home',
+          games: 'Games',
+          categories: 'Categories',
+          recommended: 'Recommended',
+          recentlyViewed: 'Recently Viewed',
+          favorites: 'Favorites',
+          settings: 'Settings',
+          about: 'About',
+          library: 'Library',
+          collapse: 'Collapse sidebar',
+        },
+        header: {
+          searchPlaceholder: 'Search games, genres, tags…',
+          offline: 'Offline',
+          online: 'Online',
+          syncing: 'Syncing…',
+          updateAvailable: 'Update available',
+        },
+        home: {
+          heroFps: 'Recommended: {{fps}} FPS',
+          heroPreset: 'Preset: {{preset}}',
+          viewOptimization: 'View Optimization',
+          popular: 'Popular Games',
+          recentlyAdded: 'Recently Added',
+          recommendedForYou: 'Recommended For Your PC',
+          recommendedPlaceholder: 'Connect your hardware profile to get personalized recommendations.',
+          viewAll: 'View all',
+        },
+        games: {
+          title: 'Games',
+          searchPlaceholder: 'Search…',
+          filters: 'Filters',
+          genre: 'Genre',
+          year: 'Release year',
+          technologies: 'Technologies',
+          clearFilters: 'Clear filters',
+          noResults: 'No games match your filters.',
+          fps: '{{fps}} FPS',
+          allGenres: 'All genres',
+          allYears: 'All years',
+        },
+        card: {
+          newOptimization: 'New optimization v{{version}}',
+          favorite: 'Add to favorites',
+          unfavorite: 'Remove from favorites',
+        },
+        detail: {
+          developer: 'Developer',
+          publisher: 'Publisher',
+          releaseDate: 'Release date',
+          engine: 'Engine',
+          api: 'API',
+          rating: 'Performance rating',
+          requirements: 'System Requirements',
+          minimum: 'Minimum',
+          recommended: 'Recommended',
+          optimizationProfiles: 'Optimization Profiles',
+          targetFps: 'Target: {{fps}} FPS',
+          settingsTable: 'Recommended Settings',
+          setting: 'Setting',
+          recommendedValue: 'Recommended',
+          noProfiles: 'No optimization profiles published for this game yet.',
+          notFound: 'Game not found.',
+          back: 'Back',
+        },
+        settings: {
+          title: 'Settings',
+          language: 'Language',
+          languageHint: 'Persian (فارسی) enables RTL layout.',
+          cache: 'Offline cache',
+          cacheHint: 'Games and optimizations are cached locally and work offline.',
+          clearCache: 'Clear cache',
+          clearCacheDone: 'Cache cleared.',
+          syncNow: 'Sync now',
+          syncedAt: 'Last synced: {{time}}',
+          aboutSection: 'About',
+          version: 'Version {{version}}',
+        },
+        favorites: {
+          title: 'Favorites',
+          empty: 'No favorites yet. Tap the heart on any game card.',
+        },
+        recently: {
+          title: 'Recently Viewed',
+          empty: 'Games you open will show up here.',
+        },
+        recommended: {
+          title: 'Recommended For Your PC',
+          placeholder:
+            'Hardware detection is coming in a future version. The architecture is ready — just not shipped yet.',
+        },
+        about: {
+          title: 'About',
+          description:
+            'A modern desktop companion that shows optimal graphics and performance settings for your games.',
+          tagline: 'Every setting is delivered from the server — new games and optimizations appear without an app update.',
+        },
+        categories: {
+          title: 'Categories',
+          games: '{{count}} games',
+        },
+        common: {
+          loading: 'Loading…',
+          error: 'Something went wrong.',
+          retry: 'Retry',
+          back: 'Back',
+          all: 'All',
+        },
+      },
+    },
+    fa: {
+      translation: {
+        appName: 'مرکز بهینه‌سازی بازی',
+        sidebar: {
+          home: 'خانه',
+          games: 'بازی‌ها',
+          categories: 'دسته‌بندی‌ها',
+          recommended: 'پیشنهادی',
+          recentlyViewed: 'بازدیدهای اخیر',
+          favorites: 'علاقه‌مندی‌ها',
+          settings: 'تنظیمات',
+          about: 'درباره',
+          library: 'کتابخانه',
+          collapse: 'جمع‌کردن نوار کناری',
+        },
+        header: {
+          searchPlaceholder: 'جستجوی بازی، ژانر، برچسب…',
+          offline: 'آفلاین',
+          online: 'آنلاین',
+          syncing: 'در حال همگام‌سازی…',
+          updateAvailable: 'نسخه جدید موجود است',
+        },
+        home: {
+          heroFps: 'پیشنهادی: {{fps}} فریم بر ثانیه',
+          heroPreset: 'پیش‌تنظیم: {{preset}}',
+          viewOptimization: 'مشاهده بهینه‌سازی',
+          popular: 'بازی‌های محبوب',
+          recentlyAdded: 'اخیراً اضافه‌شده',
+          recommendedForYou: 'پیشنهادی برای سیستم شما',
+          recommendedPlaceholder: 'برای دریافت پیشنهادهای شخصی، پروفایل سخت‌افزاری خود را متصل کنید.',
+          viewAll: 'مشاهده همه',
+        },
+        games: {
+          title: 'بازی‌ها',
+          searchPlaceholder: 'جستجو…',
+          filters: 'فیلترها',
+          genre: 'ژانر',
+          year: 'سال انتشار',
+          technologies: 'فناوری‌ها',
+          clearFilters: 'حذف فیلترها',
+          noResults: 'هیچ بازی‌ای مطابق فیلترها یافت نشد.',
+          fps: '{{fps}} فریم بر ثانیه',
+          allGenres: 'همه ژانرها',
+          allYears: 'همه سال‌ها',
+        },
+        card: {
+          newOptimization: 'بهینه‌سازی جدید نسخه {{version}}',
+          favorite: 'افزودن به علاقه‌مندی‌ها',
+          unfavorite: 'حذف از علاقه‌مندی‌ها',
+        },
+        detail: {
+          developer: 'توسعه‌دهنده',
+          publisher: 'ناشر',
+          releaseDate: 'تاریخ انتشار',
+          engine: 'موتور',
+          api: 'API',
+          rating: 'امتیاز عملکرد',
+          requirements: 'حداقل سیستم مورد نیاز',
+          minimum: 'حداقل',
+          recommended: 'پیشنهادی',
+          optimizationProfiles: 'پروفایل‌های بهینه‌سازی',
+          targetFps: 'هدف: {{fps}} فریم بر ثانیه',
+          settingsTable: 'تنظیمات پیشنهادی',
+          setting: 'تنظیم',
+          recommendedValue: 'پیشنهادی',
+          noProfiles: 'هنوز پروفایل بهینه‌سازی برای این بازی منتشر نشده است.',
+          notFound: 'بازی پیدا نشد.',
+          back: 'بازگشت',
+        },
+        settings: {
+          title: 'تنظیمات',
+          language: 'زبان',
+          languageHint: 'فارسی با پشتیبانی کامل RTL فعال می‌شود.',
+          cache: 'کش آفلاین',
+          cacheHint: 'بازی‌ها و بهینه‌سازی‌ها به‌صورت محلی ذخیره می‌شوند و بدون اینترنت هم کار می‌کنند.',
+          clearCache: 'پاک کردن کش',
+          clearCacheDone: 'کش پاک شد.',
+          syncNow: 'همگام‌سازی',
+          syncedAt: 'آخرین همگام‌سازی: {{time}}',
+          aboutSection: 'درباره',
+          version: 'نسخه {{version}}',
+        },
+        favorites: {
+          title: 'علاقه‌مندی‌ها',
+          empty: 'هنوز موردی در علاقه‌مندی‌ها نیست. روی قلب هر بازی ضربه بزنید.',
+        },
+        recently: {
+          title: 'بازدیدهای اخیر',
+          empty: 'بازی‌هایی که باز کنید اینجا نمایش داده می‌شوند.',
+        },
+        recommended: {
+          title: 'پیشنهادی برای سیستم شما',
+          placeholder: 'تشخیص سخت‌افزار در نسخه‌های آینده اضافه می‌شود. معماری آن آماده است.',
+        },
+        about: {
+          title: 'درباره',
+          description: 'همراه دسکتاپی مدرن برای نمایش تنظیمات گرافیکی و عملکرد بهینه بازی‌ها.',
+          tagline: 'همه تنظیمات از سرور دریافت می‌شوند — بازی‌ها و بهینه‌سازی‌های جدید بدون به‌روزرسانی برنامه ظاهر می‌شوند.',
+        },
+        categories: {
+          title: 'دسته‌بندی‌ها',
+          games: '{{count}} بازی',
+        },
+        common: {
+          loading: 'در حال بارگذاری…',
+          error: 'خطایی رخ داد.',
+          retry: 'تلاش مجدد',
+          back: 'بازگشت',
+          all: 'همه',
+        },
+      },
+    },
+  },
+  lng: 'en',
+  fallbackLng: 'en',
+  interpolation: { escapeValue: false },
+});
+
+/** Set the document direction for RTL languages. */
+export function applyDirection(lng: string) {
+  document.documentElement.dir = lng === 'fa' ? 'rtl' : 'ltr';
+}

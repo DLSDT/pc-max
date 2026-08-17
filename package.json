@@ -1,0 +1,25 @@
+{
+  "name": "game-optimization-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Game Optimization Hub — Windows desktop app + admin panel + API",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "prepare": "npm run build -w @goh/validation && npm run build -w @goh/types",
+    "dev:api": "npm run dev -w @goh/api",
+    "dev:admin": "npm run dev -w @goh/admin",
+    "dev:desktop": "npm run dev -w @goh/desktop",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w @goh/api",
+    "db:seed": "npm run db:seed -w @goh/api",
+    "db:studio": "npm run db:studio -w @goh/api"
+  },
+  "engines": {
+    "node": ">=18.18"
+  }
+}

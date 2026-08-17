@@ -1,0 +1,236 @@
+import { and, asc, count, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import type { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+import { GameDetail, GameListResponse, GamesQuery } from '@goh/validation';
+import { slugParams } from '../lib/params';
+import { dataListSchema } from '../lib/schemas';
+import { HomeResponse } from '@goh/validation';
+import { db } from '../db';
+import { categories, gameCategories, gameImages, games, gameTags, gameRequirements, tags } from '../db/schema';
+import { notFound } from '../lib/errors';
+import { paginationMeta } from '../lib/http';
+import {
+  attachGameMetadata,
+  categoriesWithCounts,
+  findPublishedGameBySlug,
+  iso,
+  publishedGameWhere,
+  toSummary,
+} from '../services/games';
+
+export async function publicGamesModule(app: FastifyInstance) {
+  const typed = app.withTypeProvider<ZodTypeProvider>();
+
+  typed.get(
+    '/games',
+    {
+      schema: { querystring: GamesQuery, response: { 200: GameListResponse } },
+    },
+    async (request) => {
+      const { q, genre, year, techs, sort, page, limit } = request.query;
+
+      const where: ReturnType<typeof and>[] = [publishedGameWhere()];
+
+      if (q) {
+        const pattern = `%${q}%`;
+        const byTags = db
+          .select({ gameId: gameTags.gameId })
+          .from(gameTags)
+          .innerJoin(tags, eq(gameTags.tagId, tags.id))
+          .where(ilike(tags.name, pattern));
+        const byGenres = db
+          .select({ gameId: gameCategories.gameId })
+          .from(gameCategories)
+          .innerJoin(categories, eq(gameCategories.categoryId, categories.id))
+          .where(ilike(categories.name, pattern));
+        where.push(
+          or(
+            ilike(games.name, pattern),
+            ilike(games.slug, pattern),
+            ilike(games.tagline, pattern),
+            ilike(games.developer, pattern),
+            inArray(games.id, byTags),
+            inArray(games.id, byGenres),
+          )!,
+        );
+      }
+
+      if (genre) {
+        const genreIds = db
+          .select({ gameId: gameCategories.gameId })
+          .from(gameCategories)
+          .innerJoin(categories, eq(gameCategories.categoryId, categories.id))
+          .where(eq(categories.slug, genre));
+        where.push(inArray(games.id, genreIds));
+      }
+
+      if (year) where.push(sql`extract(year from ${games.releaseDate}) = ${year}`);
+
+      for (const tech of techs ?? []) {
+        where.push(sql`(${games.technologies} ->> '${sql.raw(tech)}')::boolean = true`);
+      }
+
+      const orderBy =
+        sort === 'popular'
+          ? desc(games.viewCount)
+          : sort === 'new'
+            ? desc(games.releaseDate)
+            : sort === 'rating'
+              ? desc(games.performanceRating)
+              : asc(games.name);
+
+      const totalRows = await db.select({ n: count() }).from(games).where(and(...where));
+      const total = Number(totalRows[0]?.n ?? 0);
+
+      const rows = await db
+        .select()
+        .from(games)
+        .where(and(...where))
+        .orderBy(orderBy)
+        .limit(limit)
+        .offset((page - 1) * limit);
+
+      const enriched = await attachGameMetadata(rows);
+      return {
+        data: enriched.map(toSummary),
+        meta: paginationMeta(page, limit, total),
+      };
+    },
+  );
+
+  typed.get(
+    '/games/:slug',
+    {
+      schema: {
+        params: slugParams,
+        response: { 200: GameDetail },
+      },
+    },
+    async (request) => {
+      const game = await findPublishedGameBySlug(request.params.slug);
+      const [enriched] = await attachGameMetadata([game]);
+      if (!enriched) throw notFound('Game');
+
+      const imageRows = await db
+        .select()
+        .from(gameImages)
+        .where(eq(gameImages.gameId, game.id))
+        .orderBy(gameImages.sortOrder);
+
+      const reqRows = await db
+        .select()
+        .from(gameRequirements)
+        .where(eq(gameRequirements.gameId, game.id));
+
+      const summary = toSummary(enriched);
+      return {
+        ...summary,
+        description: game.description,
+        developer: game.developer,
+        publisher: game.publisher,
+        releaseDate: game.releaseDate ? game.releaseDate.toISOString() : null,
+        images: imageRows.map((img) => ({
+          id: img.id,
+          type: img.type,
+          url: img.url,
+          objectKey: img.objectKey,
+          altText: img.altText,
+          sortOrder: img.sortOrder,
+        })),
+        requirements: reqRows
+          .map((r) => ({
+            tier: r.tier,
+            os: r.os,
+            cpu: r.cpu,
+            gpu: r.gpu,
+            ramGb: r.ramGb,
+            storageGb: r.storageGb,
+            directx: r.directx,
+            notes: r.notes,
+          }))
+          .sort((a, b) => (a.tier === 'minimum' ? -1 : 1)),
+        tags: (enriched as unknown as { _tags?: { slug: string; name: string }[] })._tags ?? [],
+        viewCount: game.viewCount,
+        createdAt: iso(game.createdAt)!,
+        updatedAt: iso(game.updatedAt)!,
+      };
+    },
+  );
+
+  typed.get(
+    '/featured',
+    {
+      schema: {
+        querystring: z.object({ limit: z.coerce.number().int().min(1).max(20).default(6) }),
+        response: { 200: dataListSchema },
+      },
+    },
+    async (request) => {
+      const { limit } = request.query;
+      const rows = await db
+        .select()
+        .from(games)
+        .where(and(publishedGameWhere(), eq(games.featured, true)))
+        .orderBy(desc(games.viewCount))
+        .limit(limit);
+      const enriched = await attachGameMetadata(rows);
+      return { data: enriched.map(toSummary) };
+    },
+  );
+
+  typed.get(
+    '/categories',
+    {
+      schema: {
+        response: { 200: dataListSchema },
+      },
+    },
+    async () => ({ data: await categoriesWithCounts() }),
+  );
+
+  typed.get(
+    '/home',
+    {
+      schema: {
+        response: { 200: HomeResponse },
+      },
+    },
+    async () => {
+      const [featuredRows, popularRows, recentRows, cats] = await Promise.all([
+        db
+          .select()
+          .from(games)
+          .where(and(publishedGameWhere(), eq(games.featured, true)))
+          .orderBy(desc(games.viewCount))
+          .limit(5),
+        db
+          .select()
+          .from(games)
+          .where(publishedGameWhere())
+          .orderBy(desc(games.viewCount))
+          .limit(12),
+        db
+          .select()
+          .from(games)
+          .where(publishedGameWhere())
+          .orderBy(desc(games.createdAt))
+          .limit(12),
+        categoriesWithCounts(),
+      ]);
+
+      const [featured, popular, recent] = await Promise.all([
+        attachGameMetadata(featuredRows),
+        attachGameMetadata(popularRows),
+        attachGameMetadata(recentRows),
+      ]);
+
+      return {
+        featured: featured.map(toSummary),
+        popular: popular.map(toSummary),
+        recentlyAdded: recent.map(toSummary),
+        categories: cats,
+      };
+    },
+  );
+}

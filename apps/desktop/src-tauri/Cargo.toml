@@ -1,0 +1,33 @@
+[package]
+name = "game-optimization-hub"
+version = "0.1.0"
+description = "Game Optimization Hub — Windows desktop app"
+authors = ["Game Optimization Hub"]
+edition = "2021"
+
+# The library is used by both the desktop binary and (optionally) mobile targets.
+[lib]
+name = "game_optimization_hub_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-plugin-store = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Auto-update: the updater plugin needs a signing keypair. Wire it in once the
+# release pipeline exists — see docs/PRODUCTION.md. The app already surfaces
+# "update available" via the API in the meantime.
+# tauri-plugin-updater = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

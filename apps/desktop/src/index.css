@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 250 32% 4%;
+    --foreground: 214 32% 94%;
+    --card: 248 30% 6%;
+    --card-foreground: 214 32% 94%;
+    --primary: 262 84% 62%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 248 25% 11%;
+    --secondary-foreground: 214 25% 88%;
+    --muted: 248 25% 10%;
+    --muted-foreground: 220 12% 58%;
+    --accent: 248 28% 14%;
+    --accent-foreground: 214 32% 94%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 247 24% 14%;
+    --input: 247 24% 16%;
+    --ring: 262 84% 62%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased overflow-hidden;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    user-select: none;
+  }
+
+  /* Text remains selectable in content areas */
+  p, span, h1, h2, h3, h4, td, li {
+    user-select: text;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(247 24% 16%);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(247 24% 24%);
+}
+
+/* Subtle background glow used by the hero + detail pages */
+.bg-glow {
+  background:
+    radial-gradient(ellipse 60% 50% at 70% -10%, hsl(262 84% 62% / 0.18), transparent),
+    radial-gradient(ellipse 50% 40% at 10% 110%, hsl(190 90% 55% / 0.08), transparent),
+    hsl(var(--background));
+}
