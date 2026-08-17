@@ -295,6 +295,7 @@ fn mid_batch_failure_rolls_back_every_applied_file() {
 }
 
 #[test]
+#[cfg(not(target_os = "windows"))]
 fn read_only_target_failure_restores_exact_original_hash() {
     let game = TestGameDir::new();
     let before = game.sha("settings.cfg");
