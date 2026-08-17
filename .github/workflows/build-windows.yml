@@ -6,7 +6,7 @@ name: build-windows-installer
 # windows-latest runner and uploaded as a build artifact.
 #
 # Usage:
-#   - Manual:  Actions → "build-windows-installer" → Run workflow
+#   - Manual:   Actions → "build-windows-installer" → Run workflow
 #   - Automatic: runs on every push to main/master
 #   - The artifact download contains:
 #       PC MAX_<version>_x64-setup.exe
@@ -34,7 +34,9 @@ jobs:
           cache: npm
 
       - name: Install Rust (stable, MSVC)
-        uses: dtolnay/rust-toolchain@stable
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
 
       - name: Cache Cargo registry
         uses: Swatinem/rust-cache@v2
