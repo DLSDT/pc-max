@@ -60,7 +60,7 @@ jobs:
       - name: Inspect artifact identity
         shell: pwsh
         run: |
-          $exe = Get-ChildItem apps/desktop/src-tauri/target/release -Filter 'PC MAX.exe' -Recurse | Select-Object -First 1
+          $exe = Get-ChildItem apps/desktop/src-tauri/target/release -Filter '*.exe' -Recurse | Select-Object -First 1
           if (-not $exe) { throw 'PC MAX.exe not found' }
           $v = (Get-Item $exe.FullName).VersionInfo
           Write-Host "File: $($exe.Name) | Product: $($v.ProductName) | Description: $($v.FileDescription) | Version: $($v.FileVersion)"
