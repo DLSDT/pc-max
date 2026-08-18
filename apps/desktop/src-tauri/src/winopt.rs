@@ -25,6 +25,13 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
+/// CREATE_NO_WINDOW — every `reg`/`sc`/`powercfg`/PowerShell background query
+/// must run without flashing a console window in the packaged GUI app.
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
 // ---------------------------------------------------------------------------
 // Core types
 // ---------------------------------------------------------------------------
@@ -1107,7 +1114,11 @@ impl OsBackend for RealOs {
 
 #[cfg(target_os = "windows")]
 fn run(cmd: &str, args: &[&str]) -> Result<String, String> {
-    let out = std::process::Command::new(cmd).args(args).output().map_err(|e| e.to_string())?;
+    let out = std::process::Command::new(cmd)
+        .creation_flags(CREATE_NO_WINDOW)
+        .args(args)
+        .output()
+        .map_err(|e| e.to_string())?;
     if !out.status.success() {
         return Err(String::from_utf8_lossy(&out.stderr).trim().to_string());
     }
@@ -1450,6 +1461,7 @@ fn windows_version() -> Option<WinVersion> {
 fn is_laptop() -> bool {
     let script = "Get-CimInstance -ClassName Win32_Battery | Measure-Object | Select-Object -ExpandProperty Count";
     std::process::Command::new("powershell")
+        .creation_flags(CREATE_NO_WINDOW)
         .args(["-NoProfile", "-NonInteractive", "-Command", script])
         .output()
         .ok()

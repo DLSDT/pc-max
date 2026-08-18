@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, CheckCircle2, Cpu, Gauge, HardDrive, MemoryStick, MonitorCog, ScanSearch, Wrench, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Cpu, Gauge, HardDrive, MemoryStick, MonitorCog, ScanSearch, Shapes, Wrench, Zap } from 'lucide-react';
 import { useHome } from '@/hooks/useLibrary';
-import { Badge, Button } from '@/components/ui';
+import { Badge, Button, EmptyState } from '@/components/ui';
 import { CardSkeleton } from '@/components/CardSkeleton';
 import GameCard from '@/components/GameCard';
 import HardwarePanel from '@/components/HardwarePanel';
@@ -11,6 +11,7 @@ import { GameGrid, Section } from '@/components/Section';
 import { useHardware } from '@/store/hardware';
 import { gpuLabel } from '@/lib/hardware';
 import { getApplied } from '@/lib/backup';
+import { ApiError } from '@/lib/api';
 import { useWinOpt, computeScore as winScore } from '@/store/winopt';
 import { useLibrary } from '@/store/library';
 
@@ -29,18 +30,30 @@ function dashboardScore(hw: { profile: { cpu?: string | null; ramGb?: number | n
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { data, isLoading } = useHome();
+  const { data, isLoading, isError, error, refetch } = useHome();
   const hw = useHardware();
   const library = useLibrary((s) => s.games);
   const winOptScan = useWinOpt((s) => s.scan);
   const scanSystem = useWinOpt((s) => s.scanSystem);
 
+  // Staleness-guarded in the store: the first visit scans (real detection),
+  // subsequent visits within the window reuse the cached result — no repeated
+  // subprocess detection, no status flicker on navigation.
   useEffect(() => {
     void scanSystem();
   }, [scanSystem]);
 
   const gameApplied = getApplied().length;
-  const windowsApplied = (winOptScan?.appliedIds.length ?? 0) + (winOptScan && winOptScan.supported ? 0 : 0);
+  const windowsApplied = winOptScan?.appliedIds.length ?? 0;
+
+  // Truthful catalog error text — network failures get a clear explanation
+  // instead of a generic "Something went wrong".
+  const catalogError =
+    isError && !data
+      ? error instanceof ApiError && error.kind !== 'http'
+        ? error.message
+        : t('common.serviceUnavailable')
+      : null;
 
   const score = useMemo(() => dashboardScore(hw, gameApplied, windowsApplied), [hw.profile, gameApplied, windowsApplied]);
   const winScoreResult = winScore(winOptScan);
@@ -202,6 +215,10 @@ export default function HomePage() {
       >
         {isLoading && !popular.length ? (
           <GameGrid>{Array.from({ length: 6 }, (_, i) => <CardSkeleton key={i} />)}</GameGrid>
+        ) : catalogError ? (
+          <CatalogError message={catalogError} onRetry={() => void refetch()} />
+        ) : popular.length === 0 ? (
+          <EmptyState icon={<Shapes aria-hidden />} title={t('home.emptyCatalog')} />
         ) : (
           <GameGrid>
             {popular.slice(0, 10).map((g) => (
@@ -215,6 +232,10 @@ export default function HomePage() {
       <Section title={t('home.recentlyAdded')}>
         {isLoading && !recentlyAdded.length ? (
           <GameGrid>{Array.from({ length: 5 }, (_, i) => <CardSkeleton key={i} />)}</GameGrid>
+        ) : catalogError ? (
+          <CatalogError message={catalogError} onRetry={() => void refetch()} />
+        ) : recentlyAdded.length === 0 ? (
+          <EmptyState icon={<Shapes aria-hidden />} title={t('home.emptyCatalog')} />
         ) : (
           <GameGrid>
             {recentlyAdded.slice(0, 10).map((g) => (
@@ -223,6 +244,18 @@ export default function HomePage() {
           </GameGrid>
         )}
       </Section>
+    </div>
+  );
+}
+
+function CatalogError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-6 py-10 text-center">
+      <p className="max-w-md text-sm text-muted-foreground">{message}</p>
+      <Button variant="secondary" size="sm" onClick={onRetry}>
+        {t('common.retry')}
+      </Button>
     </div>
   );
 }

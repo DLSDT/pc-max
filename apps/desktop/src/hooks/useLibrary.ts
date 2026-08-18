@@ -78,7 +78,9 @@ export function useInitialSync() {
     queryFn: async () => {
       setSyncStatus('syncing');
       const result = await runSync();
-      setSyncStatus(result.offline ? 'offline' : 'online');
+      // Truthful connectivity: no internet = offline, service unreachable =
+      // api-unavailable, anything else = online.
+      setSyncStatus(result.offline ? 'offline' : result.apiUnavailable ? 'api-unavailable' : 'online');
       // Warm the query cache with freshly synced data.
       const home = cache.getHome();
       if (home) queryClient.setQueryData(HOME_KEY, home);

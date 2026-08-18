@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FilterX, SearchX } from 'lucide-react';
+import { CloudOff, FilterX, SearchX, WifiOff } from 'lucide-react';
 import { useGames, useHome } from '@/hooks/useLibrary';
 import { useUi } from '@/store/ui';
+import { ApiError } from '@/lib/api';
 import { Button, EmptyState, Input, Skeleton } from '@/components/ui';
 import { CardSkeleton } from '@/components/CardSkeleton';
 import GameCard from '@/components/GameCard';
@@ -27,7 +28,7 @@ export default function GamesPage() {
   const resetFilters = useUi((s) => s.resetFilters);
 
   const { data: home } = useHome();
-  const { data, isLoading, isError, refetch } = useGames();
+  const { data, isLoading, isError, error, refetch } = useGames();
 
   const [searchInput, setSearchInput] = useState(filters.q);
 
@@ -158,8 +159,18 @@ export default function GamesPage() {
         </div>
       ) : isError && !games.length ? (
         <EmptyState
-          icon={<SearchX aria-hidden />}
-          title={t('common.error')}
+          icon={
+            error instanceof ApiError && error.kind === 'network'
+              ? typeof navigator !== 'undefined' && navigator.onLine === false
+                ? <WifiOff aria-hidden />
+                : <CloudOff aria-hidden />
+              : <SearchX aria-hidden />
+          }
+          title={
+            error instanceof ApiError && error.kind !== 'http'
+              ? error.message
+              : t('common.serviceUnavailable')
+          }
           action={
             <Button variant="secondary" size="sm" onClick={() => void refetch()}>
               {t('common.retry')}

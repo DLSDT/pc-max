@@ -31,14 +31,22 @@
     --radius: 0.75rem;
   }
 
-  * {
-    @apply border-border;
+  /* The app shell is a fixed viewport; the scrollable region is the main
+     content area (see AppLayout). The full height chain (html → body → #root)
+     is more reliable than 100vh inside WebView2 and keeps wheel/touchpad
+     scrolling working normally — body must NOT be overflow:hidden, otherwise
+     wheel events over the scroll container are consumed instead of scrolled. */
+  html,
+  body,
+  #root {
+    height: 100%;
   }
 
   body {
-    @apply bg-background text-foreground antialiased overflow-hidden;
+    @apply bg-background text-foreground antialiased;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     user-select: none;
+    overscroll-behavior-y: none;
   }
 
   /* Text remains selectable in content areas */

@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type SyncStatus = 'idle' | 'syncing' | 'online' | 'offline';
+/**
+ * Connectivity truth model — an API failure is NOT automatically "offline":
+ *  - online           — the PC MAX service answered
+ *  - offline          — no internet connectivity
+ *  - api-unavailable  — internet works but the PC MAX service is unreachable
+ *  - syncing / idle   — transitional states
+ */
+export type SyncStatus = 'idle' | 'syncing' | 'online' | 'offline' | 'api-unavailable';
 
 interface GamesFilters {
   q: string;

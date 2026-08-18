@@ -102,7 +102,7 @@ export default function SettingsPage() {
     setSyncing(true);
     setSyncStatus('syncing');
     const result = await runSync();
-    setSyncStatus(result.offline ? 'offline' : 'online');
+    setSyncStatus(result.offline ? 'offline' : result.apiUnavailable ? 'api-unavailable' : 'online');
     setSyncing(false);
     await queryClient.invalidateQueries();
   }

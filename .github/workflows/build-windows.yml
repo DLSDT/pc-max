@@ -55,6 +55,12 @@ jobs:
         run: cargo test
 
       - name: Build Windows installer (NSIS)
+        # The installed app must talk to the deployed API, never localhost.
+        # Configure the GitHub secret VITE_API_URL (e.g. https://api.pcmax.app/api/v1);
+        # if it is unset we fall back to the production domain so a build never
+        # silently bakes a development URL into the installer.
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pcmax.app/api/v1' }}
         run: npm run tauri:build -w @goh/desktop
 
       - name: Inspect artifact identity

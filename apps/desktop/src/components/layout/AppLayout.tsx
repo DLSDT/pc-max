@@ -30,7 +30,7 @@ export default function AppLayout() {
   }, [i18n.language]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
+    <div className="flex h-full w-full overflow-hidden bg-background text-foreground">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         {updateRequired && (
@@ -50,7 +50,7 @@ export default function AppLayout() {
         <main
           id="main-content"
           className={cn(
-            'flex-1 overflow-y-auto bg-glow px-6 pb-10 pt-6 transition-[padding]',
+            'flex-1 overflow-y-auto overscroll-contain bg-glow px-6 pb-10 pt-6 transition-[padding]',
             sidebarCollapsed ? 'lg:px-8' : 'lg:px-10',
           )}
         >

@@ -21,15 +21,26 @@ import type {
   UserPublic,
 } from '@goh/types';
 
+export type ApiErrorKind = 'http' | 'network' | 'timeout' | 'invalid';
+
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
     public readonly body: unknown,
+    public readonly kind: ApiErrorKind = 'http',
   ) {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+/**
+ * True when the failure was a network-level failure (API unreachable / no
+ * internet) rather than an HTTP response. `status === 0` in that case.
+ */
+export function isNetworkError(err: unknown): err is ApiError {
+  return err instanceof ApiError && (err.kind === 'network' || err.kind === 'timeout');
 }
 
 interface RequestOptions {
@@ -40,6 +51,8 @@ interface RequestOptions {
   authed?: boolean;
   /** Include cookies (needed for the httpOnly refresh cookie). */
   withCredentials?: boolean;
+  /** Override the default request timeout (ms). Health probes use a short one. */
+  timeoutMs?: number;
 }
 
 /** In-memory user access token — never persisted to disk. */
@@ -51,6 +64,15 @@ export function getAuthToken(): string | null {
   return authToken;
 }
 
+/** Combine a caller-supplied signal with the request timeout. */
+function withTimeout(signal: AbortSignal | undefined, timeoutMs: number): AbortSignal {
+  if (signal) return signal; // the caller owns the timeout
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), timeoutMs);
+  ctrl.signal.addEventListener('abort', () => clearTimeout(id), { once: true });
+  return ctrl.signal;
+}
+
 async function request<T>(path: string, options: RequestOptions = {}, retried = false): Promise<T> {
   const headers: Record<string, string> = {};
   if (options.body !== undefined) headers['content-type'] = 'application/json';
@@ -59,13 +81,33 @@ async function request<T>(path: string, options: RequestOptions = {}, retried = 
     if (token) headers.authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${config.apiUrl}${path}`, {
-    method: options.method ?? 'GET',
-    signal: options.signal,
-    credentials: options.authed || options.withCredentials ? 'include' : undefined,
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${config.apiUrl}${path}`, {
+      method: options.method ?? 'GET',
+      signal: withTimeout(options.signal, options.timeoutMs ?? config.requestTimeoutMs),
+      credentials: options.authed || options.withCredentials ? 'include' : undefined,
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+  } catch (err) {
+    // fetch only throws for network-level failures and aborts — never for HTTP
+    // status codes. Distinguish timeout from unreachable so the UI can show a
+    // truthful message instead of a blanket "offline".
+    const timedOut = err instanceof DOMException && err.name === 'AbortError';
+    if (timedOut) {
+      throw new ApiError('The PC MAX service took too long to respond. Please try again.', 0, null, 'timeout');
+    }
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    throw new ApiError(
+      offline
+        ? 'You are offline. Reconnect to the internet and try again.'
+        : 'Unable to reach the PC MAX service. Check your internet connection and try again.',
+      0,
+      null,
+      'network',
+    );
+  }
 
   if (res.status === 401 && options.authed && !retried) {
     // Access token expired — refresh via the httpOnly cookie and retry once.
@@ -78,6 +120,26 @@ async function request<T>(path: string, options: RequestOptions = {}, retried = 
     throw new ApiError(body?.error?.message ?? `Request failed (${res.status})`, res.status, body);
   }
   return (await res.json()) as T;
+}
+
+/**
+ * Probes the API health endpoint. Distinguishes:
+ *  - 'online'          — the PC MAX service answered (any HTTP status)
+ *  - 'offline'         — no internet connectivity (navigator.onLine)
+ *  - 'api-unavailable' — internet present but the API is unreachable/timing out
+ */
+export async function checkServiceHealth(): Promise<'online' | 'offline' | 'api-unavailable'> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return 'offline';
+  try {
+    await fetch(`${config.apiUrl}/health`, {
+      signal: withTimeout(undefined, 6_000),
+      headers: { accept: 'application/json' },
+    });
+    return 'online';
+  } catch {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return 'offline';
+    return 'api-unavailable';
+  }
 }
 
 /** Try to restore the session via the httpOnly refresh cookie. */

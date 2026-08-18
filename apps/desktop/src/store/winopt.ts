@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import {
   windowsScan,
   windowsApply,
@@ -14,6 +15,14 @@ import {
   CATEGORY_ORDER,
 } from '@/lib/winopt';
 
+/**
+ * Detection staleness window. A fresh scan result is reused for 5 minutes so
+ * navigating between pages never re-runs the (expensive, subprocess-based)
+ * Windows scan — that was the source of both repeated PowerShell flashes and
+ * the Dashboard's optimization status "resetting" on every visit.
+ */
+export const SCAN_STALE_MS = 5 * 60 * 1000;
+
 export type WinStatus = 'idle' | 'scanning' | 'ready' | 'unsupported' | 'applying' | 'error';
 
 export interface Recommendation {
@@ -25,12 +34,18 @@ export interface Recommendation {
 interface WinOptState {
   status: WinStatus;
   scan: ScanResult | null;
+  /** Millis of the last completed scan — guards against redundant re-detection. */
+  lastScannedAt: number | null;
   snapshots: SnapshotMeta[];
   lastApply: ApplyResult | null;
   recovery: RecoveryReport | null;
   error: string | null;
-  /** Actions */
-  scanSystem: () => Promise<void>;
+  /**
+   * Run (or reuse) a detection pass. When `force` is false the cached scan is
+   * returned if it is newer than SCAN_STALE_MS — apply/restore pass true so the
+   * status always reflects real post-change state.
+   */
+  scanSystem: (force?: boolean) => Promise<void>;
   refreshSnapshots: () => Promise<void>;
   apply: (profile: string, tweakIds: string[]) => Promise<ApplyResult | null>;
   restore: (id: string) => Promise<number>;
@@ -63,49 +78,67 @@ export function recommend(scan: ScanResult | null): Recommendation[] {
     .sort((a, b) => RISK_ORDER[a.tweak.risk] - RISK_ORDER[b.tweak.risk] || CATEGORY_ORDER[a.tweak.category] - CATEGORY_ORDER[b.tweak.category]);
 }
 
-export const useWinOpt = create<WinOptState>()((set, get) => ({
-  status: 'idle',
-  scan: null,
-  snapshots: [],
-  lastApply: null,
-  recovery: null,
-  error: null,
+export const useWinOpt = create<WinOptState>()(
+  persist(
+    (set, get) => ({
+      status: 'idle',
+      scan: null,
+      lastScannedAt: null,
+      snapshots: [],
+      lastApply: null,
+      recovery: null,
+      error: null,
 
-  scanSystem: async () => {
-    set({ status: 'scanning', error: null });
-    const scan = await windowsScan();
-    set({ scan, status: scan.supported ? 'ready' : 'unsupported' });
-    await get().refreshSnapshots();
-  },
+      scanSystem: async (force = false) => {
+        const { scan, lastScannedAt } = get();
+        if (!force && scan && lastScannedAt && Date.now() - lastScannedAt < SCAN_STALE_MS) return;
+        set({ status: 'scanning', error: null });
+        const next = await windowsScan();
+        set({ scan: next, lastScannedAt: Date.now(), status: next.supported ? 'ready' : 'unsupported' });
+        await get().refreshSnapshots();
+      },
 
-  refreshSnapshots: async () => {
-    const snapshots = await windowsSnapshots();
-    set({ snapshots });
-  },
+      refreshSnapshots: async () => {
+        const snapshots = await windowsSnapshots();
+        set({ snapshots });
+      },
 
-  apply: async (profile, tweakIds) => {
-    set({ status: 'applying', error: null });
-    try {
-      const result = await windowsApply(profile, tweakIds);
-      set({ lastApply: result, error: result.error });
-      await get().scanSystem();
-      return result;
-    } catch (e) {
-      set({ status: 'error', error: e instanceof Error ? e.message : 'Apply failed.' });
-      return null;
-    }
-  },
+      apply: async (profile, tweakIds) => {
+        set({ status: 'applying', error: null });
+        try {
+          const result = await windowsApply(profile, tweakIds);
+          set({ lastApply: result, error: result.error });
+          // Always re-detect after applying so the status reflects real state.
+          await get().scanSystem(true);
+          return result;
+        } catch (e) {
+          set({ status: 'error', error: e instanceof Error ? e.message : 'Apply failed.' });
+          return null;
+        }
+      },
 
-  restore: async (id) => {
-    const n = await windowsRestore(id);
-    await get().scanSystem();
-    return n;
-  },
+      restore: async (id) => {
+        const n = await windowsRestore(id);
+        await get().scanSystem(true);
+        return n;
+      },
 
-  recover: async () => {
-    const recovery = await windowsRecover();
-    set({ recovery });
-  },
+      recover: async () => {
+        const recovery = await windowsRecover();
+        set({ recovery });
+      },
 
-  reset: () => set({ status: 'idle', scan: null, lastApply: null, error: null }),
-}));
+      reset: () => set({ status: 'idle', scan: null, lastScannedAt: null, lastApply: null, error: null }),
+    }),
+    {
+      name: 'goh_winopt',
+      // Persist the last known detection + apply result so the Dashboard can
+      // render immediately on restart instead of flashing an unoptimized state
+      // until a fresh scan finishes. Snapshots always come from disk.
+      partialize: (s) => ({ scan: s.scan, lastScannedAt: s.lastScannedAt, lastApply: s.lastApply }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.scan) state.status = state.scan.supported ? 'ready' : 'unsupported';
+      },
+    },
+  ),
+);

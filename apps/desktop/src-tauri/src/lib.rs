@@ -6,8 +6,15 @@ use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 #[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+#[cfg(target_os = "windows")]
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+/// CREATE_NO_WINDOW — background system queries (hardware/WMI detection) must
+/// never flash a console window in the packaged GUI app.
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 use tauri::Manager;
 use winopt::{ApplyResult, RealOs, RecoveryReport, ScanResult, SnapshotMeta, SnapshotStore};
 
@@ -238,6 +245,7 @@ fn powershell(script: &str) -> Option<String> {
     #[cfg(target_os = "windows")]
     {
         let out = Command::new("powershell")
+            .creation_flags(CREATE_NO_WINDOW)
             .args(["-NoProfile", "-NonInteractive", "-Command", script])
             .output()
             .ok()?;

@@ -1,6 +1,6 @@
 {
   "name": "@goh/desktop",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Game Optimization Hub — Windows Desktop App (Tauri 2 + React)",
   "type": "module",

@@ -1,10 +1,13 @@
-import { api } from './api';
+import { api, isNetworkError } from './api';
 import { cache } from './cache';
 import { ensureDeviceRegistered } from './device';
 
 export interface SyncResult {
   ok: boolean;
+  /** No internet connectivity at all. */
   offline: boolean;
+  /** Internet works but the PC MAX service is unreachable or errored. */
+  apiUnavailable: boolean;
   changedGames: number;
   contentUpdatedAt: string | null;
 }
@@ -16,7 +19,10 @@ export interface SyncResult {
  *  3. pull the incremental /sync manifest and refresh changed games,
  *  4. record the new lastSync timestamp.
  *
- * Any network failure marks the app offline; cached data keeps the UI usable.
+ * Failures are classified: a network-level failure with no connectivity is
+ * "offline"; every other failure (API unreachable, timeout, 5xx) is
+ * "api-unavailable". Only the former shows the Offline state — a reachable
+ * internet connection with a down service must never be reported as offline.
  */
 export async function runSync(): Promise<SyncResult> {
   await ensureDeviceRegistered();
@@ -64,11 +70,25 @@ export async function runSync(): Promise<SyncResult> {
     return {
       ok: true,
       offline: false,
+      apiUnavailable: false,
       changedGames,
       contentUpdatedAt: manifest.contentUpdatedAt,
     };
-  } catch {
-    return { ok: false, offline: true, changedGames: 0, contentUpdatedAt: null };
+  } catch (err) {
+    // Network-level failure while navigator reports no connectivity = genuinely
+    // offline. Anything else (API unreachable, timeout, server error) is a
+    // service issue — the user's internet may be perfectly fine.
+    const offline =
+      isNetworkError(err) &&
+      typeof navigator !== 'undefined' &&
+      navigator.onLine === false;
+    return {
+      ok: false,
+      offline,
+      apiUnavailable: !offline,
+      changedGames: 0,
+      contentUpdatedAt: null,
+    };
   }
 }
 

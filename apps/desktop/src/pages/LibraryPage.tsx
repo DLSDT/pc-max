@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FolderPlus, Loader2, Radar, ScanSearch } from 'lucide-react';
+import { CloudOff, FolderPlus, Loader2, Radar, ScanSearch, WifiOff } from 'lucide-react';
 import { useGames } from '@/hooks/useLibrary';
 import { useLibrary } from '@/store/library';
+import { ApiError } from '@/lib/api';
 import { detectGamesOnDisk, applyDetection, type KnownExecutable } from '@/lib/detect';
 import { isTauriShell } from '@/lib/optimizer';
 import GameLibraryCard from '@/components/GameLibraryCard';
@@ -63,6 +64,25 @@ export default function LibraryPage() {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('library.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('library.subtitle')}</p>
       </header>
+
+      {/* Catalog load failure — detection/association need the live catalog. */}
+      {catalog.isError && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
+          {catalog.error instanceof ApiError && typeof navigator !== 'undefined' && navigator.onLine === false ? (
+            <WifiOff aria-hidden className="size-4 shrink-0 text-amber-600" />
+          ) : (
+            <CloudOff aria-hidden className="size-4 shrink-0 text-amber-600" />
+          )}
+          <span className="min-w-0 flex-1">
+            {catalog.error instanceof ApiError && catalog.error.kind !== 'http'
+              ? catalog.error.message
+              : t('common.serviceUnavailable')}
+          </span>
+          <Button size="sm" variant="outline" onClick={() => void catalog.refetch()}>
+            {t('common.retry')}
+          </Button>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5">

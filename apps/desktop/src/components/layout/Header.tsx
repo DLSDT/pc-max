@@ -1,11 +1,41 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, Loader2, Search, Settings, UserRound, Wifi, WifiOff } from 'lucide-react';
-import { useUi } from '@/store/ui';
+import { ArrowUp, CloudOff, Loader2, Search, Settings, UserRound, Wifi, WifiOff } from 'lucide-react';
+import { useUi, type SyncStatus } from '@/store/ui';
 import { useAuth } from '@/store/auth';
 import { Input } from '@/components/ui';
 import { cn } from '@/lib/utils';
+
+/** Visual + label mapping for the truthful connectivity state. */
+function statusUi(status: SyncStatus, t: (k: string) => string) {
+  switch (status) {
+    case 'offline':
+      return {
+        icon: <WifiOff aria-hidden className="size-3.5" />,
+        label: t('header.offline'),
+        cls: 'border-destructive/30 bg-destructive/10 text-destructive',
+      };
+    case 'api-unavailable':
+      return {
+        icon: <CloudOff aria-hidden className="size-3.5" />,
+        label: t('header.apiUnavailable'),
+        cls: 'border-amber-500/30 bg-amber-500/10 text-amber-600',
+      };
+    case 'syncing':
+      return {
+        icon: <Loader2 aria-hidden className="size-3.5 animate-spin" />,
+        label: t('header.syncing'),
+        cls: 'border-border bg-secondary text-muted-foreground',
+      };
+    default:
+      return {
+        icon: <Wifi aria-hidden className="size-3.5" />,
+        label: t('header.online'),
+        cls: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600',
+      };
+  }
+}
 
 export default function Header() {
   const { t } = useTranslation();
@@ -48,32 +78,14 @@ export default function Header() {
 
         <span
           role="status"
-          title={
-            syncStatus === 'offline'
-              ? t('header.offline')
-              : syncStatus === 'syncing'
-                ? t('header.syncing')
-                : t('header.online')
-          }
+          title={statusUi(syncStatus, t).label}
           className={cn(
             'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium',
-            syncStatus === 'offline'
-              ? 'border-destructive/30 bg-destructive/10 text-destructive'
-              : syncStatus === 'syncing'
-                ? 'border-border bg-secondary text-muted-foreground'
-                : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
+            statusUi(syncStatus, t).cls,
           )}
         >
-          {syncStatus === 'offline' ? (
-            <WifiOff aria-hidden className="size-3.5" />
-          ) : syncStatus === 'syncing' ? (
-            <Loader2 aria-hidden className="size-3.5 animate-spin" />
-          ) : (
-            <Wifi aria-hidden className="size-3.5" />
-          )}
-          <span className="hidden sm:inline">
-            {syncStatus === 'offline' ? t('header.offline') : syncStatus === 'syncing' ? t('header.syncing') : t('header.online')}
-          </span>
+          {statusUi(syncStatus, t).icon}
+          <span className="hidden sm:inline">{statusUi(syncStatus, t).label}</span>
         </span>
 
         {user ? (
