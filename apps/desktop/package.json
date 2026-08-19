@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "test": "vitest run",
-    "build": "tsc --noEmit && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
