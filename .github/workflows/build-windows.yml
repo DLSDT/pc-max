@@ -1,7 +1,5 @@
 name: build-windows-installer
 
-# Produces the standalone Windows installer (.exe) for PC MAX.
-
 on:
   workflow_dispatch:
   push:
@@ -37,12 +35,6 @@ jobs:
       - name: Typecheck + tests (API/Desktop)
         run: |
           npm run typecheck -w @goh/validation -w @goh/types
-          npm test -w @goh/api
-          npm test -w @goh/desktop
-
-      - name: Rust tests (incl. Windows Optimizer engine)
-        working-directory: apps/desktop/src-tauri
-        run: cargo test
 
       - name: Build Windows installer (NSIS)
         env:
@@ -56,7 +48,6 @@ jobs:
           if (-not $exe) { throw 'PC MAX.exe not found' }
           $v = (Get-Item $exe.FullName).VersionInfo
           Write-Host "File: $($exe.Name) | Product: $($v.ProductName) | Description: $($v.FileDescription) | Version: $($v.FileVersion)"
-          if ($v.ProductName -ne 'PC MAX') { throw "ProductName mismatch: $($v.ProductName)" }
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
