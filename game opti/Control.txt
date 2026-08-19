@@ -1,0 +1,45 @@
+OPTIMISED-SETTINGS-YELLOW
+Far Object Detail (LOD)---------------------------HIGH
+Texture Resolution---------------------------ULTRA
+Texture Filtering---------------------------HIGH
+Shadow Resolution---------------------------HIGH
+Shadow Filtering---------------------------MEDIUM
+Volumetric Lighting---------------------------MEDIUM
+Foliage Quality---------------------------MEDIUM
+SSAO---------------------------ON
+Screen Space Reflections Quality---------------------------MEDIUM
+Global Reflections---------------------------MEDIUM
+MSAA---------------------------OFF
+Film Grain---------------------------OFF
+Motion Blur---------------------------ON
+========================================================
+با استفاده از برنامه
+OPTISCALER
+فریم جنریشن رو برای کارت های انویدیا فعال کن
+متاسفانه روشی برا فعال کردن فریم جنریشن کارت های ای ام دی تو این بازی وجود نداره
+========================================================
+OPTIMISED-SETTINGS-GREEN
+Far Object Detail (LOD)---------------------------HIGH
+Texture Resolution---------------------------ULTRA
+Texture Filtering---------------------------HIGH
+Shadow Resolution---------------------------LOW
+Shadow Filtering---------------------------LOW
+Volumetric Lighting---------------------------LOW
+Foliage Quality---------------------------LOW
+SSAO---------------------------ON
+Screen Space Reflections Quality---------------------------MEDIUM
+Global Reflections---------------------------OFF
+MSAA---------------------------OFF
+Film Grain---------------------------OFF
+Motion Blur---------------------------ON
+========================================================
+اگه فریم اضافه داشتی میتونی کنار هر کدوم از این تنظیمات از ری تریسینگ استفاده کنی
+========================================================
+RAT TRACING-OPTIMISED-SETTINGS
+Ray Tracing Preset---------------------------CUSTOM
+Ray Traced Reflections---------------------------ON
+Ray Traced Transparent Reflections---------------------------ON
+Ray Traced Indirect Diffuse Lighting---------------------------OFF
+Ray Traced Contact Shadows---------------------------OFF
+Ray Trace Debris---------------------------ON
+Ray Traced Increase samples count---------------------------OFF

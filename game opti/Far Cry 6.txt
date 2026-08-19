@@ -1,0 +1,41 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE FILTERING-------------------------ULTRA
+SHADOWS-------------------------HIGH
+GEOMETRY AND VEGETATION-------------------------HIGH
+ENVIRONMENT-------------------------HIGH
+WATER-------------------------MEDIUM
+TERRAIN-------------------------ULTRA
+VOLUMETRIC FOG-------------------------HIGH
+HD TEXTURES-------------------------OFF
+ANTI-ALIASING-------------------------TAA
+MOTION BLUR-------------------------ON
+CAMERA SHAKES-------------------------FULL
+POISONED AND DRUNK EFFECTS-------------------------ON
+DR REFLECTIONS-------------------------OFF
+DXR SHADOWS-------------------------OFF
+FIDELITYFX CAS-------------------------ON
+FIDELITYFX VARIABLE SHADING-------------------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این دو روش استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+TEXTURE FILTERING-------------------------HIGH
+SHADOWS-------------------------MEDIUM
+GEOMETRY AND VEGETATION-------------------------LOW
+ENVIRONMENT-------------------------HIGH
+WATER-------------------------LOW
+TERRAIN-------------------------ULTRA
+VOLUMETRIC FOG-------------------------HIGH
+HD TEXTURES-------------------------OFF
+ANTI-ALIASING-------------------------TAA
+MOTION BLUR-------------------------ON
+CAMERA SHAKES-------------------------FULL
+POISONED AND DRUNK EFFECTS-------------------------ON
+DR REFLECTIONS-------------------------OFF
+DXR SHADOWS-------------------------OFF
+FIDELITYFX CAS-------------------------ON
+FIDELITYFX VARIABLE SHADING-------------------------OFF

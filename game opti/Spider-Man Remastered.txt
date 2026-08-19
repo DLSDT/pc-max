@@ -1,0 +1,59 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-ALIASING---------------TAA
+TEXTURE QUALITY---------------VERY HIGH
+TEXTURE FILTERING---------------16X
+SHADOW QUALITY---------------HIGH
+AMBIENT OCCLUSION---------------SSAO
+SCREEN SPACE REFLECTIONS---------------ON
+RAY-TRACED REFLECTIONS---------------ON
+REFLECTION RESOLUTION---------------HIGH
+GEOMETRY DETAIL---------------HIGH
+OBJECT RANGE---------------5
+LEVEL OF DETAIL---------------VERY HIGH
+TRAFFIC DENSITY---------------MEDIUM
+CROWD DENSITY---------------LOW
+HAIR QUALITY---------------MEDIUM
+WEATHER PARTICLE QUALITY---------------LOW
+DEPTH OF FIELD---------------HIGH
+BLOOM---------------ON
+LENS FLARES---------------ON
+CHROMATIC ABERRATION---------------ON
+VIGNETTE---------------ON
+MOTION BLUR STRENGTH---------------5
+FIELD OF VIEW---------------10
+FILM GRAIN STRENGTH---------------OFF
+SHARPNESS---------------5
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 4 روش میتونید استفاده کنید
+DLL FG
+OPTI NO SETUP
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ANTI-ALIASING---------------TAA
+TEXTURE QUALITY---------------HIGH
+TEXTURE FILTERING---------------4X
+SHADOW QUALITY---------------MEDIUM
+AMBIENT OCCLUSION---------------SSAO
+SCREEN SPACE REFLECTIONS---------------ON
+RAY-TRACED REFLECTIONS---------------OFF
+REFLECTION RESOLUTION---------------HIGH
+GEOMETRY DETAIL---------------HIGH
+OBJECT RANGE---------------5
+LEVEL OF DETAIL---------------HIGH
+TRAFFIC DENSITY---------------MEDIUM
+CROWD DENSITY---------------LOW
+HAIR QUALITY---------------MEDIUM
+WEATHER PARTICLE QUALITY---------------LOW
+DEPTH OF FIELD---------------HIGH
+BLOOM---------------ON
+LENS FLARES---------------OFF
+CHROMATIC ABERRATION---------------ON
+VIGNETTE---------------OFF
+MOTION BLUR STRENGTH---------------5
+FIELD OF VIEW---------------10
+FILM GRAIN STRENGTH---------------OFF
+SHARPNESS---------------5

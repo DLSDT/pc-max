@@ -1,0 +1,43 @@
+VISUAL EFFECTS--------------ULTRA
+ANTI-ALIASING--------------TAA+
+ANISOTROPIC FILTERING--------------16X
+DISTANCE SCALING--------------ULTRA
+TEXTURE QUALITY--------------ULTRA
+CAR REFLECTIONS--------------PLANAR LOW
+REFLECTION QUALITY--------------MEDIUM
+CITY GLOW EFFECT--------------LOW
+GROUND HAZE--------------ON
+WORLD SHADOW QUALITY--------------HIGH
+STREETLIGHT QUALITY--------------LOW/(HIGH)
+VEHICLE LIGHT QUALITY--------------LOW/(MEDIUM)
+AMBIENT OCCLUSION--------------SSAO
+BLOOM--------------ON
+LENS FLARE--------------ON
+CLASSIC LIGHTING--------------OFF----شخصی
+CLOUD QUALITY-----------------VOLUMETRIC MAX
+MOTION BLUR--------------ON
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این دو روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+VISUAL EFFECTS--------------HIGH
+ANTI-ALIASING--------------TAA+
+ANISOTROPIC FILTERING--------------16X
+DISTANCE SCALING--------------ULTRA
+TEXTURE QUALITY--------------ULTRA
+CAR REFLECTIONS--------------SCREEN
+REFLECTION QUALITY--------------MEDIUM
+CITY GLOW EFFECT--------------LOW
+GROUND HAZE--------------ON
+WORLD SHADOW QUALITY--------------MEDIUM
+STREETLIGHT QUALITY--------------LOW
+VEHICLE LIGHT QUALITY--------------LOW
+AMBIENT OCCLUSION--------------OFF
+BLOOM--------------ON
+LENS FLARE--------------OFF
+CLASSIC LIGHTING--------------OFF----شخصی
+CLOUD QUALITY-----------------VOLUMETRIC MAX
+MOTION BLUR--------------ON

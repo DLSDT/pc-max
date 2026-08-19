@@ -1,0 +1,68 @@
+OPTIMISED-SETTINGS-YELLOW
+ENABLE RAY TRACING --------------------ON
+RAY TRACED SHADOWS --------------------OFF
+HIGH RESOLUTION RAY TRACED REFLECTIONS --------------------OFF
+RAY TRACED REFLECTIONS --------------------HIGH
+GLOBAL ILLUMINATION --------------------VERY HIGH
+SECOND RAY TRACED GLOBAL ILLUMINATION BOUNCE --------------------OFF
+RAY TRACED AMBIENT OCCLUSION --------------------VERY HIGH
+RAY TRACED SCENE BVH QUALITY --------------------VERY HIGH
+SHADER QUALITY --------------------VERY HIGH
+TEXTURE QUALITY --------------------VERY HIGH
+ANISOTROPIC FILTERING --------------------16X
+PARTICLES QUALITY --------------------VERY HIGH
+TESSELLATION --------------------VERY HIGH
+WATER QUALITY --------------------NORMAL
+GRASS QUALITY --------------------VERY HIGH
+LIGHTING QUALITY --------------------ULTRA
+REFLECTION QUALITY --------------------HIGH
+SHADOW QUALITY --------------------HIGH
+SOFT SHADOWS --------------------SOFTER
+LONG SHADOWS --------------------ON
+HIGH RESOLUTION SHADOWS --------------------OFF
+EXTENDED SHADOWS DISTANCE --------------------0
+POST FX --------------------HIGH/VERY HIGH
+IN-GAME DEPTH OF FIELD EFFECTS --------------------HIGH
+MOTION BLUR --------------------100
+AMBIENT OCCLUSION --------------------SSDO
+POPULATION DENSITY --------------------5 or 10
+POPULATION VARLETY --------------------10
+DISTANCE SCALING --------------------0
+HIGH DETAIL STREAMING WHILE FLYING --------------------ON
+EXTENDED DISTANCE SCALING --------------------5
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن در چنل یوتوب به زودی
+https://www.youtube.com/@PCMax-Gaming
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ENABLE RAY TRACING --------------------ON
+RAY TRACED SHADOWS --------------------OFF
+HIGH RESOLUTION RAY TRACED REFLECTIONS --------------------OFF
+RAY TRACED REFLECTIONS --------------------OFF
+GLOBAL ILLUMINATION --------------------OFF
+SECOND RAY TRACED GLOBAL ILLUMINATION BOUNCE --------------------OFF
+RAY TRACED AMBIENT OCCLUSION --------------------OFF
+RAY TRACED SCENE BVH QUALITY --------------------HIGH
+SHADER QUALITY --------------------HIGH
+TEXTURE QUALITY --------------------HIGH
+ANISOTROPIC FILTERING --------------------16X
+PARTICLES QUALITY --------------------NORMAL
+TESSELLATION --------------------VERY HIGH
+WATER QUALITY --------------------NORMAL
+GRASS QUALITY --------------------HIGH
+LIGHTING QUALITY --------------------ULTRA
+REFLECTION QUALITY --------------------HIGH
+SHADOW QUALITY --------------------HIGH
+SOFT SHADOWS --------------------SHARP
+LONG SHADOWS --------------------ON
+HIGH RESOLUTION SHADOWS --------------------OFF
+EXTENDED SHADOWS DISTANCE --------------------0
+POST FX --------------------HIGH/VERY HIGH
+IN-GAME DEPTH OF FIELD EFFECTS --------------------OFF
+MOTION BLUR --------------------100
+AMBIENT OCCLUSION --------------------SSDO
+POPULATION DENSITY --------------------5 or 10
+POPULATION VARLETY --------------------10
+DISTANCE SCALING --------------------0
+HIGH DETAIL STREAMING WHILE FLYING --------------------OFF
+EXTENDED DISTANCE SCALING --------------------5

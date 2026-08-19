@@ -1,0 +1,21 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURES---------------ULTRA
+MODEL QUALITY---------------ENHANCED
+ANISOTROPIC FILTER---------------ULTRA
+SHADOWS---------------MEDIUM
+REFLECTIONS---------------MEDIUM
+AMBIENT OCCLUSION---------------MEDIUM
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+OPTI NO SETUP
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+TEXTURES---------------MEDIUM
+MODEL QUALITY---------------ENHANCED
+ANISOTROPIC FILTER---------------ULTRA
+SHADOWS---------------LOW
+REFLECTIONS---------------LOW
+AMBIENT OCCLUSION---------------MEDIUM

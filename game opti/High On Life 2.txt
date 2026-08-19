@@ -1,0 +1,23 @@
+OPTIMISED-SETTINGS-YELLOW
+VIEW DISTANCE QUALITY-----------------HIGH
+GLOBAL ILLUMINATION QUALITY-----------------HIGH
+ANTI ALIASING QUALITY-----------------VERY HIGH
+SHADOW QUALITY-----------------MEDIUM
+POST PROCESS QUALITY-----------------VERY HIGH
+TEXTURE QUALITY-----------------HIGH
+EFFECTS QUALITY-----------------MEDIUM
+FOLIAGE QUALITV-----------------MEDIUM
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=SbHG7aH3svw&t=581s
+فقط رو کارت های انویدیا سری 20-30-40 جوابه
+========================================================
+OPTIMISED-SETTINGS-GREEN
+VIEW DISTANCE QUALITY-----------------MEDIUM
+GLOBAL ILLUMINATION QUALITY-----------------MEDIUM
+ANTI ALIASING QUALITY-----------------HIGH
+SHADOW QUALITY-----------------LOW
+POST PROCESS QUALITY-----------------VERY HIGH
+TEXTURE QUALITY-----------------MEDIUM
+EFFECTS QUALITY-----------------LOW
+FOLIAGE QUALITV-----------------LOW

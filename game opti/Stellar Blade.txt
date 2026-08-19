@@ -1,0 +1,44 @@
+OPTIMISED-SETTINGS-YELLOW
+ENVIRONMENTAL OBJECT DETAIL --------------------HIGH
+CHARACTER OBJECT DETAIL --------------------HIGH
+ENVIRONMENT TEXTURE --------------------4K
+CHARACTER TEXTURE --------------------VERY HIGH
+CLUTTER DENSITY --------------------MEDIUM
+ENVIRONMENTAL OBJECT VISIBLE --------------------100
+CHARACTER VISIBLE DISTANCE --------------------100
+SHADOW QUALITY --------------------HIGH
+LIGHTING QUALITY --------------------HIGH
+VOLUMETRIC FOG --------------------MEDIUM
+PARTICLE QUALITY --------------------HIGH
+ANIMATION QUALITY --------------------HIGH
+AMBIENT OCCLUSION --------------------HIGH
+DEPTH OF FIELD --------------------MEDIUM
+CHROMATIC ABERRATION --------------------ON
+FILM GRAIN --------------------OFF
+MOTION BLUR --------------------10
+SCREEN SPACE REFLECTION QUALITY --------------------HIGH
+NVIDIA REFLEX --------------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ENVIRONMENTAL OBJECT DETAIL --------------------MEDIUM
+CHARACTER OBJECT DETAIL --------------------HIGH
+ENVIRONMENT TEXTURE --------------------HIGH
+CHARACTER TEXTURE --------------------VERY HIGH
+CLUTTER DENSITY --------------------MEDIUM
+ENVIRONMENTAL OBJECT VISIBLE --------------------50
+CHARACTER VISIBLE DISTANCE --------------------100
+SHADOW QUALITY --------------------LOW
+LIGHTING QUALITY --------------------HIGH
+VOLUMETRIC FOG --------------------MEDIUM
+PARTICLE QUALITY --------------------HIGH
+ANIMATION QUALITY --------------------MEDIUM
+AMBIENT OCCLUSION --------------------LOW
+DEPTH OF FIELD --------------------MEDIUM
+CHROMATIC ABERRATION --------------------ON
+FILM GRAIN --------------------OFF
+MOTION BLUR --------------------10
+SCREEN SPACE REFLECTION QUALITY --------------------LOW
+NVIDIA REFLEX --------------------OFF

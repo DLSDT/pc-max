@@ -1,0 +1,74 @@
+OPTIMISED-SETTINGS-YELLOW
+ENVIRONMENT REFLECTION QUALITY --------------------HIGH
+FOG BLUR --------------------ON
+MICRODETAIL QUALITY --------------------HIGH
+PARTICLE QUALITY --------------------MEDIUM
+SCATTER DENSITY --------------------ULTRA
+SHADOW QUALITY --------------------HIGH
+SHADOW PROXIES --------------------ON
+SPOTLIGHT SHADOWS --------------------MANY
+SPOTLIGHT SHADOW QUALITY --------------------ULTRA
+DEFORMABLE TERRAIN QUALITY --------------------ULTRA
+EXTRA STREAMING DISTANCE --------------------100
+OBJECT DETAIL --------------------150
+DESTRUCTION QUALITY --------------------HIGH
+SPOTLIGHT PROJECTION RESOLUTION --------------------512
+TERRAIN TESSELLATION --------------------ULTRA
+RAYTRACED CONTACT SHADOWS --------------------HIGH
+RAYTRACED DIFFUSE REFLECTIONS --------------------MEDIUM
+RAYTRACED DIFFUSE REFLECTIONS RESOLUTION --------------------HIGH
+RAYTRACED SPECULAR REFLECTIONS --------------------ULTRA
+RAYTRACED SPECULAR REFLECTIONS RESOLUTION --------------------HIGH
+BVH QUALITY --------------------HIGH
+NVIDIA RTX DIRECT LIGHTING --------------------OFF
+VOLUMETRIC FOG --------------------HIGH
+VOLUMETRIC CLOUDS --------------------HIGH
+
+LENS AND CINEMATIC EFFECTS QUALITY --------------------ULTRA
+FILM GRAIN --------------------OFF
+DEPTH OF FIELD --------------------HIGH
+NVIDIA RTX DIRECT LIGHTING --------------------OFF
+MSI MYSTIC LIGHT --------------------OFF
+
+NVIDIA DLSS RAY RECONSTRUCTION --------------------OFF
+NVIDIA REFLEX --------------------OFF
+UPSCAL MODE --------------------FIXED
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ENVIRONMENT REFLECTION QUALITY --------------------HIGH
+FOG BLUR --------------------ON
+MICRODETAIL QUALITY --------------------HIGH
+PARTICLE QUALITY --------------------MEDIUM
+SCATTER DENSITY --------------------MEDIUM
+SHADOW QUALITY --------------------HIGH
+SHADOW PROXIES --------------------ON
+SPOTLIGHT SHADOWS --------------------MANY
+SPOTLIGHT SHADOW QUALITY --------------------ULTRA
+DEFORMABLE TERRAIN QUALITY --------------------ULTRA
+EXTRA STREAMING DISTANCE --------------------60
+OBJECT DETAIL --------------------125
+DESTRUCTION QUALITY --------------------HIGH
+SPOTLIGHT PROJECTION RESOLUTION --------------------512
+TERRAIN TESSELLATION --------------------MEDIUM
+RAYTRACED CONTACT SHADOWS --------------------HIGH
+RAYTRACED DIFFUSE REFLECTIONS --------------------MEDIUM
+RAYTRACED DIFFUSE REFLECTIONS RESOLUTION --------------------HIGH
+RAYTRACED SPECULAR REFLECTIONS --------------------HIGH
+RAYTRACED SPECULAR REFLECTIONS RESOLUTION --------------------HIGH
+BVH QUALITY --------------------HIGH
+NVIDIA RTX DIRECT LIGHTING --------------------OFF
+VOLUMETRIC FOG --------------------MEDIUM
+VOLUMETRIC CLOUDS --------------------MEDIUM
+
+LENS AND CINEMATIC EFFECTS QUALITY --------------------ULTRA
+FILM GRAIN --------------------OFF
+DEPTH OF FIELD --------------------HIGH
+NVIDIA RTX DIRECT LIGHTING --------------------OFF
+MSI MYSTIC LIGHT --------------------OFF
+
+NVIDIA DLSS RAY RECONSTRUCTION --------------------OFF
+NVIDIA REFLEX --------------------OFF
+UPSCAL MODE --------------------FIXED

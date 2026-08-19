@@ -1,0 +1,45 @@
+OPTIMISED-SETTINGS-YELLOW
+HD TEXTURES--------------ON
+ANTIALIASING--------------SMAA 2TX
+OBJECT QUALITY--------------VERY HIGH
+GAME EFFECTS--------------VERY HIGH
+LIGHTING--------------VERY HIGH
+PARTICLES--------------HIGH
+PHYSICS--------------ULTRA HIGH
+POSTPROCESS QUALITY--------------ULTRA HIGH
+SHADER QUALITY--------------VERY HIGH
+SHADOWS--------------HIGH
+TEXTURES--------------VERY HIGH
+WATER DETAILS--------------HIGH
+VOLUMETRIC EFFECTS DETAIL--------------MEDIUM
+VEGETATION DETAIL--------------MEDIUM
+OBJECT DISTANCE--------------8
+LOD DISTANCE--------------9
+VEGETATION DRAW DISTANCE--------------11
+MOTION BLUR--------------CAMERA or FULL
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+HD TEXTURES--------------ON
+ANTIALIASING--------------SMAA 2TX
+OBJECT QUALITY--------------HIGH
+GAME EFFECTS--------------VERY HIGH
+LIGHTING--------------HIGH
+PARTICLES--------------HIGH
+PHYSICS--------------ULTRA HIGH
+POSTPROCESS QUALITY--------------ULTRA HIGH
+SHADER QUALITY--------------MEDIUM
+SHADOWS--------------LOW
+TEXTURES--------------HIGH
+WATER DETAILS--------------HIGH
+VOLUMETRIC EFFECTS DETAIL--------------MEDIUM
+VEGETATION DETAIL--------------LOW
+OBJECT DISTANCE--------------2
+LOD DISTANCE--------------9
+VEGETATION DRAW DISTANCE--------------7
+MOTION BLUR--------------CAMERA or FULL

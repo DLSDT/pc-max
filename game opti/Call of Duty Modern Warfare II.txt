@@ -1,0 +1,76 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-ALIASING------------------FILMIC SMAA T2X
+ANTI-ALIASING QUALITY------------------ULTRA QUALITY
+VIDEO MEMORY SCALE------------------90
+TEXTURE RESOLUTION------------------HIGH
+TEXTURE FILTER ANISOTROPIC------------------HIGH
+NEARBY LEVEL OF DETAIL------------------HIGH
+DISTANT LEVEL OF DETAIL------------------HIGH
+CLUTTER DRAW DISTANCE------------------LONG
+PARTICLE QUALITY------------------HIGH
+PARTICLE QUALITY LEVEL------------------HIGH
+BULLET IMPACTS & SPRAYS------------------ON
+SHADER QUALITY------------------MEDIUM
+TESSELLATION------------------NEAR
+TERRAIN MEMORY------------------MAX
+ON-DEMAND TEXTURE STREAMING------------------OFF
+VOLUMETRIC QUALITY------------------MEDIUM
+DEFERRED PHYSICS QUALITY------------------OFF
+WATER CAUSTICS------------------ON
+SHADOW MAP RESOLUTION------------------HIGH
+SCREEN SPACE SHADOWS------------------HIGH
+SPOT SHADOW QUALITY------------------HIGH
+CACHE SPOT SHADOWS------------------ON
+SPOT CACHE------------------HIGH
+CACHE SUN SHADOWS------------------ON
+PARTICLE LIGHTING------------------NORMAL
+AMBIENT OCCLUSION------------------DYNAMIC OBJECTS (MDAD)
+SCREEN SPACE REFLECTIONS------------------NORMAL
+WEATHER GRID VOLUMES------------------ON
+NVIDIA REFLEX LOW LATENCY------------------ON
+DEPTH OF FIELD------------------ON
+WORLD MOTION BLUR------------------ON
+WEAPON MOTION BLUR------------------ON
+FILM GRAIN------------------0.00
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این سه روش میتونید استفاده کنید
+OPTI NO SETUP
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-MULTIPLAY
+ANTI-ALIASING------------------SMAA T2X
+ANTI-ALIASING QUALITY------------------LOW
+VIDEO MEMORY SCALE------------------50
+TEXTURE RESOLUTION------------------NORMAL
+TEXTURE FILTER ANISOTROPIC------------------LOW
+NEARBY LEVEL OF DETAIL------------------LOW
+DISTANT LEVEL OF DETAIL------------------LOW
+CLUTTER DRAW DISTANCE------------------SHORT
+PARTICLE QUALITY------------------LOW
+PARTICLE QUALITY LEVEL------------------VERY LOW
+BULLET IMPACTS & SPRAYS------------------ON
+SHADER QUALITY------------------LOW
+TESSELLATION------------------OFF
+TERRAIN MEMORY------------------MIN
+ON-DEMAND TEXTURE STREAMING------------------OFF
+VOLUMETRIC QUALITY------------------LOW
+DEFERRED PHYSICS QUALITY------------------OFF
+WATER CAUSTICS------------------OFF
+SHADOW MAP RESOLUTION------------------VERY LOW
+SCREEN SPACE SHADOWS------------------LOW
+SPOT SHADOW QUALITY------------------LOW
+CACHE SPOT SHADOWS------------------OFF
+SPOT CACHE------------------LOW
+CACHE SUN SHADOWS------------------OFF
+PARTICLE LIGHTING------------------LOW
+AMBIENT OCCLUSION------------------DYNAMIC OBJECTS (MDAD)
+SCREEN SPACE REFLECTIONS------------------OFF
+WEATHER GRID VOLUMES------------------OFF
+NVIDIA REFLEX LOW LATENCY------------------OFF
+DEPTH OF FIELD------------------OFF
+WORLD MOTION BLUR------------------OFF
+WEAPON MOTION BLUR------------------OFF
+FILM GRAIN------------------0.00

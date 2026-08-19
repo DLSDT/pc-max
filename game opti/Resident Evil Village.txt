@@ -1,0 +1,42 @@
+RENDERING MODE---------------------NORMAL/INTERLACED
+IMAGE QUALITY---------------------1
+FIDELITYFX CAS---------------------ON
+ANTI-ALIASING---------------------FXAA+TAA
+VARIABLE RATE SHADING---------------------PRIORITIZE PERFORMANCE
+TEXTURE QUALITY---------------------HIGH (0.5GB)For 8GB/HIGH (8GB)For 12GB
+TEXTURE FILTER QUALITY---------------------X2/X16
+MESH QUALITY---------------------LOW/MAX
+RAY TRACING---------------------OFF/ON
+GL AND REFLECTION---------------------OFF/LOW
+LIGHT REFLECTION---------------------OFF/LOW
+AMBIENT OCCLUSION---------------------SSAO/ON
+SCREEN SPACE REFLECTION---------------------OFF
+VOLUMETRIC LIGHTING QUALITY---------------------LOW
+SUBSURFACE SCATTERING---------------------OFF
+SHADOW QUALITY---------------------HIGH
+CONTACT SHADOW---------------------ON
+SHADOW CACHE---------------------ON
+BLOOM---------------------OFF/ON
+LENS FLARE---------------------ON
+FILM NOISE---------------------OFF
+DEPTH OF FIELD---------------------ON
+LENS DISTORTION---------------------ON+CHROMATIC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

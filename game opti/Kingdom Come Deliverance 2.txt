@@ -1,0 +1,28 @@
+OPTIMISED-SETTINGS-GREEN
+ANTIALIASING--------------------SMAA 1X
+OBJECT QUALITY--------------------MEDIUM
+PARTICLES--------------------MEDIUM
+LIGHTING--------------------MEDIUM
+GLOBAL ILLUMINATION--------------------MEDIUM
+POSTPROCESS QUALITY--------------------ULTRA
+SHADER QUALITY--------------------MEDIUM
+SHADOWS--------------------MEDIUM
+TEXTURES--------------------HIGH
+VOLUMETRIC EFFECTS DETAIL--------------------HIGH
+VEGETATION DETAIL--------------------MEDIUM
+CHARACTER DETAIL--------------------HIGH
+
+
+OPTIMISED-SETTINGS-YELLOW
+ANTIALIASING--------------------SMAA 1X
+OBJECT QUALITY--------------------MEDIUM
+PARTICLES--------------------MEDIUM
+LIGHTING--------------------HIGH
+GLOBAL ILLUMINATION--------------------HIGH
+POSTPROCESS QUALITY--------------------ULTRA
+SHADER QUALITY--------------------HIGH
+SHADOWS--------------------HIGH
+TEXTURES--------------------ULTRA
+VOLUMETRIC EFFECTS DETAIL--------------------HIGH
+VEGETATION DETAIL--------------------MEDIUM
+CHARACTER DETAIL--------------------HIGH

@@ -1,0 +1,30 @@
+OPTIMISED-SETTINGS-YELLOW
+EFFECTS QUALITY --------------------ULTRA
+GEOMETRIC QUALITY --------------------ULTRA
+GLOBAL ILLUMINATION --------------------HIGH
+LIGHTING QUALITY --------------------ULTRA
+TEXTURE QUALITY --------------------ULTRA
+REFLECTIONS --------------------MEDIUM
+ATMOSPHERIC QUALITY --------------------MEDIUM
+POST-PROCESSING QUALITY --------------------LOW
+SCREEN SHAKE --------------------ON
+MOTION BLUR --------------------ON
+ASYNC COMPUTE --------------------ON for 60 FPS/OFF for 120 FPS
+LOW LATENCY MODE --------------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+========================================================
+OPTIMISED-SETTINGS-GREEN
+EFFECTS QUALITY --------------------ULTRA
+GEOMETRIC QUALITY --------------------MEDIUM
+GLOBAL ILLUMINATION --------------------LOW
+LIGHTING QUALITY --------------------LOW
+TEXTURE QUALITY --------------------HIGH
+REFLECTIONS --------------------MEDIUM
+ATMOSPHERIC QUALITY --------------------LOW
+POST-PROCESSING QUALITY --------------------LOW
+SCREEN SHAKE --------------------ON
+MOTION BLUR --------------------ON
+ASYNC COMPUTE --------------------ON for 60 FPS/OFF for 120 FPS
+LOW LATENCY MODE --------------------OFF

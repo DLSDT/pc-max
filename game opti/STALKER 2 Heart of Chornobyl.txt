@@ -1,0 +1,47 @@
+OPTIMISED-SETTINGS-GREEN
+TEXTURE QUALITY--------------------MEDIUM(For 8GB GPUs)
+HAIR-------------------------------------MEDIUM
+OBJECT DETAILS-----------------------EPIC
+EFFECTS QUALITY---------------------EPIC
+MATERIALS-----------------------------EPIC
+POST PROCESSING--------------------LOW
+ANTIALIASING-------------------------EPIC
+MOTION BLUR STRENGTH-----------100
+DEPTH OF FIELD----------------------EPIC
+LIGHT SHAFTS-------------------------ENABLED
+SHARPNESS------------------------------20
+SHADING QUALITY-------------------MEDIUM
+GLOBAL ILLUMINATION-------------HIGH
+REFLECTIONS--------------------------EPIC
+SHADOW QUALITY-------------------HIGH
+CLODS----------------------------------EPIC
+FOG-------------------------------------HIGH
+SKY--------------------------------------HIGH
+FOLIAGE QUALITY--------------------LOW
+ENVIRONMENT DRAW DISTANCE--EPIC
+
+محل ریختن فایل فریم جنریشن
+STALKER 2 Heart of Chornobyl\Stalker2\Binaries\Win64
+استفاده کنید dll_version از فایل های داخل فولدر
+
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE QUALITY--------------------EPIC(For 12GB GPUs)
+HAIR-------------------------------------MEDIUM
+OBJECT DETAILS-----------------------EPIC
+EFFECTS QUALITY---------------------EPIC
+MATERIALS-----------------------------EPIC
+POST PROCESSING--------------------LOW
+ANTIALIASING-------------------------EPIC
+MOTION BLUR STRENGTH-----------100
+DEPTH OF FIELD----------------------EPIC
+LIGHT SHAFTS-------------------------ENABLED
+SHARPNESS------------------------------20
+SHADING QUALITY-------------------MEDIUM
+GLOBAL ILLUMINATION-------------HIGH
+REFLECTIONS--------------------------EPIC
+SHADOW QUALITY-------------------HIGH
+CLODS----------------------------------EPIC
+FOG-------------------------------------HIGH
+SKY--------------------------------------HIGH
+FOLIAGE QUALITY-------------------MEDIUM
+ENVIRONMENT DRAW DISTANCE--EPIC

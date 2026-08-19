@@ -1,0 +1,40 @@
+OPTIMISED-SETTINGS-YELLOW
+MODEL QUALITY---------------------MEDIUM
+SHADOW QUALITY---------------------MEDIUM
+CLOUD QUALITY---------------------ULTRA
+TEXTURE QUALITY---------------------ULTRA
+TEXTURE FILTERING---------------------16X
+INSTANCE DISTANCE---------------------HIGH
+FOG QUALITY---------------------HIGH
+DETAIL DISTANCE---------------------HIGH
+ANIMATION LEVEL OF DETAIL---------------------HIGH
+ANTI-ALIASING---------------------TAA
+AMBIENT OCCLUSION---------------------ON
+DEPTH OF FIELD---------------------GAUSSIAN
+DEPTH OF FIELD QUALITY---------------------QUARTER
+GOD RAYS---------------------ON
+BLOOM---------------------ON
+SUBSURFACE SCATTERING---------------------OFF
+DYNAMIC CROWDS---------------------OFF
+========================================================
+ویدیو آموزش فریم جنریشن: فقط برنامه لاسلس اسکیلینگ برا این بازی جوابه
+https://www.youtube.com/watch?v=L2sffRNoTwI
+========================================================
+OPTIMISED-SETTINGS-GREEN
+MODEL QUALITY---------------------LOW
+SHADOW QUALITY---------------------MEDIUM
+CLOUD QUALITY---------------------ULTRA
+TEXTURE QUALITY---------------------HIGH
+TEXTURE FILTERING---------------------8X
+INSTANCE DISTANCE---------------------MEDIUM
+FOG QUALITY---------------------HIGH
+DETAIL DISTANCE---------------------HIGH
+ANIMATION LEVEL OF DETAIL---------------------HIGH
+ANTI-ALIASING---------------------TAA
+AMBIENT OCCLUSION---------------------OFF
+DEPTH OF FIELD---------------------OFF
+DEPTH OF FIELD QUALITY---------------------QUARTER
+GOD RAYS---------------------ON
+BLOOM---------------------ON
+SUBSURFACE SCATTERING---------------------OFF
+DYNAMIC CROWDS---------------------OFF

@@ -1,0 +1,62 @@
+OPTIMISED-SETTINGS-MULTIPLAY-{Pro Players}
+TEXTURE RESOLUTION-----------------NORMAL
+TEXTURE FILTER ANISOTROPIC-----------------ULTRA
+DEPTH OF FIELD-----------------OFF
+DETAIL QUALITY-----------------LOW
+PATRICLE RESOLUTION-----------------LOW
+BULELLE IMPACTS-----------------ON
+PERSISTENT EFFECTS-----------------OFF
+SHADER QUALITY-----------------LOW
+ON-DEMAND TEXTURE STREAMING-----------------OPTIMIZED
+LOCAL TEXTURE STREAMING QUALITY-----------------NORMAL
+SHADOW QUALITY-----------------NORMAL
+SCREEN SPACE SHADOWS-----------------OFF
+OCCLUSION AND SCREEN SPACE LIGHTING-----------------OFF
+SCREEN SPACE REFLECTIONS-----------------OFF
+STATIC REFLECTION QUALITY-----------------LOW
+TESSELLATION-----------------OFF
+VOLUMATRIC QUALITY-----------------LOW
+DEFERRED PHYSICS QUALITY-----------------LOW
+WEATHER GRID VOLUMES QUALITY-----------------OFF
+WATER QUALITY-----------------OFF
+
+
+VARIABLE RATE SHADING-----------------ON
+DYNAMIC RESOLUTION SCALE------------------------OFF
+NVIDIA REFLEX LOW LATENCY------------------------ON
+WORLD MOTION BLUR-----------------OFF
+WEAPON MOTION BLUR-----------------OFF
+
+========================================================
+محل ریختن فایل فریم جنریشن
+Steam\steamapps\common\Call of Duty HQ
+استفاده کنید dll_version از فایل های داخل فولدر
+========================================================
+OPTIMISED-SETTINGS-MULTIPLAY-{Casual Players}
+TEXTURE RESOLUTION-----------------HIGH
+TEXTURE FILTER ANISOTROPIC-----------------ULTRA
+DEPTH OF FIELD-----------------OFF
+DETAIL QUALITY-----------------NORMAL
+PATRICLE RESOLUTION-----------------NORMAL
+BULELLE IMPACTS-----------------ON
+PERSISTENT EFFECTS-----------------ON
+SHADER QUALITY-----------------LOW
+ON-DEMAND TEXTURE STREAMING-----------------OPTIMIZED
+LOCAL TEXTURE STREAMING QUALITY-----------------NORMAL
+SHADOW QUALITY-----------------NORMAL
+SCREEN SPACE SHADOWS-----------------HIGH
+OCCLUSION AND SCREEN SPACE LIGHTING-----------------OFF
+SCREEN SPACE REFLECTIONS-----------------HIGH
+STATIC REFLECTION QUALITY-----------------HIGH
+TESSELLATION-----------------ALL
+VOLUMATRIC QUALITY-----------------LOW
+DEFERRED PHYSICS QUALITY-----------------LOW
+WEATHER GRID VOLUMES QUALITY-----------------ULTRA
+WATER QUALITY-----------------OFF
+
+
+VARIABLE RATE SHADING-----------------ON
+DYNAMIC RESOLUTION SCALE------------------------OFF
+NVIDIA REFLEX LOW LATENCY------------------------OFF
+WORLD MOTION BLUR-----------------OFF
+WEAPON MOTION BLUR-----------------OFF

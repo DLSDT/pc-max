@@ -1,0 +1,37 @@
+OPTIMISED-SETTINGS-YELLOW
+GLOBAL ILLUMINATION ---------------QUALITY
+SHADOWS ---------------QUALITY
+ANTI-ALIASING ---------------QUALITY
+VIEW DISTANCE ---------------ULTRA
+TEXTURES ---------------QUALITY
+EFFECTS ---------------QUALITY
+REFLECTIONS ---------------QUALITY
+POST PROCESSING ---------------QUALITY
+MOTION BLUR ---------------ON
+DEPTH OF FIELD ---------------ON
+FILM GRAIN ---------------OFF
+CHROMATIC ABERRATION---------------ON
+HAIR STRANDS ---------------ON
+RAY RECONSTRUCTION ---------------OFF
+REFLEX LOW LATENCY ---------------ON+BOOST
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=SbHG7aH3svw&t=581s
+فقط رو کارت های انویدیا سری 20-30-40 جوابه
+========================================================
+OPTIMISED-SETTINGS-GREEN
+GLOBAL ILLUMINATION ---------------QUALITY
+SHADOWS ---------------BALANCED
+ANTI-ALIASING ---------------BALANCED
+VIEW DISTANCE ---------------ULTRA
+TEXTURES ---------------QUALITY
+EFFECTS ---------------PERFORMANCE
+REFLECTIONS ---------------BALANCED
+POST PROCESSING ---------------QUALITY
+MOTION BLUR ---------------ON
+DEPTH OF FIELD ---------------ON
+FILM GRAIN ---------------OFF
+CHROMATIC ABERRATION---------------ON
+HAIR STRANDS ---------------OFF
+RAY RECONSTRUCTION ---------------OFF
+REFLEX LOW LATENCY ---------------ON+BOOST

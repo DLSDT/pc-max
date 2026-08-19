@@ -1,0 +1,33 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE QUALITY------------HIGH
+SHADOW MAP SIZE------------HIGH
+FOLIAGE QUALITY------------HIGH
+VIEW DISTANCE------------24
+AMBIENT OCCLUSION------------ON
+NVIDIA HBAO+------------ON
+NVIDIA DEPTH OF FIELD------------ON
+NVIDIA PCSS------------OFF
+MOTION BLUR------------ON
+ANTIALIASING------------ON
+FILM GRAIN EFFECT------------OFF
+CHROMATIC ABERRATION EFFECT------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+TEXTURE QUALITY------------HIGH
+SHADOW MAP SIZE------------MEDIUM
+FOLIAGE QUALITY------------MEDIUM
+VIEW DISTANCE------------17
+AMBIENT OCCLUSION------------ON
+NVIDIA HBAO+------------OFF
+NVIDIA DEPTH OF FIELD------------ON
+NVIDIA PCSS------------OFF
+MOTION BLUR------------ON
+ANTIALIASING------------ON
+FILM GRAIN EFFECT------------OFF
+CHROMATIC ABERRATION EFFECT------------OFF

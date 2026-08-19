@@ -1,0 +1,35 @@
+OPTIMISED-SETTINGS-YELLOW
+MOTION BLUR--------------100
+RAY TRACING--------------ON
+NVIDIA REFLEX LOW LATENCY--------------ON
+ANTI-ALIASING--------------EPIC
+VIEW DISTANCE--------------EPIC
+SHADOW QUALITY--------------HIGH
+TEXTURE QUALITY--------------EPIC
+SHADING QUALITY--------------EPIC
+EFFECTS QUALITY--------------HIGH
+FOLIAGE QUALITY--------------HIGH
+POST PROCESSING QUALITY--------------HIGH
+REFLECTION QUALITY--------------HIGH
+GLOBAL ILLUMINATION QUALITY--------------HIGH
+========================================================
+ویدیو آموزش فریم جنریشن با استفاده از فایل های دی ال ال
+https://www.youtube.com/watch?v=L2sffRNoTwI
+محل ریختن فایل های دی ال ال
+Avowed\Alabama\Binaries\Win64
+استفاده کنید dll_version از فایل های داخل فولدر
+========================================================
+OPTIMISED-SETTINGS-GREEN
+MOTION BLUR--------------100
+RAY TRACING--------------OFF
+NVIDIA REFLEX LOW LATENCY--------------ON
+ANTI-ALIASING--------------EPIC
+VIEW DISTANCE--------------EPIC
+SHADOW QUALITY--------------MEDIUM
+TEXTURE QUALITY--------------HIGH
+SHADING QUALITY--------------EPIC
+EFFECTS QUALITY--------------MEDIUM
+FOLIAGE QUALITY--------------MEDIUM
+POST PROCESSING QUALITY--------------MEDIUM
+REFLECTION QUALITY--------------HIGH
+GLOBAL ILLUMINATION QUALITY--------------HIGH

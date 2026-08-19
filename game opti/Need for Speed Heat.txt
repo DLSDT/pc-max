@@ -1,0 +1,14 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE QUALITY-----------------ULTRA
+SHADOW QUALITY-----------------MEDIUM
+TEXTURE FILTERING-----------------ULTRA
+AMBIENT OCCLUSION-----------------HBAO
+EFFECTS DETAIL-----------------HIGH
+GEOMETRY DETAIL-----------------ULTRA
+ANTI-ALIASING-----------------TAA
+TERRAIN QUALITY-----------------LOW
+VEGETATION DETAIL-----------------MEDIUM
+POST PROCESS QUALITY-----------------MEDIUM
+REFLECTION QUALITY-----------------HIGH
+DEPTH OF FIELD-----------------ULTRA
+LIGHTING QUALITY-----------------LOW

@@ -1,0 +1,48 @@
+OPTIMISED-SETTINGS-MULTIPLAY-{Pro Players}
+VSYNC-----------------------OFF
+SCOPE MAGNIFICATION-----------------------OFF
+ANTI-ALIASING-----------------------TEMPORAL AA
+WEAPON MOTION BLUR-----------------------OFF
+REFLECTIONS-----------------------LOW
+TEXTURE FILTERING-----------------------EXTREME
+AMBIENT OCCTUSION-----------------------OFF
+PARTICTES-----------------------LOW
+DISTORTION-----------------------LOW
+SCENE DETAILS-----------------------LOW
+SCENE VIEW DISTANCE-----------------------LOW
+DEPTH OF FIELD-----------------------OFF
+GLOBAL ILLUMINATION QUALITY-----------------------LOW
+SHADERS-----------------------LOW
+TEXTURES-----------------------ULTIMATE
+STREAMING-----------------------LOW
+SHADOWS-----------------------ULTRA
+SHADOW MAP-----------------------LOW
+POST-PROCESSING-----------------------LOW
+VOLUMETRIC FOG-----------------------MEDIUM
+ANIMATION-----------------------ULTIMATE
+NVIDIA REFLEX LOW LATENCY-----------------------LOW LATENCY
+========================================================
+========================================================
+OPTIMISED-SETTINGS-MULTIPLAY-{Casual Players}
+VSYNC-----------------------OFF
+SCOPE MAGNIFICATION-----------------------OFF
+ANTI-ALIASING-----------------------TEMPORAL AA
+WEAPON MOTION BLUR-----------------------OFF
+REFLECTIONS-----------------------EXTREME
+TEXTURE FILTERING-----------------------EXTREME
+AMBIENT OCCTUSION-----------------------OFF
+PARTICTES-----------------------LOW
+DISTORTION-----------------------LOW
+SCENE DETAILS-----------------------ULTRA
+SCENE VIEW DISTANCE-----------------------EXTREME
+DEPTH OF FIELD-----------------------ON
+GLOBAL ILLUMINATION QUALITY-----------------------ULTIMATE
+SHADERS-----------------------ULTIMATE
+TEXTURES-----------------------ULTIMATE
+STREAMING-----------------------ULTRA
+SHADOWS-----------------------ULTRA
+SHADOW MAP-----------------------LOW
+POST-PROCESSING-----------------------ULTRA
+VOLUMETRIC FOG-----------------------MEDIUM
+ANIMATION-----------------------ULTIMATE
+NVIDIA REFLEX LOW LATENCY-----------------------LOW LATENCY

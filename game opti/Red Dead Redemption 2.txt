@@ -1,0 +1,99 @@
+OPTIMISED-SETTINGS-YELLOW
+NVIDIA REFLEX LOW LATENCY ---------------ON+BOOST
+TRIPLE BUFFERING ---------------OFF or ON
+PAUSE GAME ON FOCUS LOSS ---------------OFF
+CONSTRAIN MOUSE POINTER ---------------OFF
+QUALITY PRESET LEVEL (CUSTOM] ---------------OFF
+
+TEXTURE QUALITY ---------------ULTRA
+ANISOTROPIC FILTERING ---------------16X
+LIGHTING QUALITY ---------------HIGH
+GLOBAL ILLUMINATION QUALITY ---------------HIGH
+SHADOW QUALITY ---------------HIGH
+FAR SHADOW QUALITY ---------------ULTRA
+SCREEN SPACE AMBIENT OCCLUSION ---------------MEDIUM
+REFLECTION QUALITY ---------------HIGH
+MIRROR QUALITY ---------------MEDIUM
+WATER QUALITY ---------------CUSTOM
+VOLUMETRICS QUALITY ---------------CUSTOM
+PARTICLE QUALITY ---------------MEDIUM
+TESSELLATION QUALITY ---------------MEDIUM
+TAA ---------------HIGH
+FXAA ---------------ON
+MSAA ---------------OFF
+
+GRAPHICS API ---------------VULKAN(DirectX 12=برای مولتی فریم)
+NEAR VOLUMETRIC RESOLUTION ---------------MEDIUM
+FAR VOLUMETRIC RESOLUTION ---------------LOW
+VOLUMETRIC LIGHTING QUALITY ---------------MEDIUM
+UNLOCKED VOLUMETRIC RAYMARCH RESOLUTION ---------------OFF
+PARTICLE LIGHTING QUALITY ---------------ULTRA
+SOFT SHADOWS ---------------OFF
+GRASS SHADOWS ---------------MEDIUM
+LONG SHADOWS ---------------ON
+FULL RESOLUTION SCREEN SPACE AMBIENT OCCLUSIOR ---------------OFF
+WATER REFRACTION QUALITY ---------------MEDIUM
+WATER REFLECTION QUALITY ---------------MEDIUM
+WATER PHYSICS QUALITY ---------------2
+RESOLUTION SCALE ---------------OFF
+MOTION BLUR ---------------ON 
+REFLECTION MSAA ---------------2X
+GEOMETRY LEVEL OF DETAIL ---------------3
+GRASS LEVEL OF DETAIL ---------------6
+TREE QUALITY ---------------HIGH
+PARALLAX OCCLUSION MAPPING QUALITY ---------------MEDIUM
+DECAL QUALITY ---------------ULTRA
+FUR QUALITY ---------------HIGH
+TREE TESSELLATION ---------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=FYGxlbdfbhI&t=26s
+این روش برای همه کارت گرافیک ها جوابه
+========================================================
+OPTIMISED-SETTINGS-GREEN
+NVIDIA REFLEX LOW LATENCY ---------------ON+BOOST
+TRIPLE BUFFERING ---------------OFF or ON
+PAUSE GAME ON FOCUS LOSS ---------------OFF
+CONSTRAIN MOUSE POINTER ---------------OFF
+QUALITY PRESET LEVEL (CUSTOM] ---------------OFF
+
+TEXTURE QUALITY ---------------ULTRA
+ANISOTROPIC FILTERING ---------------4X
+LIGHTING QUALITY ---------------MEDIUM
+GLOBAL ILLUMINATION QUALITY ---------------HIGH
+SHADOW QUALITY ---------------HIGH
+FAR SHADOW QUALITY ---------------ULTRA
+SCREEN SPACE AMBIENT OCCLUSION ---------------OFF
+REFLECTION QUALITY ---------------MEDIUM
+MIRROR QUALITY ---------------MEDIUM
+WATER QUALITY ---------------CUSTOM
+VOLUMETRICS QUALITY ---------------CUSTOM
+PARTICLE QUALITY ---------------MEDIUM
+TESSELLATION QUALITY ---------------MEDIUM
+TAA ---------------HIGH
+FXAA ---------------ON
+MSAA ---------------OFF
+
+GRAPHICS API ---------------VULKAN(DirectX 12=برای مولتی فریم)
+NEAR VOLUMETRIC RESOLUTION ---------------MEDIUM
+FAR VOLUMETRIC RESOLUTION ---------------LOW
+VOLUMETRIC LIGHTING QUALITY ---------------MEDIUM
+UNLOCKED VOLUMETRIC RAYMARCH RESOLUTION ---------------OFF
+PARTICLE LIGHTING QUALITY ---------------ULTRA
+SOFT SHADOWS ---------------OFF
+GRASS SHADOWS ---------------MEDIUM
+LONG SHADOWS ---------------ON
+FULL RESOLUTION SCREEN SPACE AMBIENT OCCLUSIOR ---------------OFF
+WATER REFRACTION QUALITY ---------------MEDIUM
+WATER REFLECTION QUALITY ---------------MEDIUM
+WATER PHYSICS QUALITY ---------------2
+RESOLUTION SCALE ---------------OFF
+MOTION BLUR ---------------ON 
+REFLECTION MSAA ---------------OFF
+GEOMETRY LEVEL OF DETAIL ---------------3
+GRASS LEVEL OF DETAIL ---------------3
+TREE QUALITY ---------------HIGH
+PARALLAX OCCLUSION MAPPING QUALITY ---------------MEDIUM
+DECAL QUALITY ---------------ULTRA
+FUR QUALITY ---------------MEDIUM
+TREE TESSELLATION ---------------OFF

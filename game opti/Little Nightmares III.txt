@@ -1,0 +1,25 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-ALIASING------------HIGH
+BLOOM------------ULTRA
+POST-PROCESSING------------HIGH
+TEXTURES------------ULTRA
+SHADOWS------------HIGH
+EFFECTS QUALITY------------HIGH
+AMBIENT OCCLUSION------------HIGH
+DEPTH OF FIELD------------ULTRA
+RAY TRACING------------HIGH
+========================================================
+محل ریختن فایل فریم جنریشن
+Little Nightmares III\SMG031MP\Binaries\Win64
+استفاده کنید dll_version از فایل های داخل فولدر
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ANTI-ALIASING------------HIGH
+BLOOM------------HIGH
+POST-PROCESSING------------MEDIUM
+TEXTURES------------HIGH
+SHADOWS------------HIGH
+EFFECTS QUALITY------------HIGH
+AMBIENT OCCLUSION------------MEDIUM
+DEPTH OF FIELD------------ULTRA
+RAY TRACING------------MEDIUM

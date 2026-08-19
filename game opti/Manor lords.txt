@@ -1,0 +1,34 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-ALIASING--------------TAA
+SHARPENING--------------MEDIUM
+SHADER QUALITY--------------ULTRA
+SHADOW METHOD--------------SOFT
+SHADOW QUALITY--------------HIGH
+POSTPROCESS QUALITY--------------MEDIUM
+VOLUMETRIC CLOUDS--------------OFF
+TERRAIN TEXTURE RESOLUTION--------------ULTRA
+VIEW DISTANCE--------------MEDIUM
+GRASS DENSITY--------------HIGH
+GRASS DISTANCE--------------ULTRA
+FOLIAGE QUALITY--------------HIGH
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این سه روش میتونید استفاده کنید
+OPTI NO SETUP
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ANTI-ALIASING--------------TAA
+SHARPENING--------------OFF
+SHADER QUALITY--------------HIGH
+SHADOW METHOD--------------SOFT
+SHADOW QUALITY--------------MEDIUM
+POSTPROCESS QUALITY--------------MEDIUM
+VOLUMETRIC CLOUDS--------------OFF
+TERRAIN TEXTURE RESOLUTION--------------MEDIUM
+VIEW DISTANCE--------------MEDIUM
+GRASS DENSITY--------------HIGH
+GRASS DISTANCE--------------HIGH
+FOLIAGE QUALITY--------------MEDIUM

@@ -1,0 +1,69 @@
+OPTIMISED-SETTINGS-YELLOW
+Mesh Quality----------------HIGH
+Texture Quality----------------HIGH
+Lighting Quality----------------LOW or HIGH
+Shadows Resolution----------------HIGH
+Shadows Visibility----------------ALL
+Shader Quality----------------HIGH
+Anisotropic Filtering----------------8X
+Anti-Aliasing----------------ON
+Anti-Aliasing Mode----------------SMAA
+Ambient Occlusion----------------ON
+Ambient Occlusion Quality----------------NORMAL
+Bloom----------------ON
+Light Rays----------------ON
+Depth of Field----------------ON
+Motion blur----------------ON
+Motion blur strength----------------0.50
+Motion blur for current vehicle----------------ON
+Dynamic Reflection----------------ON
+Resolution----------------512PX
+Update Rate----------------1
+Detail----------------0.7
+Distance----------------300M
+Detailed mirrors (supported vehicles only)----------------ON
+Resolution----------------512X
+Detail----------------0.7
+Distance----------------400
+Tire marks amount----------------2000
+Grass Density----------------0.70
+Skip generation of License Plates----------------OFF
+Bump detail below 30 degrees of field of view----------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+Mesh Quality----------------NORMAL
+Texture Quality----------------NORMAL
+Lighting Quality----------------LOWEST or LOW
+Shadows Resolution----------------HIGH
+Shadows Visibility----------------ALL
+Shader Quality----------------HIGH
+Anisotropic Filtering----------------8X
+Anti-Aliasing----------------ON
+Anti-Aliasing Mode----------------SMAA
+Ambient Occlusion----------------ON
+Ambient Occlusion Quality----------------NORMAL
+Bloom----------------ON
+Light Rays----------------ON
+Depth of Field----------------OFF
+Motion blur----------------ON
+Motion blur strength----------------0.50
+Motion blur for current vehicle----------------ON
+Dynamic Reflection----------------ON
+Resolution----------------256PX
+Update Rate----------------1
+Detail----------------0.3
+Distance----------------300M
+Detailed mirrors (supported vehicles only)----------------ON
+Resolution----------------512X
+Detail----------------0.4
+Distance----------------250
+Tire marks amount----------------2000
+Grass Density----------------0.40
+Skip generation of License Plates----------------OFF
+Bump detail below 30 degrees of field of view----------------OFF

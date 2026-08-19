@@ -1,0 +1,47 @@
+OPTIMISED-SETTINGS-YELLOW
+RENDERER MODE--------------DX12
+ASYNCHRONOUS COMPUTE--------------ON
+TEXTURE QUALITY--------------HIGH
+LOD QUALITY--------------HIGH
+LOD RANGE MULTIPLIER--------------140
+ANTI ALIASING--------------STABLE
+MOTION BLUR QUALITY--------------MEDIUM
+PARTICLES QUALITY--------------MEDIUM
+SUN SHADOWS QUALITY--------------MEDIUM
+CONTACT SHADOWS QUALITY--------------VERY HIGH
+AMBIENT OCCLUSION QUALITY--------------MEDIUM
+GLOBAL ILLUMINATION QUALITY--------------HIGH
+REFLECTIONS QUALITY--------------MEDIUM OR ULTRA
+RAYTRACED FLASHLIGHT--------------OFF
+FOG QUALITY--------------MEDIUM
+POSTPROCESS QUALITY--------------HIGH
+GLOW--------------ON
+LIGHT STREAKS--------------ON
+LENS FLARE--------------ON
+========================================================
+ویدیو آموزش فریم جنریشن با استفاده از فایل های دی ال ال
+https://www.youtube.com/watch?v=L2sffRNoTwI
+محل ریختن فایل های دی ال ال
+Dying Light 2 Stay Human\engine\source\bin\x64
+استفاده کنید dll_version از فایل های داخل فولدر
+========================================================
+OPTIMISED-SETTINGS-GREEN
+RENDERER MODE--------------DX12
+ASYNCHRONOUS COMPUTE--------------ON
+TEXTURE QUALITY--------------HIGH
+LOD QUALITY--------------HIGH
+LOD RANGE MULTIPLIER--------------75
+ANTI ALIASING--------------STABLE
+MOTION BLUR QUALITY--------------MEDIUM
+PARTICLES QUALITY--------------MEDIUM
+SUN SHADOWS QUALITY--------------LOW
+CONTACT SHADOWS QUALITY--------------VERY HIGH
+AMBIENT OCCLUSION QUALITY--------------MEDIUM
+GLOBAL ILLUMINATION QUALITY--------------HIGH
+REFLECTIONS QUALITY--------------LOW OR MEDIUM
+RAYTRACED FLASHLIGHT--------------OFF
+FOG QUALITY--------------LOW
+POSTPROCESS QUALITY--------------HIGH
+GLOW--------------ON
+LIGHT STREAKS--------------ON
+LENS FLARE--------------ON

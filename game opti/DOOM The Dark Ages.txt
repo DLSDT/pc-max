@@ -1,0 +1,67 @@
+OPTIMISED-SETTINGS-YELLOW
+PRESENT FROM COMPUTE ----------------OFF
+CHROMATIC ABERRATION ----------------ON
+DEPTH OF FIELD ----------------ON
+FILM GRAIN ----------------0.00
+VARIABLE RATE SHADING (VRS) ----------------ON
+
+INVIDIA REFLEX MODE ----------------OFF
+MOTION BLUR ----------------ON
+MOTION BLUR AMOUNT ----------------ULTRA NIGHTMARE
+MOTION BLUR QUALITY ----------------ULTRA NIGHTMARE
+
+PATH TRACING ----------------OFF
+DENOISER ----------------OFF
+RAY TRACED SHADOWS ----------------OFF
+RAY TRACED TRANSPARENCY ----------------OFF
+PATH TRACED WATER REFLECTIONS ----------------OFF
+
+TEXTURE POOL SIZE ----------------2048
+SHADOW QUALITY ----------------HIGH
+REFLECTIONS QUALITY ----------------ULTRA NIGHTMARE
+LIGHTS QUALITY ----------------HIGH
+PARTICLES QUALITY ----------------ULTRA NIGHTMARE
+DECAL QUALITY ----------------ULTRA NIGHTMARE
+WATER QUALITY ----------------HIGH
+VOLUMETRICS QUALITY ----------------ULTRA NIGHTMARE
+TEXTURE FILTERING QUALITY ----------------ULTRA NIGHTMARE
+GEOMETRIC QUALITY ----------------HIGH
+SHADING QUALITY ----------------HIGH
+DIRECTIONAL OCCLUSION ----------------ULTRA NIGHTMARE
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن انویدیا
+https://www.youtube.com/watch?v=irxWFuwCLvc&t=442s
+این روش فقط برای کارت گرافیک های انویدیا سری ۲۰ به بالا جوابه
+دقیقه - 03:03
+ببین داخل یوتوب
+========================================================
+OPTIMISED-SETTINGS-GREEN
+PRESENT FROM COMPUTE ----------------OFF
+CHROMATIC ABERRATION ----------------ON
+DEPTH OF FIELD ----------------ON
+FILM GRAIN ----------------0.00
+VARIABLE RATE SHADING (VRS) ----------------ON
+
+INVIDIA REFLEX MODE ----------------OFF
+MOTION BLUR ----------------OFF
+MOTION BLUR AMOUNT ----------------OFF
+MOTION BLUR QUALITY ----------------OFF
+
+PATH TRACING ----------------OFF
+DENOISER ----------------OFF
+RAY TRACED SHADOWS ----------------OFF
+RAY TRACED TRANSPARENCY ----------------OFF
+PATH TRACED WATER REFLECTIONS ----------------OFF
+
+TEXTURE POOL SIZE ----------------1536
+SHADOW QUALITY ----------------MEDIUM
+REFLECTIONS QUALITY ----------------MEDIUM
+LIGHTS QUALITY ----------------HIGH
+PARTICLES QUALITY ----------------ULTRA NIGHTMARE
+DECAL QUALITY ----------------ULTRA NIGHTMARE
+WATER QUALITY ----------------LOW
+VOLUMETRICS QUALITY ----------------ULTRA NIGHTMARE
+TEXTURE FILTERING QUALITY ----------------ULTRA
+GEOMETRIC QUALITY ----------------MEDIUM
+SHADING QUALITY ----------------HIGH
+DIRECTIONAL OCCLUSION ----------------ULTRA NIGHTMARE

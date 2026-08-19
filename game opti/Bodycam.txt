@@ -1,0 +1,48 @@
+OPTIMISED-SETTINGS-YELLOW
+AMD FS3 (FPS BOOST)--------------------PERFORMANCE
+AMD FSR3 FRAME GENERATION (FPS BOOST)--------------------ON
+NVIDIA DLSS--------------------PERFORMANCE
+UPSCALE QUALITY--------------------EXTREME
+ANTI ALIASING METHOD - (RECOMMENDED TSR)--------------------TAA
+TEMPORAL ANTI ALIASING UPSAMPLING--------------------ON
+
+SHARPNESS--------------------HIGH
+GRAIN--------------------OFF
+MOTION BLUR--------------------EPIC
+
+GLOBAL ILLUMINATION--------------------LOW
+ANTI ALIASING QUALITY--------------------EPIC
+VIEW DISTANCE--------------------FAR
+TEXTURES--------------------EPIC
+SHADOWS--------------------HIGH
+EFFECTS--------------------HIGH
+REFLECTIONS--------------------HIGH
+FOLIAGE--------------------HIGH
+SHADING QUALITY--------------------HIGH
+POST PROCESSING--------------------EPIC
+========================================================
+آموزش فعال سازی فریم جنریشن و آپ اسکیل انویدیا به صورت همزمان داخل ویدیو هست
+هشدار اگه میخوای از آپ اسکیل ای ام دی استفاده کنی به هیچ عنوان این روش رو انجام نده
+========================================================
+OPTIMISED-SETTINGS-MULTIPLAY
+AMD FS3 (FPS BOOST)--------------------PERFORMANCE
+AMD FSR3 FRAME GENERATION (FPS BOOST)--------------------OFF
+NVIDIA DLSS--------------------PERFORMANCE
+UPSCALE QUALITY--------------------EXTREME
+ANTI ALIASING METHOD - (RECOMMENDED TSR)--------------------TAA
+TEMPORAL ANTI ALIASING UPSAMPLING--------------------OFF
+
+SHARPNESS--------------------HIGH
+GRAIN--------------------OFF
+MOTION BLUR--------------------OFF
+
+GLOBAL ILLUMINATION--------------------LOW
+ANTI ALIASING QUALITY--------------------LOW
+VIEW DISTANCE--------------------EPIC
+TEXTURES--------------------EPIC
+SHADOWS--------------------HIGH
+EFFECTS--------------------LOW
+REFLECTIONS--------------------HIGH
+FOLIAGE--------------------HIGH
+SHADING QUALITY--------------------LOW
+POST PROCESSING--------------------HIGH

@@ -1,0 +1,45 @@
+OPTIMISED-SETTINGS-YELLOW
+DYNAMIC RESOLUTION--------------------------OFF
+RENDER RESOLUTION SCALE--------------------------100
+SHADOW QUALITY--------------------------HIGH
+INDIRECT LIGHTING--------------------------ULTRA
+REFLECTIONS--------------------------MEDIUM
+PARTICLE QUALITY--------------------------LOW
+VOLUMETRIC LIGHTING--------------------------LOW
+CROWD DENSITY--------------------------MEDIUM
+MOTION BLUR--------------------------HIGH
+GTAO QUALITY--------------------------ULTRA
+GRASS QUALITY--------------------------MEDIUM
+CONTACT SHADOWS--------------------------LOW
+ANISOTROPIC FILTERING--------------------------4X
+ALL LAYERS USE ANISOTROPIC--------------------------OFF
+NVIDIA REFLEX LOW LATENCY--------------------------ON
+SHARPENING--------------------------50
+ENABLE VRS--------------------------ON
+FILM GRAIN INTENSITY--------------------------0
+ENABLE DEPTH OF FIELD--------------------------ON
+========================================================
+محل ریختن فایل فریم جنریشن
+\Starfield
+استفاده کنید dll_version از فایل های داخل فولدر
+========================================================
+OPTIMISED-SETTINGS-GREEN
+DYNAMIC RESOLUTION--------------------------OFF
+RENDER RESOLUTION SCALE--------------------------100
+SHADOW QUALITY--------------------------LOW
+INDIRECT LIGHTING--------------------------MEDIUM
+REFLECTIONS--------------------------MEDIUM
+PARTICLE QUALITY--------------------------LOW
+VOLUMETRIC LIGHTING--------------------------LOW
+CROWD DENSITY--------------------------LOW
+MOTION BLUR--------------------------HIGH
+GTAO QUALITY--------------------------ULTRA
+GRASS QUALITY--------------------------MEDIUM
+CONTACT SHADOWS--------------------------LOW
+ANISOTROPIC FILTERING--------------------------4X
+ALL LAYERS USE ANISOTROPIC--------------------------OFF
+NVIDIA REFLEX LOW LATENCY--------------------------ON
+SHARPENING--------------------------50
+ENABLE VRS--------------------------ON
+FILM GRAIN INTENSITY--------------------------0
+ENABLE DEPTH OF FIELD--------------------------ON

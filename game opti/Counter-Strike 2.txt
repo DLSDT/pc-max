@@ -1,0 +1,22 @@
+BOOST PLAYER CONTRAST--------------------ENABLED
+
+BRIGHTNESS-------------------115
+
+V-SYNC--------------------DISABLED
+NVIDIA G-SYNC--------------------DISABLED
+NVIDIA REFLEX LOW LATENCY--------------------ENABLED+BOOST
+MAXIMUM FPS IN GAME--------------------540
+MAXIMUM FPS IN MENUS--------------------120
+
+
+MULTISAMPLING ANTI-ALIASING MODE--------------------NONE
+GLOBAL SHADOW QUALITY--------------------LOW
+DYNAMIC SHADOWS--------------------ALL
+MODEL/TEXTURE DETAIL--------------------HIGH
+TEXTURE FILTERING MODE--------------------BILINEAR
+SHADER DETAIL--------------------LOW
+PARTICLE DETAIL--------------------LOW
+AMBIENT OCCLUSION--------------------DISABLED
+HIGH DYNAMIC RANGE--------------------QUALITY
+FIDELITYFX SUPER RESOLUTION--------------------DISABLED
+AMD ANTI-LAG 2.0--------------------ENABLED

@@ -1,0 +1,26 @@
+OPTIMISED-SETTINGS-YELLOW
+LIGHTING QUALITY----------------------HIGH
+GEOMETRY QUALITY----------------------MEDIUM
+FOLIAGE DRAW DISTANCE----------------------HIGH
+SHADOW QUALITY----------------------MEDIUM
+CLOUD AND FOG QUALITY----------------------LOW
+TEXTURE FILTER QUALITY----------------------HIGH
+TEXTURE STREAMING QUALITY----------------------HIGH
+
+FIELD OF VIEW----------------------90
+CHROMATIC ABERRATION----------------------ON
+MOTION BLUR----------------------ON
+========================================================
+========================================================
+OPTIMISED-SETTINGS-GREEN
+LIGHTING QUALITY----------------------HIGH
+GEOMETRY QUALITY----------------------LOW
+FOLIAGE DRAW DISTANCE----------------------MEDIUM
+SHADOW QUALITY----------------------MEDIUM
+CLOUD AND FOG QUALITY----------------------LOW
+TEXTURE FILTER QUALITY----------------------MEDIUM
+TEXTURE STREAMING QUALITY----------------------HIGH
+
+FIELD OF VIEW----------------------90
+CHROMATIC ABERRATION----------------------ON
+MOTION BLUR----------------------ON

@@ -1,0 +1,31 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-ALIASING----------------TAA HIGH
+VIEW DISTANCE----------------HIGH
+POST PROCESSING----------------ULTRA
+SHADOWS----------------MEDIUM
+TEXTURES----------------ULTRA
+EFFECTS----------------MEDIUM
+FOLIAGE DETAIL----------------HIGH
+SSAO----------------ULTRA
+INDIRECT SHADOWS----------------MEDIUM
+SCREEN SPACE REFLECTIONS----------------HIGH
+SHADING QUALITY----------------LOW
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ANTI-ALIASING----------------TAA HIGH
+VIEW DISTANCE----------------LOW
+POST PROCESSING----------------ULTRA
+SHADOWS----------------MEDIUM
+TEXTURES----------------HIGH
+EFFECTS----------------LOW
+FOLIAGE DETAIL----------------MEDIUM
+SSAO----------------ULTRA
+INDIRECT SHADOWS----------------MEDIUM
+SCREEN SPACE REFLECTIONS----------------MEDIUM
+SHADING QUALITY----------------LOW

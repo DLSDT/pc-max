@@ -1,0 +1,44 @@
+OPTIMISED-SETTINGS-YELLOW
+DEPTH OF FIELD --------------------HIGH
+MOTION BLUR --------------------ON
+ANTI-ALIASING --------------------HIGH
+NVIDIA REFLEX --------------------OFF or ON
+ANIMATION QUALITY --------------------MAX
+SHADOWS --------------------ULTRA
+AMBIENT OCCLUSION --------------------MAX
+VISUAL FX --------------------MAX
+NUMBER OF OBJECTS --------------------MAX
+MATERIALS --------------------MEDIUM
+VOLUMETRIC FOG --------------------HIGH
+POSTPROCESSING --------------------ULTRA
+TEXTURES --------------------MAX
+TEXTURE ANISOTROPY --------------------8
+3D MODEL QUALITY --------------------MEDIUM
+VEGETATION DENSITY --------------------HIGH
+HARD DRIVE SPEED --------------------SSD
+SHADER CACHE --------------------ON
+RAY TRACING (BETA) --------------------OFF
+===========================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+===========================================
+OPTIMISED-SETTINGS-GREEN
+DEPTH OF FIELD --------------------OFF
+MOTION BLUR --------------------ON
+ANTI-ALIASING --------------------MEDIUM
+NVIDIA REFLEX --------------------OFF or ON
+ANIMATION QUALITY --------------------MAX
+SHADOWS --------------------MEDIUM
+AMBIENT OCCLUSION --------------------MAX
+VISUAL FX --------------------MAX
+NUMBER OF OBJECTS --------------------LOW
+MATERIALS --------------------MEDIUM
+VOLUMETRIC FOG --------------------LOW
+POSTPROCESSING --------------------HIGH
+TEXTURES --------------------MAX
+TEXTURE ANISOTROPY --------------------8
+3D MODEL QUALITY --------------------MEDIUM
+VEGETATION DENSITY --------------------MEDIUM
+HARD DRIVE SPEED --------------------SSD
+SHADER CACHE --------------------ON
+RAY TRACING (BETA) --------------------OFF

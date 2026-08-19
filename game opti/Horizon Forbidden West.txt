@@ -1,0 +1,34 @@
+TEXTURE QUALITY--------------------HIGH ( For 8GG GPUs ) VERY HIGH
+TEXTURE FILTERING--------------------16X
+SHADOW QUALITY--------------------MEDIUM
+SCREEN SPACE SHADOWS--------------------OFF
+AMBIENT OCCLUSION--------------------SSAO
+SCREEN SPACE REFLECTIONS--------------------HIGH
+LEVEL OF DETAIL--------------------MEDIUM
+HAIR QUALITY--------------------HIGH
+CROWD QUALITY--------------------HIGH
+TERRAIN QUALITY--------------------MEDIUM
+WATER QUALITY--------------------HIGH
+CLOUDS QUALITY--------------------LOW/HIGH ( For Yellow Optimised settings )
+TRANSLUCENCY QUALITY--------------------DEFAULT
+PARALLAX OCCLUSION MAPPING--------------------OFF/ON
+DEPTH OF FIELD--------------------MEDIUM/HIGH ( For Yellow Optimised settings )
+BLOOM--------------------ON
+LENS FLARES--------------------ON
+VIGNETTE--------------------ON
+REDIAL BLUR--------------------ON
+CHROMATIC ABERRATION--------------------ON
+NVIDIA REFLEX LOW LATENCY--------------------OFF
+
+
+
+
+
+
+
+
+
+
+
+
+

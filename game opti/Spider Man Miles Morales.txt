@@ -1,0 +1,58 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-ALIASING---------------TAA
+TEXTURE QUALITY---------------VERY HIGH
+TEXTURE FILTERING---------------8X
+SHADOW QUALITY---------------HIGH
+AMBIENT OCCLUSION---------------HBAO+
+SCREEN SPACE REFLECTIONS---------------ON
+RAY-TRACED REFLECTIONS---------------ON
+RAY-TRACED SHADOW---------------OFF
+REFLECTION RESOLUTION---------------HIGH
+REFLECTION GEOMETRY DETAIL---------------HIGH
+OBJECT RANGE---------------5
+LEVEL OF DETAIL---------------VERY HIGH
+TRAFFIC DENSITY---------------MEDIUM
+CROWD DENSITY---------------MEDIUM
+HAIR QUALITY---------------MEDIUM
+WEATHER PARTICLE QUALITY---------------LOW
+DEPTH OF FIELD---------------MEDIUM
+BLOOM---------------ON
+LENS FLARES---------------ON
+CHROMATIC ABERRATION---------------ON
+VIGNETTE---------------ON
+MOTION BLUR STRENGTH---------------5
+FIELD OF VIEW---------------10
+FILM GRAIN STRENGTH---------------OFF
+SHARPNESS---------------5
+========================================================
+ویدیو آموزش فریم جنریشن با استفاده از فایل های دی ال ال
+https://www.youtube.com/watch?v=L2sffRNoTwI
+محل ریختن فایل های دی ال ال
+Marvel's Spider-Man Miles Morales
+استفاده کنید dll_version از فایل های داخل فولدر
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ANTI-ALIASING---------------TAA
+TEXTURE QUALITY---------------HIGH
+SHADOW QUALITY---------------MEDIUM
+AMBIENT OCCLUSION---------------SSAO
+SCREEN SPACE REFLECTIONS---------------ON
+RAY-TRACED REFLECTIONS---------------OFF
+RAY-TRACED SHADOW---------------OFF
+REFLECTION RESOLUTION---------------HIGH
+REFLECTION GEOMETRY DETAIL---------------HIGH
+OBJECT RANGE---------------5
+LEVEL OF DETAIL---------------MEDIUM
+TRAFFIC DENSITY---------------MEDIUM
+CROWD DENSITY---------------MEDIUM
+HAIR QUALITY---------------MEDIUM
+WEATHER PARTICLE QUALITY---------------LOW
+DEPTH OF FIELD---------------MEDIUM
+BLOOM---------------ON
+LENS FLARES---------------OFF
+CHROMATIC ABERRATION---------------ON
+VIGNETTE---------------OFF
+MOTION BLUR STRENGTH---------------5
+FIELD OF VIEW---------------10
+FILM GRAIN STRENGTH---------------OFF
+SHARPNESS---------------5

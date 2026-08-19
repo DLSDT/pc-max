@@ -1,0 +1,30 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE QUALITY---------------------MAX
+ANTIALIASING APPLICATION---------------------ON
+SSAO---------------------MAX
+DEPTH OF FIELD---------------------MEDIUM
+MOTION BLUR---------------------MEDIUM
+SHADOW QUALITY---------------------HIGH
+LIGHTING QUALITY---------------------HIGH
+EFFECTS QUALITY---------------------MEDIUM
+VOLUMETRIC QUALITY---------------------HIGH
+REFLECTIONS QUALITY---------------------HIGH
+WATER SURFACE QUALITY---------------------LOW
+SHADER QUALITY---------------------HIGH
+========================================================
+ویدیو آموزش فریم جنریشن فقط برنامه لاسلس اسکیلینگ برا این بازی جوابه
+https://www.youtube.com/watch?v=L2sffRNoTwI
+========================================================
+OPTIMISED-SETTINGS-GREEN
+TEXTURE QUALITY---------------------HIGH
+ANTIALIASING APPLICATION---------------------ON
+SSAO---------------------OFF
+DEPTH OF FIELD---------------------MEDIUM
+MOTION BLUR---------------------LOW
+SHADOW QUALITY---------------------HIGH
+LIGHTING QUALITY---------------------HIGH
+EFFECTS QUALITY---------------------MEDIUM
+VOLUMETRIC QUALITY---------------------LOW
+REFLECTIONS QUALITY---------------------LOW
+WATER SURFACE QUALITY---------------------LOW
+SHADER QUALITY---------------------HIGH

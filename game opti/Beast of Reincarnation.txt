@@ -1,0 +1,30 @@
+OPTIMISED-SETTINGS-YELLOW
+RAY TRACING --------------------OFF
+VRAM LIMIT --------------------2
+MESH QUALITY --------------------HIGHEST
+ANISOTROPIC FILTERING --------------------16X
+TEXTURE QUALITY --------------------3
+SHADOW RESOLUTION --------------------MEDIUM
+LIGHTING --------------------MEDIUM
+SHADOW QUALITY --------------------HIGHEST
+CONTACT SHADOWS --------------------ON
+POST-PROCESSING --------------------HIGH
+MOTION BLUR --------------------ON
+DEPTH OF FIELD --------------------ON
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+========================================================
+OPTIMISED-SETTINGS-GREEN
+RAY TRACING --------------------OFF
+VRAM LIMIT --------------------1
+MESH QUALITY --------------------HIGH
+ANISOTROPIC FILTERING --------------------16X
+TEXTURE QUALITY --------------------2
+SHADOW RESOLUTION --------------------MEDIUM
+LIGHTING --------------------MEDIUM
+SHADOW QUALITY --------------------HIGHEST
+CONTACT SHADOWS --------------------OFF
+POST-PROCESSING --------------------MEDIUM
+MOTION BLUR --------------------ON
+DEPTH OF FIELD --------------------OFF

@@ -1,0 +1,58 @@
+OPTIMISED-SETTINGS-YELLOW
+MOTION BLUR --------------------ON
+DEPTH OF FIELD --------------------HIGH
+SHADOW QUALITY --------------------HIGH
+SUN CONTACT SHADOWS --------------------HIGH
+SPOT SHADOWS --------------------HIGH
+SPOT SHADOWS RESOLUTION --------------------VERY HIGH
+SHADOW PROXIES --------------------ON
+SPECULAR REFLECTIONS --------------------HIGH
+DIFFUSE REFLECTIONS --------------------MEDIUM
+ENVIRONMENT REFLECTION QUALITY --------------------HIGH
+VOLUMETRIC CLOUDS --------------------HIGH
+VOLUMETRIC FOG --------------------MEDIUM
+EXTRA STREAMING DISTANCE --------------------5
+OBJECT DETAIL --------------------10
+BVH QUALITY --------------------HIGH
+MICRODETAIL QUALITY --------------------ULTRA
+PARTICLE DETAIL --------------------HIGH
+SCATTER DENSITY --------------------HIGH
+DITHER FADE --------------------OFF
+SPOTLIGHT PROJECTION RESOLUTION --------------------512
+DESTRUCTION QUALITY --------------------LOW
+TERRAIN TESSELLATION --------------------MEDIUM
+
+NVIDIA DLSS RAY RECONSTRUCTION --------------------OFF
+NVIDIA REFLEX --------------------OFF
+UPSCAL MODE --------------------FIXED
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+========================================================
+OPTIMISED-SETTINGS-GREEN
+MOTION BLUR --------------------ON
+DEPTH OF FIELD --------------------HIGH
+SHADOW QUALITY --------------------HIGH
+SUN CONTACT SHADOWS --------------------LOW
+SPOT SHADOWS --------------------LOW
+SPOT SHADOWS RESOLUTION --------------------HIGH
+SHADOW PROXIES --------------------ON
+SPECULAR REFLECTIONS --------------------VERY LOW
+DIFFUSE REFLECTIONS --------------------MEDIUM
+ENVIRONMENT REFLECTION QUALITY --------------------HIGH
+VOLUMETRIC CLOUDS --------------------HIGH
+VOLUMETRIC FOG --------------------MEDIUM
+EXTRA STREAMING DISTANCE --------------------0
+OBJECT DETAIL --------------------5
+BVH QUALITY --------------------HIGH
+MICRODETAIL QUALITY --------------------ULTRA
+PARTICLE DETAIL --------------------MEDIUM
+SCATTER DENSITY --------------------MEDIUM
+DITHER FADE --------------------OFF
+SPOTLIGHT PROJECTION RESOLUTION --------------------512
+DESTRUCTION QUALITY --------------------LOW
+TERRAIN TESSELLATION --------------------LOW
+
+NVIDIA DLSS RAY RECONSTRUCTION --------------------OFF
+NVIDIA REFLEX --------------------OFF
+UPSCAL MODE --------------------FIXED

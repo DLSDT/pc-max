@@ -1,0 +1,49 @@
+OPTIMISED-SETTINGS-YELLOW
+Anisotropic Filtering---------------8X
+Anti-Aliasing Samples---------------2X
+World detail---------------VERY HIGH
+Shadow Resolution---------------HIGH
+Smoke generation---------------NORMAL
+Show smoke in mirrors---------------ON
+Enable post-processing effects---------------ON
+Effect preset---------------DEFAULT
+Overall effect quality---------------HIGH
+Glare quality---------------NORMAL
+Depth of field quality---------------ULTRA
+Color saturation---------------120
+Motion Blur---------------0
+Crepuscular rays---------------OFF
+Heat shimmering effects---------------OFF
+Fast Approximate Anti-Aliasing---------------OFF
+Mirror Resolution---------------NORMAL
+High Quality Mirror Reflection---------------ON
+Reflection Quality---------------MEDIUM
+Reflection Rendering Frequency---------------LOW
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+Anisotropic Filtering---------------2X
+Anti-Aliasing Samples---------------2X
+World detail---------------MEDIUM
+Shadow Resolution---------------HIGH
+Smoke generation---------------LOW
+Show smoke in mirrors---------------OFF
+Enable post-processing effects---------------ON
+Effect preset---------------DEFAULT
+Overall effect quality---------------MEDIUM
+Glare quality---------------NORMAL
+Depth of field quality---------------HIGH
+Color saturation---------------120
+Motion Blur---------------0
+Crepuscular rays---------------OFF
+Heat shimmering effects---------------OFF
+Fast Approximate Anti-Aliasing---------------OFF
+Mirror Resolution---------------OFF
+High Quality Mirror Reflection---------------OFF
+Reflection Quality---------------LOW
+Reflection Rendering Frequency---------------LOW

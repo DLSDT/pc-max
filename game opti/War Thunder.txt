@@ -1,0 +1,148 @@
+OPTIMISED-SETTINGS-MULTIPLAY
+Graphics AP| *--------------------------Direct3D12
+Render resolution--------------------------100
+Anti-aliasing method--------------------------TAA
+Image sharpening--------------------------SET IN POSTFX
+Dynamic Lut--------------------------OFF
+Vignette--------------------------0
+TPS sharpness--------------------------70
+Gunner View sharpness--------------------------50
+Bomber View sharpness--------------------------50
+Cockpit sharpness--------------------------50
+Color Correction--------------------------Default
+Ton Mapping--------------------------POLYNOM
+A--------------------------5
+B--------------------------0.01
+C--------------------------5
+D--------------------------5
+E--------------------------5
+F--------------------------5
+White--------------------------0.01
+Film grain--------------------------OFF
+Anisotropy--------------------------16X
+SSAA--------------------------NONE
+NVIDIA Reflex Low Latency--------------------------ON
+
+Texture Quality--------------------------HIGH
+Shadow Quality--------------------------MINIMUM
+Effects quality--------------------------LOW
+Water quality--------------------------HIGH
+Water Effects Quality--------------------------LOW
+Cloud quality (in flight)--------------------------0
+cloud quality (on ground)--------------------------0
+Reflection Quality--------------------------0
+Terrain quality--------------------------0
+SSAO Quality--------------------------0
+Tire/track marks--------------------------MEDIUM
+Cockpit mirror reflections quality--------------------------0
+Global illumination quality--------------------------LOW
+Physics Quality--------------------------1
+Terrain displacement quality--------------------------0
+
+Tree range--------------------------40
+Grass range--------------------------0
+Small object shadows--------------------------0
+Bloom quality--------------------------0
+Advanced shore--------------------------NO
+Far terrain details--------------------------NO
+Lens flare--------------------------NO
+
+Ray tracing--------------------------OFF
+Ray tracing distance--------------------------X
+PTGI (Path traced global illumination)--------------------------X
+RTAO (Ray traced ambient occlusion)--------------------------X
+RTSM quality--------------------------X
+RTSM (Ray traced shadows)--------------------------X
+RTR (Ray traced reflections)--------------------------X
+RTR resolution--------------------------X
+RTR (Water)--------------------------X
+RTR (Water) resolution--------------------------X
+RTR (Translucent)--------------------------X
+
+VR Mode--------------------------X
+VR Display Mirror Mode--------------------------X
+VR Streamer Mode--------------------------X
+
+Performance Metrics--------------------------COMPACT
+Motion blur strength--------------------------0
+Cancel camera motion blur--------------------------YES
+JPEG Screenshots--------------------------NO
+High resolution screenshots--------------------------NO
+Old videocard support *--------------------------NO
+High dynamic range (HDR) *--------------------------NO
+========================================================
+========================================================
+OPTIMISED-SETTINGS-YELLOW
+Graphics AP| *--------------------------Direct3D12
+Render resolution--------------------------100
+Anti-aliasing method--------------------------TAA
+Image sharpening--------------------------SET IN POSTFX
+Dynamic Lut--------------------------OFF
+Vignette--------------------------0
+TPS sharpness--------------------------70
+Gunner View sharpness--------------------------50
+Bomber View sharpness--------------------------50
+Cockpit sharpness--------------------------50
+Color Correction--------------------------Default
+Ton Mapping--------------------------POLYNOM
+A--------------------------5
+B--------------------------0.01
+C--------------------------5
+D--------------------------5
+E--------------------------5
+F--------------------------5
+White--------------------------0.01
+Film grain--------------------------OFF
+
+
+Anisotropy--------------------------16X
+SSAA--------------------------NONE
+NVIDIA Reflex Low Latency--------------------------ON
+
+Texture Quality--------------------------HIGH
+Shadow Quality--------------------------VERYHIGH
+Effects quality--------------------------LOW
+Water quality--------------------------VERYHIGH
+Water Effects Quality--------------------------LOW
+Cloud quality (in flight)--------------------------0
+cloud quality (on ground)--------------------------0
+Reflection Quality--------------------------50
+Terrain quality--------------------------3
+SSAO Quality--------------------------1
+Tire/track marks--------------------------VERYHIGH
+Cockpit mirror reflections quality--------------------------0
+Global illumination quality--------------------------LOW
+Physics Quality--------------------------1
+Terrain displacement quality--------------------------0
+
+Tree range--------------------------40
+Grass range--------------------------20
+Small object shadows--------------------------0
+Bloom quality--------------------------3
+Advanced shore--------------------------YES
+Far terrain details--------------------------YES
+Lens flare--------------------------YES
+
+Ray tracing--------------------------OFF
+Ray tracing distance--------------------------X
+PTGI (Path traced global illumination)--------------------------X
+RTAO (Ray traced ambient occlusion)--------------------------X
+RTSM quality--------------------------X
+RTSM (Ray traced shadows)--------------------------X
+RTR (Ray traced reflections)--------------------------X
+RTR resolution--------------------------X
+RTR (Water)--------------------------X
+RTR (Water) resolution--------------------------X
+RTR (Translucent)--------------------------X
+
+VR Mode--------------------------X
+VR Display Mirror Mode--------------------------X
+VR Streamer Mode--------------------------X
+
+Performance Metrics--------------------------COMPACT
+Motion blur strength--------------------------0
+Cancel camera motion blur--------------------------YES
+JPEG Screenshots--------------------------NO
+High resolution screenshots--------------------------NO
+Old videocard support *--------------------------NO
+High dynamic range (HDR) *--------------------------NO

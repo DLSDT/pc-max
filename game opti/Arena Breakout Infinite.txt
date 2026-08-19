@@ -1,0 +1,37 @@
+OPTIMISED-SETTINGS-YELLOW
+VARIABLE ROTE RENDERING----------------ON
+VIEW DISTANCE----------------QUALITY
+SHADOW QUALITY----------------BALANCED 
+RESOLUTION----------------BASIC
+POST-PROCESSING QUALITY----------------BALANCED
+TEXTURE QUALITY----------------QUALITY
+EFFECT QUALITY----------------BALANCED
+VEGETATION QUALITY----------------QUALITY
+SHADER QUALITY----------------BALANCED
+LIGHT QUALITY----------------BALANCED
+WORLD DETAIL QUALITY----------------BASIC
+SCOPE QUALITY----------------PERFORMANCE
+TERRAIN SURFACE SUBDIVISION----------------HIGH PRECISION
+========================================================
+برای این بازی از هیچ فایل یا برنامه ای استفاده نکنید
+========================================================
+OPTIMISED-SETTINGS-MULTIPLAY
+VARIABLE ROTE RENDERING----------------ON
+VIEW DISTANCE----------------BASIC
+SHADOW QUALITY----------------BASIC 
+RESOLUTION----------------BASIC
+POST-PROCESSING QUALITY----------------BASIC
+TEXTURE QUALITY----------------QUALITY
+EFFECT QUALITY----------------BASIC
+VEGETATION QUALITY----------------QUALITY
+SHADER QUALITY----------------BASIC
+LIGHT QUALITY----------------BASIC
+WORLD DETAIL QUALITY----------------BASIC
+SCOPE QUALITY----------------PERFORMANCE
+TERRAIN SURFACE SUBDIVISION----------------CLOSE
+
+POST-PROCESSING
+BRIGHTNESS----------------1.00
+SATURATION----------------1.35
+CONTRAST----------------0.50
+SHARPNESS----------------5

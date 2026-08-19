@@ -1,0 +1,65 @@
+OPTIMISED-SETTINGS-YELLOW
+RAY TRACING--------------------OFF
+IMAGE QUALITY--------------------100
+RENDERING MODE--------------------NORMAL
+ANTI-ALIASING--------------------TAA+FXAA
+TEXTURE QUALITY (RECOMMENDED VRAM)--------------------HIGH(8GB)
+TEXTURE FILTERING--------------------16X
+MESH QUALITY--------------------MAX
+SHADOW QUALITY--------------------HIGH
+SHADOW CACHE--------------------ON
+CONTACT SHADOWS--------------------ON
+AMBIENT OCCLUSION--------------------SSAO
+VOLUMATRIC LIGHTING--------------------MID
+PARTICLE LIGHTING QUALITY--------------------HIGH
+BLOOM--------------------ON
+SCREEN SPACE REFLECTIONS--------------------OFF---(فریم اضافه داشتی خرج این گزینه کن)---ON
+SUBSURFACE SCATTERING--------------------OFF
+HAIR STRANDS--------------------OFF---(فریم اضافه داشتی خرج این گزینه کن)---HIGH
+GRAPHIC DISMEMBERMENT--------------------ON
+PERSISTENT CORPSES--------------------MANY
+CORPSE PHYSICS--------------------HIGH
+DIVERSE ENEMY ANIMATIONS--------------------ON
+MOTION BLUR--------------------OFF OR ON
+RAIN QUALITY--------------------HIGH
+TERRAIN--------------------ON
+DESTRUCTIBLE ENVIRONMENTS--------------------ON
+LENS FLARE--------------------ON
+LENS DISTORTION--------------------ON
+DEPTH OF FIELD--------------------ON
+RESOURCE-INTENSE LIGHTING QUALITY--------------------HIGH
+RESOURCE-INTENSE EFFECTS QUALITY--------------------HIGH
+========================================================
+========================================================
+OPTIMISED-SETTINGS-GREEN
+RAY TRACING--------------------OFF
+IMAGE QUALITY--------------------100
+RENDERING MODE--------------------NORMAL
+ANTI-ALIASING--------------------TAA+FXAA
+TEXTURE QUALITY (RECOMMENDED VRAM)--------------------HIGH(6GB)
+TEXTURE FILTERING--------------------16X
+MESH QUALITY--------------------MID
+SHADOW QUALITY--------------------LOW
+SHADOW CACHE--------------------ON
+CONTACT SHADOWS--------------------OFF
+AMBIENT OCCLUSION--------------------OFF
+VOLUMATRIC LIGHTING--------------------MIN
+PARTICLE LIGHTING QUALITY--------------------HIGH
+BLOOM--------------------ON
+SCREEN SPACE REFLECTIONS--------------------OFF---(فریم اضافه داشتی خرج این گزینه کن)---ON
+SUBSURFACE SCATTERING--------------------OFF
+HAIR STRANDS--------------------OFF---(فریم اضافه داشتی خرج این گزینه کن)---HIGH
+GRAPHIC DISMEMBERMENT--------------------ON
+PERSISTENT CORPSES--------------------FEW
+CORPSE PHYSICS--------------------LOW
+DIVERSE ENEMY ANIMATIONS--------------------ON
+MOTION BLUR--------------------OFF OR ON
+RAIN QUALITY--------------------HIGH
+TERRAIN--------------------OFF
+DESTRUCTIBLE ENVIRONMENTS--------------------ON
+LENS FLARE--------------------ON
+LENS DISTORTION--------------------ON
+DEPTH OF FIELD--------------------OFF
+RESOURCE-INTENSE LIGHTING QUALITY--------------------HIGH
+RESOURCE-INTENSE EFFECTS QUALITY--------------------HIGH
+

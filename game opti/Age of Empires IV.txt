@@ -1,0 +1,12 @@
+OPTIMISED-SETTINGS-YELLOW
+IMAGE QUALITY---------------MEDIUM
+ANIMATION QUALITY---------------HIGH
+SHADOW QUALITY---------------HIGH
+TEXTURE DETAIL---------------HIGH
+GEOMETRY DETAIL---------------MEDIUM
+ANTI-ALIASING---------------LOW
+PHYSICS---------------HIGH
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+========================================================

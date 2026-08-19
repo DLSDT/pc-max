@@ -1,0 +1,36 @@
+OPTIMISED-SETTINGS-YELLOW
+Resolution scale-------------100
+View distance-------------HIGH
+Shadows-------------HIGH
+Anti-aliasing-------------ULTRA
+Texture quality-------------ULTRA
+Visual effect quality-------------HIGH
+Post-processing quality-------------MEDIUM
+Reflection quality-------------ULTRA
+Global illumination quality-------------MEDIUM
+Foliage quality-------------HIGH
+Motion blur-------------ON
+Film grain-------------OFF
+Chromatic aberration-------------ON
+Umbral Distortion Effect-------------OFF
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این یک روش میتونید استفاده کنید
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+Resolution scale-------------100
+View distance-------------MEDIUM
+Shadows-------------MEDIUM
+Anti-aliasing-------------HIGH
+Texture quality-------------ULTRA
+Visual effect quality-------------HIGH
+Post-processing quality-------------MEDIUM
+Reflection quality-------------ULTRA
+Global illumination quality-------------MEDIUM
+Foliage quality-------------MEDIUM
+Motion blur-------------ON
+Film grain-------------OFF
+Chromatic aberration-------------ON
+Umbral Distortion Effect-------------OFF

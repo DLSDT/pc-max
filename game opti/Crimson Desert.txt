@@ -1,0 +1,46 @@
+OPTIMISED-SETTINGS-YELLOW
+MODEL QUALITY -------------------- ULTRA
+DISPLACEMENT SCALE -------------------- OFF
+TEXTURE QUALITY -------------------- CINEMATIC
+SHADOW QUALITY -------------------- CINEMATIC
+RAYTRACING -------------------- ON
+RAYTRACED SUN/MOON LIGHT SHADOWS -------------------- OFF
+LIGHTING QUALITY -------------------- ULTRA
+REFLECTION QUALITY -------------------- CINEMATIC
+ADVANCED WEATHER EFFECT -------------------- ON 
+WATER QUALITY -------------------- CINEMATIC
+FOLIAGE DENSITY -------------------- ULTRA
+DETAIL DECORATIVE MESH -------------------- ON
+VOLUMETRIC FOG QUALITY -------------------- HIGH
+EFFECT QUALITY -------------------- CINEMATIC
+SIMULATION QUALITY -------------------- CINEMATIC
+POST-PROCESSING EFFECT QUALITY -------------------- CINEMATIC
+NIGHT TONE MODE -------------------- OFF
+NVIDIA DLSS RAY RECONSTRUCTION -------------------- OFF
+NVIDIA REFLEX -------------------- OFF or ON
+PARTICLE EFFECTS QUALITY -------------------- 100
+===========================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=nsIfWqinUz0&t=15s
+===========================================
+OPTIMISED-SETTINGS-GREEN
+MODEL QUALITY -------------------- HIGH
+DISPLACEMENT SCALE -------------------- OFF
+TEXTURE QUALITY -------------------- ULTRA
+SHADOW QUALITY -------------------- MEDIUM
+RAYTRACING -------------------- ON
+RAYTRACED SUN/MOON LIGHT SHADOWS -------------------- OFF
+LIGHTING QUALITY -------------------- HIGH
+REFLECTION QUALITY -------------------- MEDIUM
+ADVANCED WEATHER EFFECT -------------------- ON 
+WATER QUALITY -------------------- CINEMATIC
+FOLIAGE DENSITY -------------------- HIGH
+DETAIL DECORATIVE MESH -------------------- OFF
+VOLUMETRIC FOG QUALITY -------------------- LOW
+EFFECT QUALITY -------------------- CINEMATIC
+SIMULATION QUALITY -------------------- CINEMATIC
+POST-PROCESSING EFFECT QUALITY -------------------- CINEMATIC
+NIGHT TONE MODE -------------------- OFF
+NVIDIA DLSS RAY RECONSTRUCTION -------------------- OFF
+NVIDIA REFLEX -------------------- OFF or ON
+PARTICLE EFFECTS QUALITY -------------------- 50

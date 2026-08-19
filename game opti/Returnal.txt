@@ -1,0 +1,36 @@
+OPTIMISED-SETTINGS-YELLOW
+LIGHTING QUALITY---------------------LOW
+SHADOW QUALITY---------------------HIGH
+AMBIENT OCCLUSION---------------------HIGH
+RAY-TRACED SHADOWS---------------------OFF
+SCREEN-SPACE REFLECTION---------------------ON
+RAY-TRACED REFLECTIONS---------------------OFF OR LOW
+MODEL QUALITY---------------------HIGH
+TEXTURE QUALITY---------------------EPIC
+VOLUMETRIC FOG---------------------HIGH
+PARTICLE QUALITY---------------------MEDIUM
+ANTI-ALIASING QUALITY---------------------EPIC
+DEPTH OF FIELD---------------------ON
+FILM GRAIN---------------------0
+BLOOM---------------------ON
+EMISSIVE INTENSITY---------------------100
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن فقط برنامه اوپتی اسکیلر رو این بازی جوابه
+https://www.youtube.com/watch?v=zHSedwpzIOY
+========================================================
+OPTIMISED-SETTINGS-GREEN
+LIGHTING QUALITY---------------------LOW
+SHADOW QUALITY---------------------MEDIUM
+AMBIENT OCCLUSION---------------------MEDIUM
+RAY-TRACED SHADOWS---------------------OFF
+SCREEN-SPACE REFLECTION---------------------ON
+RAY-TRACED REFLECTIONS---------------------OFF
+MODEL QUALITY---------------------MEDIUM
+TEXTURE QUALITY---------------------HIGH
+VOLUMETRIC FOG---------------------HIGH
+PARTICLE QUALITY---------------------MEDIUM
+ANTI-ALIASING QUALITY---------------------EPIC
+DEPTH OF FIELD---------------------OFF
+FILM GRAIN---------------------0
+BLOOM---------------------ON
+EMISSIVE INTENSITY---------------------100

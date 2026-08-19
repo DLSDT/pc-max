@@ -1,0 +1,37 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE QUALITY---------------MAXIMUM
+ANTIALIASING QUALITY---------------HIGH
+SSAO---------------HIGH
+DEPTH OF FIELD---------------MAXIMUM
+MOTION BLUR---------------OFF or HIGH
+SHADOW QUALITY---------------MAXIMUM
+LIGHTING QUALITY---------------HIGH
+EFFECTS QUALITY---------------MAXIMUM
+VOLUMETRIC LIGHTING QUALITY---------------MEDIUM
+REFLECTION QUALITY---------------HIGH
+WATER SURFACE QUALITY---------------HIGH
+SHADER QUALITY---------------MEDIUM
+GLOBAL ILLUMINATION QUALITY---------------MEDIUM
+GRASS QUALITY---------------MAXIMUM
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این 2 روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+TEXTURE QUALITY---------------MAXIMUM
+ANTIALIASING QUALITY---------------HIGH
+SSAO---------------HIGH
+DEPTH OF FIELD---------------HIGH
+MOTION BLUR---------------OFF or HIGH
+SHADOW QUALITY---------------HIGH
+LIGHTING QUALITY---------------HIGH
+EFFECTS QUALITY---------------LOW
+VOLUMETRIC LIGHTING QUALITY---------------LOW
+REFLECTION QUALITY---------------LOW
+WATER SURFACE QUALITY---------------HIGH
+SHADER QUALITY---------------MEDIUM
+GLOBAL ILLUMINATION QUALITY---------------LOW
+GRASS QUALITY---------------MAXIMUM

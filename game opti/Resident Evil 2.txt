@@ -1,0 +1,52 @@
+OPTIMISED-SETTINGS-YELLOW
+RAY TRACING-------------------------ON
+GL AND REFLECTION-------------------------LOW
+LIGHT REFLECTION-------------------------MEDIUM
+RENDERING MODE-------------------------NORMAL
+IMAGE QUALITY-------------------------100
+ANTI-ALIASING-------------------------FXAA+TAA
+TEXTURE QUALITY-------------------------HIGH ( 8GB )
+TEXTURE FILTER QUALITY-------------------------X16
+MESH QUALITY-------------------------MAX
+SHADOW QUALITY-------------------------HIGH
+SHADOW CACHE-------------------------ON
+CONTACT SHADOWS-------------------------ON
+SCREEN SPACE REFLECTIONS-------------------------LOW
+SUBSURFACE SCATTERING-------------------------OFF
+VOLUMETRIC LIGHTING QUALITY-------------------------MEDIUM
+PARTICLE LIGHTING QUALITY-------------------------HIGH
+AMBIENT OCCLUSION-------------------------SSAO
+BLOOM-------------------------ON
+LENS FLARE-------------------------ON
+MOTION BLUR-------------------------ON
+DEPTH OF FIELD-------------------------ON
+LENS DISTORTION-------------------------ON
+FILM NOISE-------------------------OFF
+========================================================
+اگه خیلی سیستمت ضعیفه این گزینه رو اینجوری تنظیم کن
+RENDERING MODE-------------------------INTERLACED
+========================================================
+OPTIMISED-SETTINGS-GREEN
+RAY TRACING-------------------------OFF
+GL AND REFLECTION-------------------------X
+LIGHT REFLECTION-------------------------X
+RENDERING MODE-------------------------NORMAL
+IMAGE QUALITY-------------------------100
+ANTI-ALIASING-------------------------FXAA+TAA
+TEXTURE QUALITY-------------------------HIGH ( 3GB )
+TEXTURE FILTER QUALITY-------------------------X16
+MESH QUALITY-------------------------HIGH
+SHADOW QUALITY-------------------------MEDIUM
+SHADOW CACHE-------------------------ON
+CONTACT SHADOWS-------------------------OFF
+SCREEN SPACE REFLECTIONS-------------------------LOW
+SUBSURFACE SCATTERING-------------------------OFF
+VOLUMETRIC LIGHTING QUALITY-------------------------LOW
+PARTICLE LIGHTING QUALITY-------------------------LOW
+AMBIENT OCCLUSION-------------------------SSAO
+BLOOM-------------------------OFF
+LENS FLARE-------------------------ON
+MOTION BLUR-------------------------ON
+DEPTH OF FIELD-------------------------ON
+LENS DISTORTION-------------------------ON
+FILM NOISE-------------------------OFF

@@ -1,0 +1,49 @@
+OPTIMISED-SETTINGS-YELLOW
+ANTI-SET QUALITY----------------HIGH
+LIGHTING QUALITY----------------HIGH
+SHADOWS----------------HIGH
+VIEW DISTANCE----------------EPIC
+STREAMING DISTANCE----------------FAR
+TEXTURES----------------EPIC
+ANISOTROPIC FILTERING----------------16X
+MATERIAL QUALITY----------------HIGH
+DISTANCE FIELD AMBIENT OCCLUSION----------------LOW
+LEGO MESH QUALITY----------------HIGH
+EFFECTS----------------HIGH
+REFLECTIONS----------------MEDIUM
+POST PROCESSING----------------MEDIUM
+POPULATION QUALITY----------------MEDIUM
+FULL SCREEN EFFECTS ENABLED----------------ON
+MOTION BLUR----------------ON
+VIGNETTES----------------ON
+WEATHER EFFECTS----------------ON
+REPEATING VISUAL EFFECTS----------------ON
+BLOOM----------------ON
+SCREEN SPACE AMBIENT OCCLUSION----------------ON
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=SbHG7aH3svw&t=581s
+فقط رو کارت های انویدیا سری 20-30-40 جوابه
+========================================================
+OPTIMISED-SETTINGS-GREEN
+ANTI-SET QUALITY----------------MEDIUM
+LIGHTING QUALITY----------------MEDIUM
+SHADOWS----------------MEDIUM
+VIEW DISTANCE----------------FAR
+STREAMING DISTANCE----------------MEDIUM
+TEXTURES----------------MEDIUM
+ANISOTROPIC FILTERING----------------1X
+MATERIAL QUALITY----------------MEDIUM
+DISTANCE FIELD AMBIENT OCCLUSION----------------LOW
+LEGO MESH QUALITY----------------MEDIUM
+EFFECTS----------------LOW
+REFLECTIONS----------------MEDIUM
+POST PROCESSING----------------MEDIUM
+POPULATION QUALITY----------------MEDIUM
+FULL SCREEN EFFECTS ENABLED----------------ON
+MOTION BLUR----------------ON
+VIGNETTES----------------ON
+WEATHER EFFECTS----------------ON
+REPEATING VISUAL EFFECTS----------------ON
+BLOOM----------------ON
+SCREEN SPACE AMBIENT OCCLUSION----------------ON

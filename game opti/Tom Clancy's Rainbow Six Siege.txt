@@ -1,0 +1,24 @@
+NVIDIA REFLEX LOW LATENCY--------------------ON
+OVERALL QUALITY--------------------
+TEXTURE QUALITY--------------------MEDIUM
+TEXTURE VRAM LIMIT--------------------LOW
+TEXTURE FILTERING--------------------4X
+LOD QUALITY--------------------LOW
+SHADING QUALITY--------------------LOW
+SHADOW QUALITY--------------------MEDIUM
+REFLECTION QUALITY--------------------LOW
+VFX QUALITY--------------------LOW
+AMBIENT OCCLUSION--------------------OFF
+LENS EFFECTS--------------------OFF
+ZOOM-IN DEPTH OF FIELD--------------------OFF
+NVIDIA DEEP LEARNING SUPER SAMPLING--------------------OFF
+AMD FIDELITYFX SUPER RESOLUTION 1.0--------------------OFF
+AMD FIDELITYFX SUPER RESOLUTION 2.0--------------------OFF
+ANTI-ALIASING--------------------OFF
+ADAPTIVE RENDER SCALING TARGET FPS--------------------OFF
+RENDER SCALING--------------------OFF
+
+BRIGHTNESS--------------------70
+VSYNC--------------------OFF
+FPSLIMIT--------------------OFF
+WIDESCREEN LETTERBOX--------------------OFF

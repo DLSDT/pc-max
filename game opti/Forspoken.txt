@@ -1,0 +1,43 @@
+OPTIMISED-SETTINGS-YELLOW
+VARIABLE RATE SHADING (VRS)---------------------ON
+DYNAMIC RESOLUTION---------------------OFF
+MODEL MEMORY---------------------LOW
+TEXTURE MEMORY---------------------STANDARD
+SHARPNESS---------------------50
+RENDER RESOLUTION---------------------100
+MODEL DETAIL LEVEL---------------------STANDARD
+TEXTURE FILTERING---------------------HIGH
+REFLECTIONS---------------------STANDARD
+MOTION BLUR---------------------ON
+DEPTH OF FIELD---------------------ON
+FOG QUALITY---------------------STANDARD
+CLOUD QUALITY---------------------STANDARD
+SHADOW QUALITY---------------------HIGH
+RAY TRACED SHADOWS---------------------OFF
+AMBIENT OCCLUSION (AO)---------------------STANDARD
+RAY TRACED AMBIENT OCCLUSION---------------------OFF
+ANTI-ALIASING---------------------TAA
+========================================================
+خودش فریم جنریشن داره ولی از این روش هم میتونی استفاده کنی
+ویدیو آموزش فعالسازی فریم جنریشن فقط برنامه اوپتی اسکیلر رو این بازی جوابه
+https://www.youtube.com/watch?v=zHSedwpzIOY
+========================================================
+OPTIMISED-SETTINGS-GREEN
+VARIABLE RATE SHADING (VRS)---------------------ON
+DYNAMIC RESOLUTION---------------------OFF
+MODEL MEMORY---------------------LOW
+TEXTURE MEMORY---------------------LOW
+SHARPNESS---------------------50
+RENDER RESOLUTION---------------------100
+MODEL DETAIL LEVEL---------------------LOW
+TEXTURE FILTERING---------------------HIGH
+REFLECTIONS---------------------STANDARD
+MOTION BLUR---------------------ON
+DEPTH OF FIELD---------------------OFF
+FOG QUALITY---------------------LOW
+CLOUD QUALITY---------------------LOW
+SHADOW QUALITY---------------------STANDARD
+RAY TRACED SHADOWS---------------------OFF
+AMBIENT OCCLUSION (AO)---------------------STANDARD
+RAY TRACED AMBIENT OCCLUSION---------------------OFF
+ANTI-ALIASING---------------------TAA

@@ -1,0 +1,33 @@
+OPTIMISED-SETTINGS-YELLOW
+SHADOW QUALITY------------------HIGH
+SHADOW SOFTNESS------------------CHSS
+SHADOW BLEND------------------DITHERED
+ANISOTROPIC LEVEL------------------8X
+NVIDIA REFLEX LOW LATENCY------------------ON
+ANTI-ALIASING / UPSCALING METHOD------------------FXAA
+MOTION BLUR------------------LEGACY
+GEOMETRY LEVEL OF DETAIL------------------5
+TERRAIN LEVEL OF DETAIL------------------3
+TREE LEVEL OF DETAIL------------------3
+TREE DRAW DISTANCE------------------2
+GRASS LEVEL OF DETAIL------------------2
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این سه روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+SHADOW QUALITY------------------MEDIUM
+SHADOW SOFTNESS------------------HIGH
+SHADOW BLEND------------------DITHERED
+ANISOTROPIC LEVEL------------------8X
+NVIDIA REFLEX LOW LATENCY------------------ON
+ANTI-ALIASING / UPSCALING METHOD------------------FXAA
+MOTION BLUR------------------LEGACY
+GEOMETRY LEVEL OF DETAIL------------------2
+TERRAIN LEVEL OF DETAIL------------------3
+TREE LEVEL OF DETAIL------------------2
+TREE DRAW DISTANCE------------------2
+GRASS LEVEL OF DETAIL------------------1

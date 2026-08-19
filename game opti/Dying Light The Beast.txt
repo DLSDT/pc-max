@@ -1,0 +1,48 @@
+OPTIMISED-SETTINGS-YELLOW
+GLOW -------------------- ON
+LIGHT STREAKS -------------------- ON
+LENS FLARE -------------------- ON
+CHROMATIC ABERRATION -------------------- ON
+FILM GRAIN EFFECT -------------------- OFF
+MOTION BLUR INTENSITY -------------------- 100
+RENDERER MODE -------------------- D3D12
+ASYNCHRONOUS COMPUTE -------------------- ON
+TEXTURE QUALITY -------------------- HIGH
+LOD QUALITY -------------------- LOW
+DRAW DISTANCE MULTIPLIER -------------------- 150
+MOTION BLUR QUALITY  -------------------- HIGH
+PARTICLES QUALITY  -------------------- HIGH
+SHADOWS QUALITY  -------------------- MEDIUM
+SCREEN SPACE SHADOWS  -------------------- ON
+AMBIENT OCCLUSION QUALITY  -------------------- HIGH
+GLOBAL ILLUMINATION QUALITY  -------------------- HIGH
+REFLECTIONS QUALITY  -------------------- MEDIUM
+FOG QUALITY  -------------------- LOW
+POSTPROCESS QUALITY -------------------- HIGH
+LATENCY REDUCTION -------------------- OFF
+===========================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=fB_nNH7UJhU&t=367s
+===========================================
+OPTIMISED-SETTINGS-GREEN
+GLOW -------------------- ON
+LIGHT STREAKS -------------------- ON
+LENS FLARE -------------------- ON
+CHROMATIC ABERRATION -------------------- ON
+FILM GRAIN EFFECT -------------------- OFF
+MOTION BLUR INTENSITY -------------------- 100
+RENDERER MODE -------------------- D3D12
+ASYNCHRONOUS COMPUTE -------------------- ON
+TEXTURE QUALITY -------------------- MEDIUM
+LOD QUALITY -------------------- LOW
+DRAW DISTANCE MULTIPLIER -------------------- 100
+MOTION BLUR QUALITY  -------------------- HIGH
+PARTICLES QUALITY  -------------------- HIGH
+SHADOWS QUALITY  -------------------- LOW
+SCREEN SPACE SHADOWS  -------------------- ON
+AMBIENT OCCLUSION QUALITY  -------------------- MEDIUM
+GLOBAL ILLUMINATION QUALITY  -------------------- HIGH
+REFLECTIONS QUALITY  -------------------- MEDIUM
+FOG QUALITY  -------------------- LOW
+POSTPROCESS QUALITY -------------------- LOW
+LATENCY REDUCTION -------------------- OFF

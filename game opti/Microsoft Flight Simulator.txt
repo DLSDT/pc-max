@@ -1,0 +1,76 @@
+OPTIMISED-SETTINGS-YELLOW
+RENDER SCALING----------------80
+ANTI-ALIASING----------------TAA
+TERRAIN LEVEL OF DETAIL----------------100
+OFF SCREEN TERRAIN PRE-CACHING----------------ULTRA
+TERRAIN VECTOR DATA----------------HIGH
+BUILDINGS----------------LOW
+TREES----------------MEDIUM
+GRASS AND BUSHES----------------MEDIUM
+OBJECTS LEVEL OF DETAIL----------------100
+VOLUMETRIC CLOUDS----------------LOW
+TEXTURE RESOLUTION----------------ULTRA
+ANISOTROPIC FILTERING----------------4X
+TEXTURE SUPERSAMPLING----------------4X4
+TEXTURE SYNTHESIS----------------LOW
+WATER WAVES----------------MEDIUM
+SHADOW MAPS----------------1024
+TERRAIN SHADOWS----------------512
+CONTACT SHADOWS----------------ULTRA
+WINDSHIELD EFFECTS----------------HIGH
+AMBIENT OCCLUSION----------------HIGH
+RAYMARCHED REFLECTION----------------HIGH
+LIGHT SHAFTS----------------LOW
+BLOOM----------------ON
+DEPTH OF FIELD----------------HIGH
+MOTION BLUR----------------ON
+LENS CORRECTION----------------ON
+LENS FLARE----------------ON
+GLASS COCKPIT REFRESH RAT----------------HIGH
+========================================================
+این ۴ تا گزینه تو قسمت ترافیکه
+LEISURE BOATS----------------15
+ROAD VEHICLES----------------15
+SHIPS AND FERRIES----------------15
+FAUNA DENSITY----------------40
+========================================================
+اگه گیمتون کرکیه تنها راه داشتن فریم جنریشن استفاده از برنامه
+LosslessScaling
+گیمتون اورجیناله و کارتتون انودیا کافیه از فایل های دی ال ال برا باز کردن قغلش استفاده کنید
+========================================================
+OPTIMISED-SETTINGS-GREEN
+RENDER SCALING----------------70
+ANTI-ALIASING----------------TAA
+TERRAIN LEVEL OF DETAIL----------------(10) OR (100)
+OFF SCREEN TERRAIN PRE-CACHING----------------ULTRA
+TERRAIN VECTOR DATA----------------HIGH
+BUILDINGS----------------LOW
+TREES----------------LOW
+GRASS AND BUSHES----------------LOW
+OBJECTS LEVEL OF DETAIL----------------10
+VOLUMETRIC CLOUDS----------------LOW
+TEXTURE RESOLUTION----------------HIGH
+ANISOTROPIC FILTERING----------------4X
+TEXTURE SUPERSAMPLING----------------OFF
+TEXTURE SYNTHESIS----------------LOW
+WATER WAVES----------------LOW
+SHADOW MAPS----------------1024
+TERRAIN SHADOWS----------------512
+CONTACT SHADOWS----------------MEDIUM
+WINDSHIELD EFFECTS----------------HIGH
+AMBIENT OCCLUSION----------------MEDIUM
+RAYMARCHED REFLECTION----------------HIGH
+LIGHT SHAFTS----------------OFF
+BLOOM----------------ON
+DEPTH OF FIELD----------------HIGH
+MOTION BLUR----------------ON
+LENS CORRECTION----------------ON
+LENS FLARE----------------ON
+GLASS COCKPIT REFRESH RAT----------------HIGH
+========================================================
+این ۴ تا گزینه تو قسمت ترافیکه
+LEISURE BOATS----------------0
+ROAD VEHICLES----------------0
+SHIPS AND FERRIES----------------0
+FAUNA DENSITY----------------20
+========================================================

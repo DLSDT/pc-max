@@ -1,0 +1,39 @@
+OPTIMISED-SETTINGS-YELLOW
+DIRECTX -------------------12
+GEOMETRY -------------------ULTRA
+ENVIRONMENT -------------------HIGH
+TEXTURE RESOLUTION -------------------HIGH
+TEXTURE FILTERING -------------------ULTRA
+SHADOWS -------------------HIGH
+HEADLIGHT SHADOWS -------------------YOUR CAR
+REFLECTIONS -------------------HIGH
+DEPTH OF FIELD -------------------ON
+MOTION BLUR -------------------ON
+BLOOM -------------------ON
+AMBIENT OCCLUSION -------------------ON
+POST-PROCESS ANTI-ALIASING -------------------TAA
+SUBSURFACE SCATTERING -------------------LOW
+RAY TRACED REFLECTIONS -------------------OFF
+EXTRA DETAILS -------------------0
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن و مولتی فریم جنریشن
+https://www.youtube.com/watch?v=SbHG7aH3svw&t=581s
+این روش رو همه کارت گرافیک ها کار میکنه
+========================================================
+OPTIMISED-SETTINGS-GREEN
+DIRECTX -------------------12
+GEOMETRY -------------------HIGH
+ENVIRONMENT -------------------LOW
+TEXTURE RESOLUTION -------------------MEDIUM
+TEXTURE FILTERING -------------------ULTRA
+SHADOWS -------------------MEDIUM
+HEADLIGHT SHADOWS -------------------YOUR CAR
+REFLECTIONS -------------------HIGH
+DEPTH OF FIELD -------------------ON
+MOTION BLUR -------------------ON
+BLOOM -------------------ON
+AMBIENT OCCLUSION -------------------ON
+POST-PROCESS ANTI-ALIASING -------------------TAA
+SUBSURFACE SCATTERING -------------------LOW
+RAY TRACED REFLECTIONS -------------------OFF
+EXTRA DETAILS -------------------0

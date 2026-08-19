@@ -1,0 +1,23 @@
+OPTIMISED-SETTINGS-YELLOW
+QUALITY-------------ULTRA
+MOTION BLUR--------------HIGH
+RAY TRACING--------------NORMAL
+REFLECTIONS--------------HYBRID
+VRS--------------OFF
+HAIRWORKS--------------ON
+ADVANCED PHYSX--------------ON
+TESSELLATION--------------OFF
+FIELD OF VIEW--------------8
+SHADING RAT--------------1.0X
+========================================================
+========================================================
+OPTIMISED-SETTINGS-GREEN
+QUALITY-------------HIGH
+MOTION BLUR--------------HIGH
+RAY TRACING--------------NORMAL
+VRS--------------4X
+HAIRWORKS--------------OFF
+ADVANCED PHYSX--------------ON
+TESSELLATION--------------OFF
+FIELD OF VIEW--------------8
+SHADING RAT--------------1.0X

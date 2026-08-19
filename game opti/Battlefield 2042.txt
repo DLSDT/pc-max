@@ -1,0 +1,66 @@
+OPTIMISED-SETTINGS-MULTIPLAY
+Field of View---------------------------90
+Vehicle 3rd Person Field of View---------------------------ON
+ADS Field of View---------------------------ON
+
+Brightness---------------------------70
+High Dynamic Range---------------------------AUTO
+Motion Blur---------------------------0
+Chromatic Aberration---------------------------OFF
+Vignette---------------------------OFF
+
+Texture Quality---------------------------MEDIUM
+Texture Filtering---------------------------MEDIUM
+Lighting Quality---------------------------LOW
+Shadow Filtering---------------------------PCF
+Effects Quality---------------------------LOW
+Post Process Quality---------------------------LOW
+Mesh Quality---------------------------LOW
+Terrain Quality---------------------------LOW
+Undergrowth Quality---------------------------LOW
+Antialiasing Post-Processing---------------------------TAA LOW
+Ambient Occlusion---------------------------OFF
+High Fidelity Objects Amount---------------------------LOW
+
+Dynamic Resolution Scale---------------------------OFF
+Dynamic Resolution Scale Refresh Rate Target---------------------------100
+DLSS---------------------------BALANCED
+Ray Traced Ambient Occlusion---------------------------OFF
+NVIDIA Reflex Low Latency---------------------------ON
+Latency Flash Indicator---------------------------OFF
+Future Frame Rendering---------------------------ON
+Vertical Sync---------------------------OFF
+========================================================
+========================================================
+OPTIMISED-SETTINGS-YELLOW
+Field of View---------------------------90
+Vehicle 3rd Person Field of View---------------------------ON
+ADS Field of View---------------------------OFF
+
+Brightness---------------------------50
+High Dynamic Range---------------------------AUTO
+Motion Blur---------------------------0
+Chromatic Aberration---------------------------ON
+Vignette---------------------------OFF
+
+Texture Quality---------------------------ULTRA
+Texture Filtering---------------------------MEDIUM
+Lighting Quality---------------------------MEDIUM
+Shadow Filtering---------------------------PCF
+Effects Quality---------------------------LOW
+Post Process Quality---------------------------ULTRA
+Mesh Quality---------------------------LOW
+Terrain Quality---------------------------HIGH
+Undergrowth Quality---------------------------LOW
+Antialiasing Post-Processing---------------------------TAA HIGH
+Ambient Occlusion---------------------------HBAO
+High Fidelity Objects Amount---------------------------LOW
+
+Dynamic Resolution Scale---------------------------OFF
+Dynamic Resolution Scale Refresh Rate Target---------------------------100
+DLSS---------------------------BALANCED
+Ray Traced Ambient Occlusion---------------------------OFF
+NVIDIA Reflex Low Latency---------------------------ON
+Latency Flash Indicator---------------------------OFF
+Future Frame Rendering---------------------------ON
+Vertical Sync---------------------------OFF

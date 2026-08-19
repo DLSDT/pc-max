@@ -1,0 +1,47 @@
+OPTIMISED-SETTINGS-YELLOW
+RENDERING MODE-----------------NORMAL
+RAY TRACING-----------------OFF
+ANTI-ALIASING-----------------TAA
+TEXTURE QUALITY-----------------HIGH(8 GB)
+TEXTURE FILTER QUALITY-----------------X16
+MESH QUALITY-----------------MAX
+SHADOW QUALITY-----------------HIGH
+SHADOW CACHE-----------------ON
+SCREEN SPACE REFLECTIONS-----------------ON
+SUBSURFACE SCATTERING-----------------ON
+VOLUMETRIC LIGHTING QUALITY-----------------MEDIUM
+PARTICLE LIGHTING QUALITY-----------------HIGH
+AMBIENT OCCLUSION-----------------HBAO+
+BLOOM-----------------ON
+LENS FLARE-----------------ON
+MOTION BLUR-----------------OFF
+DEPTH OF FIELD-----------------ON
+LENS DISTORTION-----------------ON
+FIDELITYX CAS + UPSCALING-----------------ON
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این سه روش میتونید استفاده کنید
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+RENDERING MODE-----------------NORMAL
+RAY TRACING-----------------OFF
+ANTI-ALIASING-----------------TAA
+TEXTURE QUALITY-----------------HIGH(1 GB)
+TEXTURE FILTER QUALITY-----------------X16
+MESH QUALITY-----------------MAX
+SHADOW QUALITY-----------------MEDIUM
+SHADOW CACHE-----------------ON
+SCREEN SPACE REFLECTIONS-----------------OFF
+SUBSURFACE SCATTERING-----------------ON
+VOLUMETRIC LIGHTING QUALITY-----------------LOW
+PARTICLE LIGHTING QUALITY-----------------HIGH
+AMBIENT OCCLUSION-----------------(OFF) OR SSAO
+BLOOM-----------------ON
+LENS FLARE-----------------OFF
+MOTION BLUR-----------------OFF
+DEPTH OF FIELD-----------------ON
+LENS DISTORTION-----------------ON
+FIDELITYX CAS + UPSCALING-----------------ON

@@ -1,0 +1,42 @@
+OPTIMISED-SETTINGS-YELLOW
+TEXTURE DETAILS--------------VERY HIGH
+MODEL DETAILS--------------VERY HIGH
+SHADOW DETAILS--------------ULTRA
+WATER DETAILS--------------VERY HIGH
+TERRAIN DETAILS--------------HIGH
+DECAL DETAILS--------------ULTRA
+FOG QUALITY--------------HIGH
+AMBIENT OCCLUSION--------------FIDELITYFX PERFORMANCE CACAO
+SUN SHADOWS--------------RAYTRACED
+POST-PROCESS ANTI-ALIASING--------------HIGH
+SHARPNESS POST PROCESS--------------FIDELITYFX CAS
+CAMERA MOTION BLUR--------------MEDIUM
+BLOOM--------------YES
+DEPTH OF FIELD--------------YES
+LENS FLARE--------------YES
+LIGHT SHAFTS--------------YES
+========================================================
+ویدیو آموزش فعالسازی فریم جنریشن
+https://www.youtube.com/watch?v=irxWFuwCLvc
+برا این بازی از این سه روش میتونید استفاده کنید
+OPTI NO SETUP
+IMAGE SCALING
+LOSSLESS SCALING
+========================================================
+OPTIMISED-SETTINGS-GREEN
+TEXTURE DETAILS--------------HIGH
+MODEL DETAILS--------------HIGH
+SHADOW DETAILS--------------VERY HIGH
+WATER DETAILS--------------VERY HIGH
+TERRAIN DETAILS--------------HIGH
+DECAL DETAILS--------------ULTRA
+FOG QUALITY--------------HIGH
+AMBIENT OCCLUSION--------------FIDELITYFX PERFORMANCE CACAO
+SUN SHADOWS--------------SIMPLE
+POST-PROCESS ANTI-ALIASING--------------HIGH
+SHARPNESS POST PROCESS--------------FIDELITYFX CAS
+CAMERA MOTION BLUR--------------MEDIUM
+BLOOM--------------YES
+DEPTH OF FIELD--------------YES
+LENS FLARE--------------YES
+LIGHT SHAFTS--------------NO
