@@ -1,18 +1,6 @@
 name: build-windows-installer
 
 # Produces the standalone Windows installer (.exe) for PC MAX.
-#
-# Tauri's NSIS bundler must run on Windows, so the installer is built on a
-# windows-latest runner and uploaded as a build artifact.
-#
-# Usage:
-#   - Manual:   Actions → "build-windows-installer" → Run workflow
-#   - Automatic: runs on every push to main/master
-#   - The artifact download contains:
-#       PC MAX_<version>_x64-setup.exe
-#
-# After downloading, publish the .exe wherever you distribute the app, and add
-# a new App Release in the Admin panel so clients show "Update available".
 
 on:
   workflow_dispatch:
@@ -57,10 +45,6 @@ jobs:
         run: cargo test
 
       - name: Build Windows installer (NSIS)
-        # The installed app must talk to the deployed API, never localhost.
-        # Configure the GitHub secret VITE_API_URL (e.g. https://api.pcmax.app/api/v1);
-        # if it is unset we fall back to the production domain so a build never
-        # silently bakes a development URL into the installer.
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pcmax.app/api/v1' }}
         run: npm run tauri:build -w @goh/desktop
