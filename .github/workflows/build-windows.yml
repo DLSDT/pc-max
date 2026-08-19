@@ -32,9 +32,11 @@ jobs:
       - name: Install workspace dependencies
         run: npm ci
 
-      - name: Typecheck + tests (API/Desktop)
+      - name: Build internal dependencies & types
         run: |
-          npm run typecheck -w @goh/validation -w @goh/types
+          npm run build -w @goh/types --if-present
+          npm run build -w @goh/validation --if-present
+          npm run build -w @goh/api --if-present
 
       - name: Build Windows installer (NSIS)
         env:
