@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Windows Installer (Tauri)
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://api.pcmax.rixy.ir/api/v1' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pcmax-api.rixy.ir/api/v1' }}
         run: npm run tauri build -w @goh/desktop
 
       - name: Upload installer artifact
