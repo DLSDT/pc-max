@@ -6,6 +6,7 @@ import { useAuth } from '@/store/auth';
 import { api } from '@/lib/api';
 import { Button, Input } from '@/components/ui';
 import { PasswordStrength, type PasswordRule } from '@/components/ui/password-strength';
+import { OtpInput } from '@/components/ui/otp-input';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -126,16 +127,13 @@ export default function RegisterPage() {
               <label htmlFor="reg-otp" className="text-sm font-medium">
                 {t('auth.verificationCode')}
               </label>
-              <Input
-                id="reg-otp"
-                type="text"
-                inputMode="numeric"
-                required
-                autoComplete="one-time-code"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="••••••"
-                dir="ltr"
+              {/* One box per digit: supports pasting the whole code and shakes
+                  on a rejected code. Kept LTR so digits don't reorder in RTL. */}
+              <OtpInput
+                label={t('auth.verificationCode')}
+                status={error ? 'error' : 'idle'}
+                onChange={setOtp}
+                autoFocus
               />
             </div>
 
