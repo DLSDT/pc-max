@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { Archive, BadgeCheck, Check, Database, Globe, Loader2, LogOut, Moon, RefreshCw, ShieldCheck, Sun, Trash2, UserRound } from 'lucide-react';
+import { Archive, BadgeCheck, Check, CreditCard, Database, Gamepad2, Globe, Heart, History, Info, KeyRound, Loader2, LogOut, Moon, RefreshCw, ShieldCheck, Sun, Trash2, UserRound } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { api } from '@/lib/api';
 import { cache } from '@/lib/cache';
@@ -14,6 +14,7 @@ import { createBackup, deleteBackup, getApplied, listBackups, restoreBackup, typ
 import { useAuth } from '@/store/auth';
 import { useUi } from '@/store/ui';
 import { Badge, Button, Spinner } from '@/components/ui';
+import ProfileHeader, { ProfileMenuItem } from '@/components/ProfileHeader';
 import { formatDateTime } from '@/lib/labels';
 import { cn } from '@/lib/utils';
 
@@ -142,52 +143,44 @@ export default function SettingsPage() {
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
 
-      {/* Account */}
-      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <UserRound aria-hidden className="size-4 text-primary" />
-          {t('auth.account')}
-        </h2>
-        {!authReady ? (
-          // Session restore (httpOnly refresh cookie) hasn't resolved yet —
-          // don't flash "sign in required" at an actually-signed-in user.
-          <div className="flex items-center py-2">
-            <Spinner />
+      {/* Account — profile hero + quick links, then the app settings below. */}
+      {!authReady ? (
+        <div className="flex items-center justify-center rounded-2xl border border-border bg-card py-10">
+          <Spinner />
+        </div>
+      ) : user ? (
+        <>
+          <ProfileHeader />
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <ProfileMenuItem to="/library" icon={<Gamepad2 aria-hidden />} label={t('profile.menuLibrary')} />
+            <ProfileMenuItem to="/favorites" icon={<Heart aria-hidden />} label={t('profile.menuFavorites')} />
+            <ProfileMenuItem to="/recently-viewed" icon={<History aria-hidden />} label={t('profile.menuRecent')} />
+            <ProfileMenuItem to="/subscription" icon={<CreditCard aria-hidden />} label={t('profile.menuSubscription')} />
+            <ProfileMenuItem to="/forgot-password" icon={<KeyRound aria-hidden />} label={t('profile.menuPassword')} />
+            <ProfileMenuItem to="/about" icon={<Info aria-hidden />} label={t('profile.menuAbout')} />
           </div>
-        ) : user ? (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <span className="font-medium" dir="ltr">{user.phone ?? user.email}</span>
-              <Badge variant={subActive ? 'success' : 'secondary'}>
-                <ShieldCheck aria-hidden className="mr-1 size-3" />
-                {subChecked
-                  ? subActive
-                    ? t('subscription.active')
-                    : t('subscription.noActive')
-                  : t('common.loading')}
-              </Badge>
-            </div>
-            <div className="flex gap-2">
-              <Link to="/subscription" className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-3 text-xs font-medium hover:bg-accent">
-                <BadgeCheck aria-hidden className="size-3.5 text-primary" />
-                {t('subscription.title')}
-              </Link>
-              <Button variant="outline" size="sm" onClick={() => void onSignOut()}>
-                <LogOut aria-hidden />
-                {t('auth.signOut')}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">{t('auth.signInRequired')}</p>
-            <Button size="sm" onClick={() => navigate('/login')}>
-              <UserRound aria-hidden />
-              {t('auth.signIn')}
+
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => void onSignOut()}>
+              <LogOut aria-hidden />
+              {t('auth.signOut')}
             </Button>
           </div>
-        )}
-      </section>
+        </>
+      ) : (
+        <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <UserRound aria-hidden className="size-4 text-primary" />
+            {t('auth.account')}
+          </h2>
+          <p className="text-sm text-muted-foreground">{t('auth.signInRequired')}</p>
+          <Button size="sm" onClick={() => navigate('/login')}>
+            <UserRound aria-hidden />
+            {t('auth.signIn')}
+          </Button>
+        </section>
+      )}
 
       {/* Theme */}
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
