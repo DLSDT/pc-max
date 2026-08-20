@@ -13,6 +13,8 @@ import EmbeddedPostgres from 'embedded-postgres';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
+const OPTIMIZED_SETTING_DIR = path.join(__dirname, '../../../game opti');
+
 const PG_PORT = 54329;
 const API_PORT = 4000;
 const PG_DATA_DIR = './data/dev-pg';
@@ -70,9 +72,10 @@ async function main() {
   } else {
     console.log(`🌱 Database already seeded (${Number(n)} games) — skipping seed.`);
     // Upgraded installations: ensure the commercial defaults exist (idempotent).
-    const { ensureSubscriptionPlans, ensureDemoUser } = await import('../src/db/seed');
+    const { ensureSubscriptionPlans, ensureDemoUser, seedBootstrapAdmin } = await import('../src/db/seed');
     await ensureSubscriptionPlans();
     await ensureDemoUser();
+    await seedBootstrapAdmin();
   }
 
   // Full catalog: idempotently import every game from the icon pack. Runs only
@@ -83,6 +86,15 @@ async function main() {
     console.log('📦 Importing full game catalog from the icon pack…');
     const summary = await importCatalog({ convertIcons: false });
     console.log(`   folders=${summary.foldersFound} imported=${summary.gamesImported} existing=${summary.gamesAlreadyPresent} errors=${summary.databaseErrors.length}`);
+  }
+
+  // Optimized Setting (Yellow/Green): idempotent, safe to run every boot —
+  // re-running just replaces each game's yellow/green profiles+settings.
+  if (existsSync(OPTIMIZED_SETTING_DIR)) {
+    console.log('📦 Importing Optimized Setting (Yellow/Green) data…');
+    const { importOptimizedSettings } = await import('../src/scripts/import-optimized-settings');
+    const s = await importOptimizedSettings(OPTIMIZED_SETTING_DIR);
+    console.log(`   files=${s.filesFound} matched=${s.gamesMatched} created=${s.gamesCreated} profiles=${s.profilesWritten} settings=${s.settingsWritten} skipped=${s.skipped.length}`);
   }
 
   const app = await buildApp();

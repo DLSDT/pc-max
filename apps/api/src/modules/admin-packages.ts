@@ -11,6 +11,7 @@ import {
   OptimizationPackageInput,
   OptimizationPackageUpdateInput,
   PackageFileCompleteInput,
+  PackageKind,
   PackagePresignInput,
   PackagePublishInput,
 } from '@goh/validation';
@@ -63,15 +64,21 @@ export async function adminPackagesModule(app: FastifyInstance) {
         querystring: z.object({
           gameId: z.string().uuid().optional(),
           status: z.enum(['draft', 'published', 'archived']).optional(),
+          kind: PackageKind.optional(),
           page: z.coerce.number().int().min(1).default(1),
           limit: z.coerce.number().int().min(1).max(100).default(25),
         }),
       },
     },
     async (request) => {
-      const { gameId, status, page, limit } = request.query;
+      const { gameId, status, kind, page, limit } = request.query;
       const offset = (page - 1) * limit;
-      const where = and(isNull(optimizationPackages.deletedAt), gameId ? eq(optimizationPackages.gameId, gameId) : undefined, status ? eq(optimizationPackages.status, status) : undefined);
+      const where = and(
+        isNull(optimizationPackages.deletedAt),
+        gameId ? eq(optimizationPackages.gameId, gameId) : undefined,
+        status ? eq(optimizationPackages.status, status) : undefined,
+        kind ? eq(optimizationPackages.kind, kind) : undefined,
+      );
 
       const totalRows = await db.select({ value: count() }).from(optimizationPackages).where(where);
       const rows = await db
@@ -82,6 +89,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
           slug: optimizationPackages.slug,
           version: optimizationPackages.version,
           status: optimizationPackages.status,
+          kind: optimizationPackages.kind,
           gpuVendor: optimizationPackages.gpuVendor,
           gpuFamily: optimizationPackages.gpuFamily,
           targetResolution: optimizationPackages.targetResolution,
@@ -105,6 +113,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
           slug: r.slug,
           version: r.version,
           status: r.status,
+          kind: r.kind,
           gpuVendor: r.gpuVendor,
           gpuFamily: r.gpuFamily,
           targetResolution: r.targetResolution,
@@ -152,6 +161,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
           name: body.name,
           slug: body.slug,
           description: body.description ?? null,
+          kind: body.kind,
           gpuVendor: body.gpuVendor,
           gpuFamily: body.gpuFamily ?? null,
           minVramMb: body.minVramMb ?? null,
@@ -182,7 +192,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
 
       const body = request.body;
       const patch: Record<string, unknown> = {};
-      for (const key of ['name', 'slug', 'description', 'gpuVendor', 'gpuFamily', 'minVramMb', 'minRamGb', 'minWindows', 'gameVersion', 'arch', 'targetResolution', 'targetFps', 'isDefault'] as const) {
+      for (const key of ['name', 'slug', 'description', 'kind', 'gpuVendor', 'gpuFamily', 'minVramMb', 'minRamGb', 'minWindows', 'gameVersion', 'arch', 'targetResolution', 'targetFps', 'isDefault'] as const) {
         if (body[key] !== undefined) patch[key] = body[key];
       }
       patch.updatedAt = new Date();

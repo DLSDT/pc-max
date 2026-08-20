@@ -16,10 +16,17 @@
  *   SETTING NAME ---------------VALUE
  *   ...
  *
- * Files with no YELLOW/GREEN header (a handful do this) are treated as a
- * single Yellow list. Freeform lines that aren't "NAME---VALUE" (tutorial
- * text, YouTube links) are kept as the profile's `description`, never
- * fabricated into fake settings rows.
+ * A handful of files have no literal YELLOW/GREEN header text but still use
+ * the same two-block-separated-by-`====` structure (sometimes labeled e.g.
+ * "Pro Players"/"Casual Players" instead) — for those, the first block is
+ * treated as Yellow and the block after the separator as Green, matching the
+ * position convention every labeled file already uses (and avoiding merging
+ * two distinct setting lists — often the same setting name twice with
+ * different values — into one profile). Files with no separator at all
+ * really are a single undifferentiated list and stay Yellow-only. Freeform
+ * lines that aren't "NAME---VALUE" (tutorial text, YouTube links, the
+ * "{Pro Players}"/"{Casual Players}" sub-labels themselves) are kept as the
+ * profile's `description`, never fabricated into fake settings rows.
  *
  * Games are matched to the existing catalog by exact case-insensitive name;
  * unmatched titles get their own new (published) game row — per explicit
@@ -59,16 +66,28 @@ export function parseOptimizedSettingsContent(fileName: string, content: string)
   const green: ParsedSetting[] = [];
   const notes: string[] = [];
   let current: 'yellow' | 'green' | null = null;
+  let sawHeader = false;
 
   for (const raw of content.split(/\r?\n/)) {
     const line = raw.trim();
-    if (!line || SEPARATOR.test(line)) continue;
+    if (!line) continue;
+    if (SEPARATOR.test(line)) {
+      // No explicit YELLOW/GREEN header seen yet but we've already collected
+      // a first block of settings — the separator marks the start of the
+      // second block. Treat it as Green (same first-block-Yellow convention
+      // every labeled file follows) instead of letting it fall through and
+      // merge into the same Yellow list as the first block.
+      if (!sawHeader && yellow.length > 0 && current !== 'green') current = 'green';
+      continue;
+    }
     if (HEADER_YELLOW.test(line)) {
       current = 'yellow';
+      sawHeader = true;
       continue;
     }
     if (HEADER_GREEN.test(line)) {
       current = 'green';
+      sawHeader = true;
       continue;
     }
     const match = SETTING_LINE.exec(line);

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { Archive, BadgeCheck, Check, Database, Globe, Loader2, LogOut, RefreshCw, ShieldCheck, Trash2, UserRound } from 'lucide-react';
+import { Archive, BadgeCheck, Check, Database, Globe, Loader2, LogOut, Moon, RefreshCw, ShieldCheck, Sun, Trash2, UserRound } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { api } from '@/lib/api';
 import { cache } from '@/lib/cache';
-import { config } from '@/lib/config';
+import { config, getRuntimeAppVersion } from '@/lib/config';
+import { applyTheme } from '@/lib/theme';
 import { runSync } from '@/lib/sync';
 import { getSubscription } from '@/lib/subscription';
 import { createBackup, deleteBackup, getApplied, listBackups, restoreBackup, type BackupSnapshot } from '@/lib/backup';
@@ -27,8 +28,11 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const language = useUi((s) => s.language);
   const setLanguage = useUi((s) => s.setLanguage);
+  const theme = useUi((s) => s.theme);
+  const setTheme = useUi((s) => s.setTheme);
   const setSyncStatus = useUi((s) => s.setSyncStatus);
   const user = useAuth((s) => s.user);
+  const authReady = useAuth((s) => s.ready);
   const logout = useAuth((s) => s.logout);
 
   const [syncing, setSyncing] = useState(false);
@@ -40,6 +44,7 @@ export default function SettingsPage() {
   const [backingUp, setBackingUp] = useState(false);
   const [restoringId, setRestoringId] = useState<string | null>(null);
   const [backupMsg, setBackupMsg] = useState<string | null>(null);
+  const [appVersion, setAppVersion] = useState<string>(config.appVersion);
   const [backupError, setBackupError] = useState<string | null>(null);
 
   function refreshBackups() {
@@ -83,6 +88,10 @@ export default function SettingsPage() {
   }
 
   useEffect(() => {
+    void getRuntimeAppVersion().then(setAppVersion);
+  }, []);
+
+  useEffect(() => {
     if (!user) return;
     getSubscription()
       .then((s) => {
@@ -122,6 +131,11 @@ export default function SettingsPage() {
     applyDirection(code);
   }
 
+  function onTheme(next: 'light' | 'dark') {
+    setTheme(next);
+    applyTheme(next);
+  }
+
   const lastSync = cache.getLastSync();
 
   return (
@@ -134,7 +148,13 @@ export default function SettingsPage() {
           <UserRound aria-hidden className="size-4 text-primary" />
           {t('auth.account')}
         </h2>
-        {user ? (
+        {!authReady ? (
+          // Session restore (httpOnly refresh cookie) hasn't resolved yet —
+          // don't flash "sign in required" at an actually-signed-in user.
+          <div className="flex items-center py-2">
+            <Spinner />
+          </div>
+        ) : user ? (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <span className="font-medium" dir="ltr">{user.phone ?? user.email}</span>
@@ -167,6 +187,45 @@ export default function SettingsPage() {
             </Button>
           </div>
         )}
+      </section>
+
+      {/* Theme */}
+      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          {theme === 'dark' ? <Moon aria-hidden className="size-4 text-primary" /> : <Sun aria-hidden className="size-4 text-primary" />}
+          {t('settings.theme')}
+        </h2>
+        <p className="text-xs text-muted-foreground">{t('settings.themeHint')}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => onTheme('light')}
+            aria-pressed={theme === 'light'}
+            className={cn(
+              'flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+              theme === 'light'
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-border bg-background/40 text-muted-foreground hover:bg-accent',
+            )}
+          >
+            <Sun aria-hidden className="size-4" />
+            {t('settings.light')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onTheme('dark')}
+            aria-pressed={theme === 'dark'}
+            className={cn(
+              'flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+              theme === 'dark'
+                ? 'border-primary/40 bg-primary/10 text-primary'
+                : 'border-border bg-background/40 text-muted-foreground hover:bg-accent',
+            )}
+          >
+            <Moon aria-hidden className="size-4" />
+            {t('settings.dark')}
+          </button>
+        </div>
       </section>
 
       {/* Language */}
@@ -247,7 +306,7 @@ export default function SettingsPage() {
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <RefreshCw aria-hidden className="size-4 text-primary" />
-          Sync
+          {t('settings.sync')}
         </h2>
         <p className="text-xs text-muted-foreground">
           {lastSync ? t('settings.syncedAt', { time: formatDateTime(lastSync) }) : t('common.loading')}
@@ -279,7 +338,7 @@ export default function SettingsPage() {
         <h2 className="flex items-center gap-2 font-semibold">
           {t('settings.aboutSection')}
         </h2>
-        <p className="text-muted-foreground">{t('settings.version', { version: config.appVersion })}</p>
+        <p className="text-muted-foreground">{t('settings.version', { version: appVersion })}</p>
         <p className="text-muted-foreground">{t('about.tagline')}</p>
       </section>
     </div>

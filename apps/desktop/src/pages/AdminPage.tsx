@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/store/auth';
+import { useAdminAuth } from '@/store/adminAuth';
 import {
   Shield,
   Users,
   Gamepad2,
   Settings,
-  AlertCircle,
+  Loader2,
+  LogOut,
   Package,
   LayoutDashboard,
   SlidersHorizontal,
@@ -15,6 +16,7 @@ import {
   UserCog,
   ScrollText,
 } from 'lucide-react';
+import { errMessage, iconBtnClass, inputClass, primaryBtnClass } from './admin/shared';
 import DashboardTab from './admin/DashboardTab';
 import GamesTab from './admin/GamesTab';
 import ProfilesTab from './admin/ProfilesTab';
@@ -41,20 +43,80 @@ const TABS: { key: AdminTab; i18nKey: string; icon: React.ReactNode }[] = [
   { key: 'settings', i18nKey: 'admin.tabSettings', icon: <Settings className="size-4" /> },
 ];
 
+function AdminLoginForm() {
+  const { t } = useTranslation();
+  const login = useAdminAuth((s) => s.login);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      await login(email.trim(), password);
+    } catch (err) {
+      setError(errMessage(err, t('admin.loginError')));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+      <Shield className="size-12 text-primary" />
+      <p className="text-lg font-semibold">{t('admin.loginTitle')}</p>
+      <form onSubmit={(e) => void handleSubmit(e)} className="flex w-full max-w-xs flex-col gap-3 text-left">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t('admin.loginEmail')}
+          dir="ltr"
+          required
+          className={inputClass}
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={t('admin.loginPassword')}
+          dir="ltr"
+          required
+          className={inputClass}
+        />
+        {error && <p className="text-xs text-destructive">{error}</p>}
+        <button type="submit" disabled={submitting} className={`${primaryBtnClass} justify-center`}>
+          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
+          {t('admin.loginButton')}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { t } = useTranslation();
-  const user = useAuth((s) => s.user);
+  const admin = useAdminAuth((s) => s.admin);
+  const ready = useAdminAuth((s) => s.ready);
+  const restore = useAdminAuth((s) => s.restore);
   const [tab, setTab] = useState<AdminTab>('dashboard');
 
-  if (!user || user.role !== 'admin') {
+  useEffect(() => {
+    void restore();
+  }, [restore]);
+
+  if (!ready) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-        <AlertCircle className="size-12 text-destructive" />
-        <p className="text-lg font-semibold">{t('admin.accessDenied')}</p>
-        <p className="text-sm text-muted-foreground">{t('admin.accessDeniedDesc')}</p>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="size-6 animate-spin text-primary" />
       </div>
     );
   }
+
+  if (!admin) return <AdminLoginForm />;
 
   return (
     <div className="space-y-6">
@@ -63,16 +125,19 @@ export default function AdminPage() {
         <p className="text-sm text-muted-foreground">{t('admin.subtitle')}</p>
       </header>
 
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="flex items-center justify-between rounded-xl border border-border bg-card p-5">
         <div className="flex items-center gap-4">
           <div className="flex size-12 items-center justify-center rounded-full bg-primary/10">
             <Shield className="size-6 text-primary" />
           </div>
           <div>
-            <p className="font-semibold">{user.username ?? user.email}</p>
-            <p className="text-sm capitalize text-muted-foreground">{user.role}</p>
+            <p className="font-semibold">{admin.name ?? admin.email}</p>
+            <p className="text-sm capitalize text-muted-foreground">{admin.role}</p>
           </div>
         </div>
+        <button type="button" onClick={() => void useAdminAuth.getState().logout()} className={iconBtnClass} title={t('admin.signOut')}>
+          <LogOut className="size-3.5" />
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1" role="tablist" aria-label={t('admin.title')}>

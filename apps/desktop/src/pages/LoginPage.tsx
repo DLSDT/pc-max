@@ -3,27 +3,53 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '@/store/auth';
+import { useAdminAuth } from '@/store/adminAuth';
 import { Button, Input } from '@/components/ui';
+
+/** Admin accounts are only ever identified by email (AdminLoginInput) — no point
+ * attempting the admin login for an obvious phone-number identifier. */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const login = useAuth((s) => s.login);
+  const adminLogin = useAdminAuth((s) => s.login);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /**
+   * One login form for both audiences (spec: same auth system, same app —
+   * no separate admin sign-in). Whichever account the credentials actually
+   * belong to determines where the user lands: an admin match opens the
+   * admin panel, anything else falls through to the regular user session
+   * and their account page.
+   */
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (identifier.trim().length < 6) {
+    const trimmed = identifier.trim();
+    if (trimmed.length < 6) {
       setError(t('auth.invalidIdentifier'));
       return;
     }
     setBusy(true);
     try {
-      await login(identifier.trim(), password);
+      if (EMAIL_RE.test(trimmed)) {
+        try {
+          await adminLogin(trimmed, password);
+          navigate('/admin');
+          return;
+        } catch {
+          // Not an admin account (or wrong password for one) — try it as a
+          // regular user login instead. Falling through (rather than
+          // surfacing the admin error) avoids revealing which kind of
+          // account, if any, that identifier belongs to.
+        }
+      }
+      await login(trimmed, password);
       navigate('/subscription');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.errorGeneric'));

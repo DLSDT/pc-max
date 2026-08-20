@@ -24,6 +24,9 @@ interface UiState {
   language: 'en' | 'fa';
   setLanguage: (lng: 'en' | 'fa') => void;
 
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
+
   syncStatus: SyncStatus;
   setSyncStatus: (s: SyncStatus) => void;
 
@@ -50,6 +53,9 @@ export const useUi = create<UiState>()(
       language: 'en',
       setLanguage: (language) => set({ language }),
 
+      theme: 'light',
+      setTheme: (theme) => set({ theme }),
+
       syncStatus: 'idle',
       setSyncStatus: (syncStatus) => set({ syncStatus }),
 
@@ -65,7 +71,7 @@ export const useUi = create<UiState>()(
     }),
     {
       name: 'goh_ui',
-      partialize: (s) => ({ sidebarCollapsed: s.sidebarCollapsed, language: s.language }),
+      partialize: (s) => ({ sidebarCollapsed: s.sidebarCollapsed, language: s.language, theme: s.theme }),
     },
   ),
 );

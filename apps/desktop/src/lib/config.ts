@@ -22,8 +22,33 @@ function resolveApiUrl(): string {
 
 export const config = {
   apiUrl: resolveApiUrl(),
+  /** Build-time fallback only — see getRuntimeAppVersion() for the real, packaged version. */
   appVersion: '0.3.1',
   syncIntervalMs: 5 * 60 * 1000,
   /** Default timeout for API requests (network flakiness must not hang the UI). */
   requestTimeoutMs: 15 * 1000,
 } as const;
+
+let cachedRuntimeVersion: string | null = null;
+
+/**
+ * The actual running app version. Reads it from the packaged Tauri binary
+ * itself (Cargo.toml's CARGO_PKG_VERSION, via the `app_version` command) so
+ * the update-check/About-screen version can never silently drift from what's
+ * really installed — falls back to the static `config.appVersion` constant
+ * only in the browser preview, where there is no packaged binary to ask.
+ */
+export async function getRuntimeAppVersion(): Promise<string> {
+  if (cachedRuntimeVersion) return cachedRuntimeVersion;
+  if (typeof window !== 'undefined' && Boolean((window as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__)) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      cachedRuntimeVersion = await invoke<string>('app_version');
+      return cachedRuntimeVersion;
+    } catch {
+      // fall through to the static fallback
+    }
+  }
+  cachedRuntimeVersion = config.appVersion;
+  return cachedRuntimeVersion;
+}

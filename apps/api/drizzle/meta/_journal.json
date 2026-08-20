@@ -50,6 +50,20 @@
       "when": 1787100000006,
       "tag": "0006_pc_max_email_games",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787175000007,
+      "tag": "0007_profile_color",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787180000008,
+      "tag": "0008_package_kind",
+      "breakpoints": true
     }
   ]
 }

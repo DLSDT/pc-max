@@ -66,7 +66,7 @@ export default function SettingsTab() {
                 <p className="text-sm font-medium">{key}</p>
                 <button type="button" onClick={() => void handleSave(key)} disabled={savingKey === key} className={primaryBtnClass}>
                   {savingKey === key ? <Loader2 className="size-3.5 animate-spin" /> : null}
-                  Save
+                  {t('common.save')}
                 </button>
               </div>
               <textarea

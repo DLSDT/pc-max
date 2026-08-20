@@ -15,11 +15,3 @@ export function useIsFavorite(gameId: string) {
     () => cache.isFavorite(gameId),
   );
 }
-
-/** Live view of the recently-viewed list. */
-export function useRecent() {
-  return useSyncExternalStore(
-    (cb) => cache.subscribe(cb),
-    () => cache.getRecent(),
-  );
-}

@@ -82,6 +82,7 @@ export async function attachSettings(rows: ProfileRow[]): Promise<OptimizationPr
       hardwareTier: p.hardwareTier,
       version: p.version,
       status: p.status,
+      colorProfile: p.colorProfile,
       isDefault: p.isDefault,
       viewCount: p.viewCount,
       publishedAt: iso(p.publishedAt),

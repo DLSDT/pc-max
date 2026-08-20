@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Loader2, Plus, Ban, CheckCircle2 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/store/auth';
+import { useAdminAuth } from '@/store/adminAuth';
 import { errMessage, iconBtnClass, inputClass, LoadingState, ErrorState, EmptyState, primaryBtnClass, TableWrap } from './shared';
 
 const ROLES = ['viewer', 'editor', 'admin', 'super_admin'] as const;
 
 export default function AdminsTab() {
   const { t } = useTranslation();
-  const currentUser = useAuth((s) => s.user);
+  const currentAdmin = useAdminAuth((s) => s.admin);
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +121,7 @@ export default function AdminsTab() {
               {rows.map((row) => {
                 const id = String(row.id);
                 const active = row.isActive !== false;
-                const isSelf = currentUser?.id === id;
+                const isSelf = currentAdmin?.id === id;
                 const label = isSelf ? t('admin.cannotDeactivateSelf') : active ? t('admin.deactivate') : t('admin.activate');
                 return (
                   <tr key={id} className="border-b border-border/50 last:border-0">

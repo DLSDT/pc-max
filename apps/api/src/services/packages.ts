@@ -122,6 +122,7 @@ export function toPackagePublic(pkg: typeof optimizationPackages.$inferSelect) {
     description: pkg.description,
     version: pkg.version,
     status: pkg.status,
+    kind: pkg.kind,
     gpuVendor: pkg.gpuVendor,
     gpuFamily: pkg.gpuFamily,
     minVramMb: pkg.minVramMb,

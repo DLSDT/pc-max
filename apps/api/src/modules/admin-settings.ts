@@ -15,7 +15,7 @@ import { configCache } from '../lib/ttl-cache';
  * app: announcements, maintenance mode, minimum supported version, and (in a
  * later phase) branding + theme.
  */
-const SETTING_KEYS = ['announcement', 'maintenance_mode', 'min_app_version', 'branding'] as const;
+const SETTING_KEYS = ['announcement', 'maintenance_mode', 'min_app_version', 'branding', 'support'] as const;
 
 export const DEFAULT_SETTINGS: Record<string, unknown> = {
   announcement: { enabled: false, text: '' },
@@ -27,6 +27,13 @@ export const DEFAULT_SETTINGS: Record<string, unknown> = {
     primary_color: '#E50914',
     tagline: 'Premium PC Gaming Optimization',
     logo_url: null,
+  },
+  // Contact-support details shown on the user's account page — server-driven
+  // like everything else here, never a hardcoded address in the client.
+  support: {
+    email: null,
+    telegram: null,
+    website: null,
   },
 };
 

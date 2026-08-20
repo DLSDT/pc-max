@@ -301,6 +301,22 @@ function PackageCard({
   );
 }
 
+function PackageGroup({ title, packages, slug, gameName, hw }: { title: string; packages: PackagePublic[]; slug: string; gameName: string; hw: HardwareProfileInput | null }) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-muted-foreground">{title}</h3>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {rankPackages(packages, hw).map((p) => (
+          <PackageCard key={p.id} p={p} slug={slug} gameName={gameName} hw={hw} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Frame Generation components (upscalers/frame-gen) are shown separately
+ * from generic graphics-config packages — same install/backup/rollback
+ * pipeline, just visually grouped by product area. */
 function PackagesSection({ slug, gameName }: { slug: string; gameName: string }) {
   const { t } = useTranslation();
   const hw = useHardware((s) => s.profile);
@@ -312,6 +328,9 @@ function PackagesSection({ slug, gameName }: { slug: string; gameName: string })
       .then((r) => setPackages(r.data))
       .catch(() => setPackages([]));
   }, [slug]);
+
+  const frameGen = packages?.filter((p) => p.kind === 'frame_generation') ?? [];
+  const graphics = packages?.filter((p) => p.kind !== 'frame_generation') ?? [];
 
   return (
     <section className="space-y-4">
@@ -326,10 +345,11 @@ function PackagesSection({ slug, gameName }: { slug: string; gameName: string })
           {t('packages.none')}
         </p>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {rankPackages(packages, hw).map((p) => (
-            <PackageCard key={p.id} p={p} slug={slug} gameName={gameName} hw={hw} />
-          ))}
+        <div className="space-y-6">
+          {frameGen.length > 0 && <PackageGroup title={t('packages.frameGeneration')} packages={frameGen} slug={slug} gameName={gameName} hw={hw} />}
+          {graphics.length > 0 && (
+            <PackageGroup title={frameGen.length > 0 ? t('packages.graphics') : t('packages.title')} packages={graphics} slug={slug} gameName={gameName} hw={hw} />
+          )}
         </div>
       )}
     </section>
@@ -554,7 +574,15 @@ export default function GameDetailPage() {
                       : 'border-border bg-card text-muted-foreground hover:bg-accent',
                   )}
                 >
-                  <span className="block">{p.name}</span>
+                  <span className="flex items-center gap-1.5">
+                    {p.colorProfile && (
+                      <span
+                        aria-hidden
+                        className={cn('size-2 rounded-full', p.colorProfile === 'yellow' ? 'bg-amber-400' : 'bg-emerald-400')}
+                      />
+                    )}
+                    {p.name}
+                  </span>
                   <span className="block text-[10px] font-normal opacity-70">
                     v{p.version} · {HARDWARE_TIER_LABEL[p.hardwareTier]}
                   </span>
@@ -574,6 +602,11 @@ export default function GameDetailPage() {
                     {t('settings.version', { version: selected.version })}
                   </Badge>
                   {selected.isDefault && <Badge variant="success">Default</Badge>}
+                  {selected.colorProfile && (
+                    <Badge variant={selected.colorProfile === 'yellow' ? 'warning' : 'success'}>
+                      {selected.colorProfile === 'yellow' ? t('detail.colorYellow') : t('detail.colorGreen')}
+                    </Badge>
+                  )}
                 </div>
                 {selected.description && <p className="text-sm text-muted-foreground">{selected.description}</p>}
 

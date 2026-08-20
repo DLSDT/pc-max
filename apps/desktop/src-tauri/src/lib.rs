@@ -21,6 +21,7 @@ use winopt::{ApplyResult, RealOs, RecoveryReport, ScanResult, SnapshotMeta, Snap
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -40,6 +41,7 @@ pub fn run() {
             detect_hardware,
             detect_games,
             apply_game_files,
+            extract_game_icon,
             windows_scan,
             windows_apply,
             windows_restore,
@@ -450,6 +452,34 @@ fn rollback(originals: &[(PathBuf, PathBuf)], applied: &[PathBuf], backup_root: 
         }
     }
     let _ = fs::remove_dir_all(backup_root);
+}
+
+/// Extract the icon embedded in a Windows .exe and return it as a
+/// `data:image/png;base64,...` URL, for the "add a game by executable"
+/// flow (LibraryPage). Pure Rust PE resource parsing (icoextract_rs) — no
+/// Windows shell APIs — decoded via `ico`, re-encoded as PNG.
+#[tauri::command]
+fn extract_game_icon(exe_path: String) -> Result<String, String> {
+    use icoextract_rs::IconExtractor;
+    use std::io::Cursor;
+
+    let extractor = IconExtractor::from_path(&exe_path).map_err(|e| e.to_string())?;
+    let icon = extractor.icon_by_index(0).map_err(|e| e.to_string())?;
+    let ico_bytes = icon.to_ico_bytes().map_err(|e| e.to_string())?;
+
+    let icon_dir = ico::IconDir::read(Cursor::new(ico_bytes)).map_err(|e| e.to_string())?;
+    let entry = icon_dir
+        .entries()
+        .iter()
+        .max_by_key(|e| u32::from(e.width()) * u32::from(e.height()))
+        .ok_or_else(|| "The executable has no embedded icon".to_string())?;
+    let image = entry.decode().map_err(|e| e.to_string())?;
+
+    let mut png_bytes = Vec::new();
+    image.write_png(&mut png_bytes).map_err(|e| e.to_string())?;
+
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&png_bytes);
+    Ok(format!("data:image/png;base64,{b64}"))
 }
 
 /// Detect CPU / GPU / VRAM / RAM / Windows / resolution on Windows.

@@ -2,7 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { PackageDownloadResponse, PackageListResponse } from '@goh/validation';
+import { PackageDownloadResponse, PackageKind, PackageListResponse } from '@goh/validation';
 import { db } from '../db';
 import { games, optimizationPackages } from '../db/schema';
 import { authenticateUser } from '../lib/auth-middleware';
@@ -19,7 +19,11 @@ export async function packagesModule(app: FastifyInstance) {
   typed.get(
     '/games/:slug/packages',
     {
-      schema: { params: z.object({ slug: z.string() }), response: { 200: PackageListResponse } },
+      schema: {
+        params: z.object({ slug: z.string() }),
+        querystring: z.object({ kind: PackageKind.optional() }),
+        response: { 200: PackageListResponse },
+      },
     },
     async (request) => {
       const game = await db.query.games.findFirst({
@@ -27,10 +31,18 @@ export async function packagesModule(app: FastifyInstance) {
       });
       if (!game) throw notFound('Game');
 
+      const { kind } = request.query;
       const rows = await db
         .select()
         .from(optimizationPackages)
-        .where(and(eq(optimizationPackages.gameId, game.id), eq(optimizationPackages.status, 'published'), isNull(optimizationPackages.deletedAt)));
+        .where(
+          and(
+            eq(optimizationPackages.gameId, game.id),
+            eq(optimizationPackages.status, 'published'),
+            isNull(optimizationPackages.deletedAt),
+            kind ? eq(optimizationPackages.kind, kind) : undefined,
+          ),
+        );
       return { data: rows.map(toPackagePublic) };
     },
   );

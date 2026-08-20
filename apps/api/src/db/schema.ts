@@ -28,7 +28,11 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', ['pending', 
 export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'paid', 'failed', 'refunded', 'expired']);
 export const packageGpuVendorEnum = pgEnum('package_gpu_vendor', ['any', 'nvidia', 'amd', 'intel']);
 export const packageArchEnum = pgEnum('package_arch', ['any', 'x64', 'arm64']);
+/** What kind of optimization package this is — drives which product area
+ * (Optimized Setting vs Multi-Frame Generation) surfaces it. */
+export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation']);
 export const fileOperationEnum = pgEnum('file_operation', ['replace', 'add']);
+export const profileColorEnum = pgEnum('profile_color', ['yellow', 'green']);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -276,6 +280,7 @@ export const optimizationProfiles = pgTable(
     hardwareTier: hardwareTierEnum('hardware_tier').notNull().default('mid_range'),
     version: text('version').notNull().default('1.0.0'),
     status: profileStatusEnum('status').notNull().default('draft'),
+    colorProfile: profileColorEnum('color_profile'),
     isDefault: boolean('is_default').notNull().default(false),
     viewCount: integer('view_count').notNull().default(0),
     publishedAt: timestamp('published_at', { withTimezone: true, mode: 'date' }),
@@ -666,6 +671,7 @@ export const optimizationPackages = pgTable(
     description: text('description'),
     version: text('version').notNull().default('1.0.0'),
     status: profileStatusEnum('status').notNull().default('draft'),
+    kind: packageKindEnum('kind').notNull().default('graphics'),
     gpuVendor: packageGpuVendorEnum('gpu_vendor').notNull().default('any'),
     gpuFamily: text('gpu_family'),
     minVramMb: integer('min_vram_mb'),

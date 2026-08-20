@@ -31,6 +31,39 @@
     --radius: 0.75rem;
   }
 
+  /* Dark theme — same crimson accent, inverted surfaces. Toggled via a
+     `.dark` class on <html> (store/ui.ts `theme`, applied in i18n.ts /
+     SettingsPage). Tailwind's `darkMode: ['class']` is already configured;
+     components consume these through the semantic bg-background/text-foreground
+     etc. utilities rather than `dark:` variants, so this block alone re-themes
+     the whole app. */
+  :root.dark {
+    --background: 0 0% 7%; /* #121212 */
+    --foreground: 0 0% 96%;
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 96%;
+    --primary: 355 78% 52%; /* brighter crimson for contrast on dark */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 220 9% 63%;
+    --accent: 355 45% 18%;
+    --accent-foreground: 355 90% 78%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 21%;
+    --input: 0 0% 21%;
+    --ring: 355 78% 52%;
+  }
+
+  /* Smooth animated theme switch (spec requirement) — the variables above
+     drive color, background and border on virtually every element, so a
+     single blanket transition on those properties covers the whole app. */
+  * {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+  }
+
   /* The app shell is a fixed viewport; the scrollable region is the main
      content area (see AppLayout). The full height chain (html → body → #root)
      is more reliable than 100vh inside WebView2 and keeps wheel/touchpad

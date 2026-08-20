@@ -1,6 +1,8 @@
 import { config } from './config';
 import type {
+  AdminMe,
   AppVersionCheckResponse,
+  AuthResponse,
   DevicePublic,
   GameDetail,
   GameListResponse,
@@ -22,6 +24,9 @@ import type {
 } from '@goh/types';
 
 export type ApiErrorKind = 'http' | 'network' | 'timeout' | 'invalid';
+
+/** Loose row shape for admin endpoints — the admin tabs consume these as untyped records. */
+type Row = Record<string, unknown>;
 
 export class ApiError extends Error {
   constructor(
@@ -49,6 +54,8 @@ interface RequestOptions {
   signal?: AbortSignal;
   /** Attach the in-memory user access token + refresh on 401. */
   authed?: boolean;
+  /** Attach the in-memory ADMIN access token + refresh on 401 (separate session from `authed`). */
+  authedAdmin?: boolean;
   /** Include cookies (needed for the httpOnly refresh cookie). */
   withCredentials?: boolean;
   /** Override the default request timeout (ms). Health probes use a short one. */
@@ -62,6 +69,20 @@ export function setAuthToken(token: string | null) {
 }
 export function getAuthToken(): string | null {
   return authToken;
+}
+
+/**
+ * In-memory ADMIN access token — a separate credential from the user token
+ * above. The API's admin routes (/admin/*) are authenticated against the
+ * `admins` table via a dedicated /admin/auth/login, entirely independent of
+ * the end-user auth flow (see apps/api/src/modules/auth.ts vs auth-user.ts).
+ */
+let adminAuthToken: string | null = null;
+export function setAdminAuthToken(token: string | null) {
+  adminAuthToken = token;
+}
+export function getAdminAuthToken(): string | null {
+  return adminAuthToken;
 }
 
 /** Combine a caller-supplied signal with the request timeout. */
@@ -80,13 +101,17 @@ async function request<T>(path: string, options: RequestOptions = {}, retried = 
     const token = authToken ?? (await restoreSession());
     if (token) headers.authorization = `Bearer ${token}`;
   }
+  if (options.authedAdmin) {
+    const token = adminAuthToken ?? (await restoreAdminSession());
+    if (token) headers.authorization = `Bearer ${token}`;
+  }
 
   let res: Response;
   try {
     res = await fetch(`${config.apiUrl}${path}`, {
       method: options.method ?? 'GET',
       signal: withTimeout(options.signal, options.timeoutMs ?? config.requestTimeoutMs),
-      credentials: options.authed || options.withCredentials ? 'include' : undefined,
+      credentials: options.authed || options.authedAdmin || options.withCredentials ? 'include' : undefined,
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
     });
@@ -109,9 +134,10 @@ async function request<T>(path: string, options: RequestOptions = {}, retried = 
     );
   }
 
-  if (res.status === 401 && options.authed && !retried) {
+  if (res.status === 401 && (options.authed || options.authedAdmin) && !retried) {
     // Access token expired — refresh via the httpOnly cookie and retry once.
-    if (await refreshSession()) return request<T>(path, options, true);
+    const refreshed = options.authedAdmin ? await refreshAdminSession() : await refreshSession();
+    if (refreshed) return request<T>(path, options, true);
     throw new ApiError('Session expired — please sign in again', 401, null);
   }
 
@@ -160,6 +186,38 @@ async function refreshSession(): Promise<boolean> {
   return (await restoreSession()) !== null;
 }
 
+/** Try to restore the ADMIN session via its own httpOnly refresh cookie (`goh_refresh`). */
+async function restoreAdminSession(): Promise<string | null> {
+  try {
+    const res = await fetch(`${config.apiUrl}/admin/auth/refresh`, { method: 'POST', credentials: 'include' });
+    if (!res.ok) return null;
+    const data = (await res.json()) as AuthResponse;
+    setAdminAuthToken(data.accessToken);
+    return data.accessToken;
+  } catch {
+    return null;
+  }
+}
+
+/** Refresh the admin access token using the httpOnly cookie. Returns true on success. */
+async function refreshAdminSession(): Promise<boolean> {
+  return (await restoreAdminSession()) !== null;
+}
+
+/** Build a query string from a flat params object, skipping empty values. */
+function buildQuery(params: Record<string, string | number | undefined>): string {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== '') qs.set(k, String(v));
+  const query = qs.toString();
+  return query ? `?${query}` : '';
+}
+
+/** Admin list endpoints return `{ data, meta: { total } }` — flatten to `{ data, total }` for the admin tabs. */
+async function adminList<T>(path: string): Promise<{ data: T[]; total: number }> {
+  const res = await request<{ data: T[]; meta?: { total: number } }>(path, { authedAdmin: true });
+  return { data: res.data, total: res.meta?.total ?? res.data.length };
+}
+
 export const api = {
   home: (signal?: AbortSignal) => request<HomeResponse>('/home/cached', { signal }),
   games: (params: Record<string, string | undefined>, signal?: AbortSignal) => {
@@ -174,6 +232,7 @@ export const api = {
   profile: (slug: string, profileSlug: string, signal?: AbortSignal) =>
     request<OptimizationProfile>(`/games/${slug}/optimizations/${profileSlug}`, { signal }),
   featured: (signal?: AbortSignal) => request<{ data: GameSummary[] }>('/featured', { signal }),
+  optimizedSettingGames: (signal?: AbortSignal) => request<{ data: GameSummary[] }>('/optimized-setting/games', { signal }),
   sync: (since: string | null, signal?: AbortSignal) =>
     request<SyncResponse>(`/sync${since ? `?since=${encodeURIComponent(since)}` : ''}`, { signal }),
   appVersion: (current: string) =>
@@ -229,7 +288,8 @@ export const api = {
     request<HardwareRecommendResponse>('/hardware/recommend', { method: 'POST', body: { gameSlug, hardware } }),
 
   // ------------------------------------------------------------ packages
-  gamePackages: (slug: string) => request<PackageListResponse>(`/games/${slug}/packages`),
+  gamePackages: (slug: string, kind?: 'graphics' | 'frame_generation') =>
+    request<PackageListResponse>(`/games/${slug}/packages${kind ? `?kind=${kind}` : ''}`),
   /** Entitlement-gated download — returns the manifest with short-lived signed URLs. */
   downloadPackage: (gameSlug: string, packageSlug: string) =>
     request<PackageDownloadResponse>(`/games/${gameSlug}/packages/${packageSlug}/download`, {
@@ -238,4 +298,150 @@ export const api = {
       authed: true,
     }),
   remoteConfig: () => request<{ data: Record<string, unknown> }>('/config'),
+
+  // ------------------------------------------------------------ admin auth
+  // Entirely separate credential from the end-user session above — backed by
+  // the `admins` table, not `users` (see apps/api/src/modules/auth.ts).
+  adminLogin: (body: { email: string; password: string }) =>
+    request<AuthResponse>('/admin/auth/login', { method: 'POST', body, withCredentials: true }),
+  adminLogout: () => request<{ ok: boolean }>('/admin/auth/logout', { method: 'POST', withCredentials: true }),
+  adminMe: () => request<AdminMe>('/admin/auth/me', { authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin dashboard
+  adminDashboard: () => request<Record<string, unknown>>('/admin/dashboard', { authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin games
+  adminGames: (params?: { q?: string; page?: string; limit?: string }) =>
+    adminList<Row>(`/admin/games${buildQuery(params ?? {})}`),
+  adminGetGame: (id: string) => request<Row>(`/admin/games/${id}`, { authedAdmin: true }),
+  adminCreateGame: (input: Record<string, unknown>) =>
+    request<Row>('/admin/games', { method: 'POST', body: input, authedAdmin: true }),
+  adminUpdateGame: (id: string, patch: Record<string, unknown>) =>
+    request<Row>(`/admin/games/${id}`, { method: 'PATCH', body: patch, authedAdmin: true }),
+  adminDeleteGame: (id: string) => request<{ ok: boolean }>(`/admin/games/${id}`, { method: 'DELETE', authedAdmin: true }),
+  adminPublishGame: (id: string, status: string) =>
+    request<{ ok: boolean }>(`/admin/games/${id}/publish`, { method: 'POST', body: { status }, authedAdmin: true }),
+  adminAddGameImage: (gameId: string, input: { type: string; objectKey: string }) =>
+    request<Row>(`/admin/games/${gameId}/images`, { method: 'POST', body: input, authedAdmin: true }),
+  adminDeleteGameImage: (gameId: string, imageId: string) =>
+    request<{ ok: boolean }>(`/admin/games/${gameId}/images/${imageId}`, { method: 'DELETE', authedAdmin: true }),
+  adminSetGameRequirements: (gameId: string, body: Record<string, unknown>) =>
+    request<{ ok: boolean }>(`/admin/games/${gameId}/requirements`, { method: 'PUT', body, authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin uploads
+  adminPresignUpload: (kind: string, contentType: string, size: number) =>
+    request<{ uploadUrl: string; objectKey: string; publicUrl: string }>('/admin/uploads/presign', {
+      method: 'POST',
+      body: { kind, contentType, size },
+      authedAdmin: true,
+    }),
+  /** Raw PUT of the file bytes to the presigned URL — not an API-prefixed call. */
+  adminUploadFile: async (uploadUrl: string, file: File) => {
+    const res = await fetch(uploadUrl, { method: 'PUT', headers: { 'content-type': file.type }, body: file });
+    if (!res.ok) throw new ApiError(`Upload failed (${res.status})`, res.status, null);
+  },
+
+  // ------------------------------------------------------------ admin optimization profiles
+  adminGameProfiles: (gameId: string) => request<{ data: Row[] }>(`/admin/games/${gameId}/profiles`, { authedAdmin: true }),
+  adminCreateProfile: (gameId: string, input: Record<string, unknown>) =>
+    request<Row>(`/admin/games/${gameId}/profiles`, { method: 'POST', body: input, authedAdmin: true }),
+  adminGetProfile: (id: string) => request<Row>(`/admin/profiles/${id}`, { authedAdmin: true }),
+  adminDeleteProfile: (id: string) => request<{ ok: boolean }>(`/admin/profiles/${id}`, { method: 'DELETE', authedAdmin: true }),
+  adminPublishProfile: (id: string, status: string) =>
+    request<{ ok: boolean }>(`/admin/profiles/${id}/publish`, { method: 'POST', body: { status }, authedAdmin: true }),
+  adminReleaseProfileVersion: (id: string, changeNote?: string) =>
+    request<{ ok: boolean; version: string }>(`/admin/profiles/${id}/versions`, {
+      method: 'POST',
+      body: { changeNote },
+      authedAdmin: true,
+    }),
+  adminAddSetting: (profileId: string, input: Record<string, unknown>) =>
+    request<{ id: string }>(`/admin/profiles/${profileId}/settings`, { method: 'POST', body: input, authedAdmin: true }),
+  adminDeleteSetting: (settingId: string) =>
+    request<{ ok: boolean }>(`/admin/settings/${settingId}`, { method: 'DELETE', authedAdmin: true }),
+  adminAddOption: (settingId: string, input: Record<string, unknown>) =>
+    request<{ id: string }>(`/admin/settings/${settingId}/options`, { method: 'POST', body: input, authedAdmin: true }),
+  adminDeleteOption: (optionId: string) =>
+    request<{ ok: boolean }>(`/admin/options/${optionId}`, { method: 'DELETE', authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin packages
+  adminPackages: (params?: { gameId?: string; status?: string; kind?: string; page?: string; limit?: string }) =>
+    adminList<Row>(`/admin/packages${buildQuery(params ?? {})}`),
+  adminGetPackage: (id: string) => request<Row>(`/admin/packages/${id}`, { authedAdmin: true }),
+  adminCreatePackage: (input: Record<string, unknown>) =>
+    request<Row>('/admin/packages', { method: 'POST', body: input, authedAdmin: true }),
+  adminUpdatePackage: (id: string, patch: Record<string, unknown>) =>
+    request<Row>(`/admin/packages/${id}`, { method: 'PATCH', body: patch, authedAdmin: true }),
+  adminPublishPackage: (id: string) =>
+    request<Row>(`/admin/packages/${id}/publish`, { method: 'POST', body: {}, authedAdmin: true }),
+  adminArchivePackage: (id: string) => request<Row>(`/admin/packages/${id}/archive`, { method: 'POST', authedAdmin: true }),
+  adminDeletePackage: (id: string) => request<{ ok: boolean }>(`/admin/packages/${id}`, { method: 'DELETE', authedAdmin: true }),
+  adminPackageFiles: (id: string) => request<{ data: Row[] }>(`/admin/packages/${id}/files`, { authedAdmin: true }),
+  adminPresignPackageUpload: (id: string, filename: string, size: number) =>
+    request<{ uploadUrl: string; objectKey: string; publicUrl: string }>(`/admin/packages/${id}/files/presign`, {
+      method: 'POST',
+      body: { filename, size },
+      authedAdmin: true,
+    }),
+  /** Raw PUT of the file bytes to the presigned URL — not an API-prefixed call. */
+  adminUploadPackageFile: async (uploadUrl: string, file: File) => {
+    const res = await fetch(uploadUrl, { method: 'PUT', headers: { 'content-type': file.type || 'application/octet-stream' }, body: file });
+    if (!res.ok) throw new ApiError(`Upload failed (${res.status})`, res.status, null);
+  },
+  adminCompletePackageFile: (id: string, input: Record<string, unknown>) =>
+    request<Row>(`/admin/packages/${id}/files/complete`, { method: 'POST', body: input, authedAdmin: true }),
+  adminDeletePackageFile: (id: string, fileId: string) =>
+    request<{ ok: boolean }>(`/admin/packages/${id}/files/${fileId}`, { method: 'DELETE', authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin taxonomy
+  adminCategories: () => request<{ data: Row[] }>('/admin/categories', { authedAdmin: true }),
+  adminCreateCategory: (input: Record<string, unknown>) =>
+    request<Row>('/admin/categories', { method: 'POST', body: input, authedAdmin: true }),
+  adminUpdateCategory: (id: string, patch: Record<string, unknown>) =>
+    request<Row>(`/admin/categories/${id}`, { method: 'PATCH', body: patch, authedAdmin: true }),
+  adminDeleteCategory: (id: string) => request<{ ok: boolean }>(`/admin/categories/${id}`, { method: 'DELETE', authedAdmin: true }),
+  adminTags: () => request<{ data: Row[] }>('/admin/tags', { authedAdmin: true }),
+  adminCreateTag: (input: Record<string, unknown>) =>
+    request<Row>('/admin/tags', { method: 'POST', body: input, authedAdmin: true }),
+  adminUpdateTag: (id: string, patch: Record<string, unknown>) =>
+    request<Row>(`/admin/tags/${id}`, { method: 'PATCH', body: patch, authedAdmin: true }),
+  adminDeleteTag: (id: string) => request<{ ok: boolean }>(`/admin/tags/${id}`, { method: 'DELETE', authedAdmin: true }),
+  adminOptimizationCategories: () => request<{ data: Row[] }>('/admin/optimization-categories', { authedAdmin: true }),
+  adminCreateOptimizationCategory: (input: Record<string, unknown>) =>
+    request<Row>('/admin/optimization-categories', { method: 'POST', body: input, authedAdmin: true }),
+  adminUpdateOptimizationCategory: (id: string, patch: Record<string, unknown>) =>
+    request<Row>(`/admin/optimization-categories/${id}`, { method: 'PATCH', body: patch, authedAdmin: true }),
+  adminDeleteOptimizationCategory: (id: string) =>
+    request<{ ok: boolean }>(`/admin/optimization-categories/${id}`, { method: 'DELETE', authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin releases
+  adminAppVersions: () => request<{ data: Row[] }>('/admin/app-versions', { authedAdmin: true }),
+  adminCreateAppVersion: (input: Record<string, unknown>) =>
+    request<Row>('/admin/app-versions', { method: 'POST', body: input, authedAdmin: true }),
+  adminReconcileLatestVersion: (id: string) =>
+    request<{ ok: boolean }>(`/admin/app-versions/${id}/state`, { method: 'PATCH', authedAdmin: true }),
+  adminDeleteAppVersion: (id: string) =>
+    request<{ ok: boolean }>(`/admin/app-versions/${id}`, { method: 'DELETE', authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin users
+  adminUsers: (params?: { q?: string; status?: string; page?: string; limit?: string }) =>
+    adminList<Row>(`/admin/users${buildQuery(params ?? {})}`),
+  adminUpdateUserStatus: (id: string, status: string) =>
+    request<Row>(`/admin/users/${id}`, { method: 'PATCH', body: { status }, authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin admins
+  adminAdmins: () => request<{ data: Row[] }>('/admin/admins', { authedAdmin: true }),
+  adminCreateAdmin: (input: Record<string, unknown>) =>
+    request<Row>('/admin/admins', { method: 'POST', body: input, authedAdmin: true }),
+  adminUpdateAdmin: (id: string, patch: Record<string, unknown>) =>
+    request<Row>(`/admin/admins/${id}`, { method: 'PATCH', body: patch, authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin audit
+  adminAuditLogs: (params?: { entityType?: string; q?: string; page?: string; limit?: string }) =>
+    request<{ data: Row[] }>(`/admin/audit-logs${buildQuery(params ?? {})}`, { authedAdmin: true }),
+
+  // ------------------------------------------------------------ admin settings
+  adminSettings: () => request<{ data: Record<string, unknown> }>('/admin/settings', { authedAdmin: true }),
+  adminUpdateSettings: (patch: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>('/admin/settings', { method: 'PUT', body: { settings: patch }, authedAdmin: true }),
 };

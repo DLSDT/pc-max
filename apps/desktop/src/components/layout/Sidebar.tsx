@@ -1,40 +1,37 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  Clock,
-  Gamepad2,
   Heart,
-  History,
   Home,
   Info,
+  Layers,
   LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
-  Shapes,
+  Shield,
   SlidersHorizontal,
-  Sparkles,
   Wrench,
 } from 'lucide-react';
+import { useAdminAuth } from '@/store/adminAuth';
 import { useUi } from '@/store/ui';
 import { cn } from '@/lib/utils';
 
 type Icon = typeof Home;
 
+/** Dashboard → Multi-Frame Generation → Optimized Setting → Optimized Windows →
+ * General Setting, in that exact order (per spec). */
 const PRIMARY: { to: string; i18nKey: string; icon: Icon; end?: boolean }[] = [
   { to: '/', i18nKey: 'sidebar.dashboard', icon: Home, end: true },
-  { to: '/library', i18nKey: 'sidebar.gameOptimizer', icon: Gamepad2 },
+  { to: '/multi-frame-generation', i18nKey: 'sidebar.multiFrameGeneration', icon: Layers },
+  { to: '/optimized-setting', i18nKey: 'sidebar.optimizedSetting', icon: SlidersHorizontal },
   { to: '/windows-optimizer', i18nKey: 'sidebar.windowsOptimizer', icon: Wrench },
-  { to: '/history', i18nKey: 'sidebar.history', icon: History },
   { to: '/settings', i18nKey: 'sidebar.settings', icon: Settings },
 ];
 
 const SECONDARY: { to: string; i18nKey: string; icon: Icon }[] = [
   { to: '/games', i18nKey: 'sidebar.games', icon: LayoutGrid },
-  { to: '/categories', i18nKey: 'sidebar.categories', icon: Shapes },
   { to: '/favorites', i18nKey: 'sidebar.favorites', icon: Heart },
-  { to: '/recently-viewed', i18nKey: 'sidebar.recentlyViewed', icon: Clock },
-  { to: '/recommended', i18nKey: 'sidebar.recommended', icon: Sparkles },
 ];
 
 function NavLinkItem({ to, i18nKey, icon: Icon, end, collapsed }: { to: string; i18nKey: string; icon: Icon; end?: boolean; collapsed: boolean }) {
@@ -63,6 +60,7 @@ export default function Sidebar() {
   const { t } = useTranslation();
   const collapsed = useUi((s) => s.sidebarCollapsed);
   const toggle = useUi((s) => s.toggleSidebar);
+  const isAdmin = useAdminAuth((s) => Boolean(s.admin));
 
   return (
     <aside
@@ -109,8 +107,10 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      {/* Footer: About */}
-      <div className="border-t border-border p-3">
+      {/* Footer: Admin (only once signed in as one — sign-in itself happens
+          through the single login form, not a separate nav entry) + About */}
+      <div className="space-y-1 border-t border-border p-3">
+        {isAdmin && <NavLinkItem to="/admin" i18nKey="sidebar.admin" icon={Shield} collapsed={collapsed} />}
         <NavLinkItem to="/about" i18nKey="sidebar.about" icon={Info} collapsed={collapsed} />
       </div>
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, ExternalLink, Loader2, Monitor, ShieldCheck, X } from 'lucide-react';
+import { Check, ExternalLink, Globe, Loader2, Mail, MessageCircle, Monitor, ShieldCheck, X } from 'lucide-react';
 import type { MySubscription, SubscriptionPlanPublic } from '@goh/types';
 import { api } from '@/lib/api';
 import { useAuth } from '@/store/auth';
@@ -9,12 +9,19 @@ import { formatDateTime } from '@/lib/labels';
 import { invalidateSubscriptionCache, getSubscription } from '@/lib/subscription';
 import { cn } from '@/lib/utils';
 
+interface SupportInfo {
+  email?: string | null;
+  telegram?: string | null;
+  website?: string | null;
+}
+
 export default function SubscriptionPage() {
   const { t } = useTranslation();
   const user = useAuth((s) => s.user);
   const [plans, setPlans] = useState<SubscriptionPlanPublic[] | null>(null);
   const [mine, setMine] = useState<MySubscription | null>(null);
   const [devices, setDevices] = useState<{ id: string; name: string | null; createdAt: string }[] | null>(null);
+  const [support, setSupport] = useState<SupportInfo | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -30,6 +37,13 @@ export default function SubscriptionPage() {
       setError(t('auth.errorGeneric'));
     }
   }, [t]);
+
+  useEffect(() => {
+    api
+      .remoteConfig()
+      .then((res) => setSupport((res.data.support as SupportInfo | undefined) ?? {}))
+      .catch(() => setSupport({}));
+  }, []);
 
   useEffect(() => {
     void load();
@@ -232,6 +246,56 @@ export default function SubscriptionPage() {
             </span>
           )}
         </p>
+      </section>
+
+      {/* Contact Support — admin-configured, never a hardcoded address in the client */}
+      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <MessageCircle aria-hidden className="size-4 text-primary" />
+          {t('subscription.support')}
+        </h2>
+        {support === null ? (
+          <Skeleton className="h-8 w-48" />
+        ) : support.email || support.telegram || support.website ? (
+          <div className="flex flex-wrap gap-2">
+            {support.email && (
+              <a
+                href={`mailto:${support.email}`}
+                dir="ltr"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background/40 px-3 text-xs font-medium transition-colors hover:bg-accent"
+              >
+                <Mail aria-hidden className="size-3.5 text-primary" />
+                {support.email}
+              </a>
+            )}
+            {support.telegram && (
+              <a
+                href={support.telegram.startsWith('http') ? support.telegram : `https://t.me/${support.telegram.replace(/^@/, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                dir="ltr"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background/40 px-3 text-xs font-medium transition-colors hover:bg-accent"
+              >
+                <MessageCircle aria-hidden className="size-3.5 text-primary" />
+                {support.telegram}
+              </a>
+            )}
+            {support.website && (
+              <a
+                href={support.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                dir="ltr"
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-background/40 px-3 text-xs font-medium transition-colors hover:bg-accent"
+              >
+                <Globe aria-hidden className="size-3.5 text-primary" />
+                {support.website}
+              </a>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{t('subscription.supportUnavailable')}</p>
+        )}
       </section>
     </div>
   );

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { HardwareTier, IsoDate, ProfileStatus, Semver, SettingType } from './enums';
+import { HardwareTier, IsoDate, ProfileColor, ProfileStatus, Semver, SettingType } from './enums';
 
 export const OptimizationOption = z.object({
   id: z.string().uuid(),
@@ -37,6 +37,7 @@ export const OptimizationProfile = z.object({
   hardwareTier: HardwareTier,
   version: Semver,
   status: ProfileStatus,
+  colorProfile: ProfileColor.nullable(),
   isDefault: z.boolean(),
   viewCount: z.number().int(),
   publishedAt: IsoDate.nullable(),
@@ -67,6 +68,7 @@ export const ProfileCreateInput = z.object({
   hardwareTier: HardwareTier,
   isDefault: z.boolean().default(false),
   version: Semver.default('1.0.0'),
+  colorProfile: ProfileColor.nullable().optional(),
 });
 export type ProfileCreateInput = z.infer<typeof ProfileCreateInput>;
 

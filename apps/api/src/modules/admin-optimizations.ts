@@ -113,6 +113,7 @@ export async function adminOptimizationsModule(app: FastifyInstance) {
           targetFps: input.targetFps ?? null,
           hardwareTier: input.hardwareTier,
           version: input.version,
+          colorProfile: input.colorProfile ?? null,
           isDefault: input.isDefault,
           status: 'draft',
         })
@@ -170,7 +171,7 @@ export async function adminOptimizationsModule(app: FastifyInstance) {
       if (input.slug && input.slug !== profile.slug) await ensureProfileSlug(profile.gameId, input.slug, profile.id);
 
       const patch: Record<string, unknown> = {};
-      for (const key of ['slug', 'name', 'description', 'targetFps', 'hardwareTier', 'version', 'isDefault'] as const) {
+      for (const key of ['slug', 'name', 'description', 'targetFps', 'hardwareTier', 'version', 'isDefault', 'colorProfile'] as const) {
         if (input[key] !== undefined) patch[key] = input[key];
       }
 

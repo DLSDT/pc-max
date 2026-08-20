@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { config } from '@/lib/config';
+import { getRuntimeAppVersion } from '@/lib/config';
 import { useUi } from '@/store/ui';
 import { compareVersions } from '@/lib/updater';
 
@@ -17,13 +17,14 @@ export function useAppVersionCheck() {
   useQuery({
     queryKey: ['app-version'],
     queryFn: async () => {
+      const runningVersion = await getRuntimeAppVersion();
       const [res, cfg] = await Promise.all([
-        api.appVersion(config.appVersion),
+        api.appVersion(runningVersion),
         api.remoteConfig().catch(() => null),
       ]);
       setUpdateAvailable(res.updateAvailable);
       const min = (cfg?.data?.min_app_version as { version?: string } | undefined)?.version;
-      if (min && compareVersions(config.appVersion, min) < 0) {
+      if (min && compareVersions(runningVersion, min) < 0) {
         setUpdateRequired(true);
       }
       return res;

@@ -11,6 +11,7 @@ function pkg(over: Partial<PackagePublic>): PackagePublic {
     description: null,
     version: '1.0.0',
     status: 'published',
+    kind: 'graphics',
     gpuVendor: 'any',
     gpuFamily: null,
     minVramMb: null,

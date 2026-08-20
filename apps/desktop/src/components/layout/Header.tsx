@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowUp, CloudOff, Loader2, Search, Settings, UserRound, Wifi, WifiOff } from 'lucide-react';
+import { ArrowUp, CloudOff, Loader2, Search, Shield, UserRound, Wifi, WifiOff } from 'lucide-react';
 import { useUi, type SyncStatus } from '@/store/ui';
 import { useAuth } from '@/store/auth';
+import { useAdminAuth } from '@/store/adminAuth';
 import { Input } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +45,7 @@ export default function Header() {
   const syncStatus = useUi((s) => s.syncStatus);
   const updateAvailable = useUi((s) => s.updateAvailable);
   const user = useAuth((s) => s.user);
+  const admin = useAdminAuth((s) => s.admin);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -88,7 +90,16 @@ export default function Header() {
           <span className="hidden sm:inline">{statusUi(syncStatus, t).label}</span>
         </span>
 
-        {user ? (
+        {admin ? (
+          <Link
+            to="/admin"
+            title={admin.name ?? admin.email}
+            className="flex h-9 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            <Shield aria-hidden className="size-4" />
+            <span className="hidden max-w-32 truncate md:inline" dir="ltr">{admin.name ?? admin.email}</span>
+          </Link>
+        ) : user ? (
           <Link
             to="/subscription"
             title={user.phone ?? user.email ?? ''}
@@ -106,14 +117,6 @@ export default function Header() {
             {t('auth.signIn')}
           </Link>
         )}
-
-        <Link
-          to="/settings"
-          aria-label={t('sidebar.settings')}
-          className="flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <Settings aria-hidden className="size-[18px]" />
-        </Link>
       </div>
     </header>
   );

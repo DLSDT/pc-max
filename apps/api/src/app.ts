@@ -28,6 +28,7 @@ import { adminSettingsModule } from './modules/admin-settings';
 import { deviceModule } from './modules/device';
 import { publicGamesModule } from './modules/public-games';
 import { publicOptimizationsModule } from './modules/public-optimizations';
+import { publicOptimizedSettingModule } from './modules/public-optimized-setting';
 import { syncModule } from './modules/sync';
 import { systemModule } from './modules/system';
 import { uploadsModule } from './modules/uploads';
@@ -153,6 +154,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await api.register(deviceModule, { prefix: '/api/v1' });
   await api.register(publicGamesModule, { prefix: '/api/v1' });
   await api.register(publicOptimizationsModule, { prefix: '/api/v1' });
+  await api.register(publicOptimizedSettingModule, { prefix: '/api/v1' });
   await api.register(syncModule, { prefix: '/api/v1' });
   await api.register(uploadsModule, { prefix: '/api/v1' });
 

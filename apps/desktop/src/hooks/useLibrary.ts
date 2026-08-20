@@ -46,6 +46,15 @@ export function useGames() {
   });
 }
 
+/** Optimized Setting — every published game with a Yellow/Green profile. */
+export function useOptimizedSettingGames() {
+  return useQuery<GameListResponse['data']>({
+    queryKey: ['optimized-setting-games'],
+    queryFn: async () => (await api.optimizedSettingGames()).data,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 /** Game detail — cache-first, background refresh. */
 export function useGameDetail(slug: string) {
   return useQuery<GameDetail>({

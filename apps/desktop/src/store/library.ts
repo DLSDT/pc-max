@@ -21,6 +21,8 @@ export interface LibraryGame {
   path: string;
   /** Matched executable file name (detected entries). */
   executable?: string;
+  /** Icon extracted from the .exe itself (data URL), for games with no catalog artwork. */
+  iconDataUrl?: string;
   source: 'manual' | 'detected';
   /** True when the path could not be matched to any supported game. */
   unknown: boolean;

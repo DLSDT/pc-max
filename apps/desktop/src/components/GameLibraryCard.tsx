@@ -32,7 +32,7 @@ export default function GameLibraryCard({ entry, catalog }: Props) {
     staleTime: 60_000,
   });
 
-  const icon = catalog ? (gameIconUrl(catalog.slug) ?? catalog.coverUrl) : null;
+  const icon = entry.iconDataUrl ?? (catalog ? (gameIconUrl(catalog.slug) ?? catalog.coverUrl) : null);
   const latest = packages.data?.[0];
 
   return (

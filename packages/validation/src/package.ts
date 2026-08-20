@@ -7,6 +7,11 @@ export type PackageGpuVendor = z.infer<typeof PackageGpuVendor>;
 export const PackageArch = z.enum(['any', 'x64', 'arm64']);
 export type PackageArch = z.infer<typeof PackageArch>;
 
+/** Which product area a package belongs to — Optimized Setting (graphics
+ *  config files) vs Multi-Frame Generation (upscaler/frame-gen components). */
+export const PackageKind = z.enum(['graphics', 'frame_generation']);
+export type PackageKind = z.infer<typeof PackageKind>;
+
 /** Allowed file operations — packages can only replace or add files, never
  *  execute anything. This is the allowlist that prevents arbitrary RCE. */
 export const FileOperation = z.enum(['replace', 'add']);
@@ -17,6 +22,7 @@ export const OptimizationPackageInput = z.object({
   name: z.string().trim().min(1).max(120),
   slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/, 'Slug may only contain lowercase letters, digits and dashes'),
   description: z.string().trim().max(2000).optional(),
+  kind: PackageKind.default('graphics'),
   gpuVendor: PackageGpuVendor.default('any'),
   gpuFamily: z.string().trim().max(120).optional(),
   minVramMb: z.number().int().min(0).max(64 * 1024).optional(),
@@ -67,6 +73,7 @@ export const PackagePublic = z.object({
   description: z.string().nullable(),
   version: z.string(),
   status: z.enum(['draft', 'published', 'archived']),
+  kind: PackageKind,
   gpuVendor: PackageGpuVendor,
   gpuFamily: z.string().nullable(),
   minVramMb: z.number().int().nullable(),

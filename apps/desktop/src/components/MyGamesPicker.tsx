@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Gamepad2 } from 'lucide-react';
+import { FolderPlus, Gamepad2 } from 'lucide-react';
 import { useLibrary } from '@/store/library';
 import { useGames } from '@/hooks/useLibrary';
 import GameLibraryCard from '@/components/GameLibraryCard';
@@ -10,6 +10,9 @@ import GameLibraryCard from '@/components/GameLibraryCard';
  * lives on the game's own detail page (Optimized Setting's Yellow/Green
  * profiles, Multi-Frame Generation's package install), so both just need to
  * get the user to a game. Renders the same rows as the Games library page.
+ *
+ * `/library` (detect/browse-for-.exe) isn't its own sidebar entry — this is
+ * the entry point back to it, always visible, not just on the empty state.
  */
 export default function MyGamesPicker() {
   const { t } = useTranslation();
@@ -28,8 +31,9 @@ export default function MyGamesPicker() {
         <p className="max-w-md text-sm text-muted-foreground">{t('picker.noGames')}</p>
         <Link
           to="/library"
-          className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
+          <FolderPlus aria-hidden className="size-4" />
           {t('picker.goToGames')}
         </Link>
       </div>
@@ -38,6 +42,15 @@ export default function MyGamesPicker() {
 
   return (
     <div className="space-y-3">
+      <div className="flex justify-end">
+        <Link
+          to="/library"
+          className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <FolderPlus aria-hidden className="size-3.5" />
+          {t('picker.manageGames')}
+        </Link>
+      </div>
       {entries.map((entry) => (
         <GameLibraryCard key={entry.path} entry={entry} catalog={catalogBySlug.get(entry.slug)} />
       ))}

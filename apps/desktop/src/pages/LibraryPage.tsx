@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CloudOff, FolderPlus, Loader2, Radar, ScanSearch, WifiOff } from 'lucide-react';
+import { CloudOff, FolderOpen, FolderPlus, Loader2, Radar, ScanSearch, WifiOff } from 'lucide-react';
 import { useGames } from '@/hooks/useLibrary';
 import { useLibrary } from '@/store/library';
 import { ApiError } from '@/lib/api';
 import { detectGamesOnDisk, applyDetection, type KnownExecutable } from '@/lib/detect';
+import { extractGameIcon, selectGameExecutable, splitPath } from '@/lib/gameExe';
 import { isTauriShell } from '@/lib/optimizer';
 import GameLibraryCard from '@/components/GameLibraryCard';
 import { Button, Input } from '@/components/ui';
@@ -20,6 +21,7 @@ export default function LibraryPage() {
   const [path, setPath] = useState('');
   const [detecting, setDetecting] = useState(false);
   const [detectNote, setDetectNote] = useState<string | null>(null);
+  const [browsing, setBrowsing] = useState(false);
   const [associating, setAssociating] = useState<string | null>(null);
   const [associateSlug, setAssociateSlug] = useState('');
 
@@ -56,6 +58,31 @@ export default function LibraryPage() {
       unknown: true,
     });
     setPath('');
+  }
+
+  /** Native "select a game's .exe" flow — matches it against the catalog by
+   * executable name and extracts its real embedded icon, per spec. */
+  async function handleBrowse() {
+    setBrowsing(true);
+    try {
+      const exePath = await selectGameExecutable();
+      if (!exePath) return;
+      const { dir, file } = splitPath(exePath);
+      const iconDataUrl = (await extractGameIcon(exePath)) ?? undefined;
+      const matched = (catalog.data?.data ?? []).find((g) =>
+        g.executables.some((exe) => exe.toLowerCase() === file.toLowerCase()),
+      );
+      addManual({
+        slug: matched?.slug ?? '',
+        name: matched?.name ?? file.replace(/\.exe$/i, ''),
+        path: dir,
+        executable: file,
+        unknown: !matched,
+        iconDataUrl,
+      });
+    } finally {
+      setBrowsing(false);
+    }
   }
 
   return (
@@ -97,9 +124,21 @@ export default function LibraryPage() {
         </div>
         {detectNote && <p className="text-xs font-medium text-primary">{detectNote}</p>}
 
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={() => void handleBrowse()}
+            disabled={browsing || !isTauriShell()}
+            title={!isTauriShell() ? t('library.detectionDesktopOnly') : undefined}
+            className="gap-2"
+          >
+            {browsing ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <FolderOpen aria-hidden className="size-4" />}
+            {t('library.browseExe')}
+          </Button>
+        </div>
+
         <div className="flex flex-col gap-1.5">
           <label htmlFor="lib-path" className="text-xs font-semibold text-foreground">
-            {t('library.add')}
+            {t('library.addManualPath')}
           </label>
           <div className="flex flex-wrap items-center gap-2">
             <Input

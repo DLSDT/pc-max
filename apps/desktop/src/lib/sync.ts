@@ -2,6 +2,24 @@ import { api, isNetworkError } from './api';
 import { cache } from './cache';
 import { ensureDeviceRegistered } from './device';
 
+/**
+ * Run `fn` over `items` with at most `limit` in flight at once. A first sync
+ * against the full catalog can involve hundreds of "changed" games — firing
+ * them all via a single Promise.all blows past the API's per-IP rate limit
+ * (300 req/min by default) and the failures are silently swallowed, so the
+ * cache never fully warms. This keeps each burst bounded.
+ */
+async function runWithConcurrency<T>(items: T[], limit: number, fn: (item: T) => Promise<void>): Promise<void> {
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const item = items[cursor++]!;
+      await fn(item);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+}
+
 export interface SyncResult {
   ok: boolean;
   /** No internet connectivity at all. */
@@ -40,20 +58,20 @@ export async function runSync(): Promise<SyncResult> {
     }
 
     // Refresh changed games (fetch full details — also warms the profiles).
+    // Bounded concurrency: a fresh catalog sync can involve hundreds of
+    // games, and firing them all at once trips the API's rate limiter.
     let changedGames = 0;
     const changed = manifest.games.filter((g) => !g.deleted);
-    await Promise.all(
-      changed.map(async (g) => {
-        try {
-          const [detail, profiles] = await Promise.all([api.game(g.slug), api.optimizations(g.slug)]);
-          cache.setGame(detail);
-          cache.setProfiles(g.slug, profiles.data);
-          changedGames += 1;
-        } catch {
-          // The game may have been unpublished — skip it this round.
-        }
-      }),
-    );
+    await runWithConcurrency(changed, 8, async (g) => {
+      try {
+        const [detail, profiles] = await Promise.all([api.game(g.slug), api.optimizations(g.slug)]);
+        cache.setGame(detail);
+        cache.setProfiles(g.slug, profiles.data);
+        changedGames += 1;
+      } catch {
+        // The game may have been unpublished — skip it this round.
+      }
+    });
 
     // New optimization versions are detected by comparing manifest versions
     // against the cached profile versions.

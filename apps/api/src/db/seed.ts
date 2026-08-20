@@ -260,7 +260,7 @@ export async function ensureDemoUser(): Promise<void> {
   process.stdout.write(`  ✓ Created demo user: ${phone} / Demo123!\n`);
 }
 
-async function seedBootstrapAdmin() {
+export async function seedBootstrapAdmin() {
   const existing = await db.query.admins.findFirst({
     where: sql`${admins.email} = ${config.ADMIN_BOOTSTRAP_EMAIL}`,
   });
