@@ -440,6 +440,14 @@ export const api = {
   adminAuditLogs: (params?: { entityType?: string; q?: string; page?: string; limit?: string }) =>
     request<{ data: Row[] }>(`/admin/audit-logs${buildQuery(params ?? {})}`, { authedAdmin: true }),
 
+  // ------------------------------------------------------- admin crash reports
+  adminClientErrors: (params?: { resolved?: string; limit?: string }) =>
+    request<{ data: Row[] }>(`/admin/client-errors${buildQuery(params ?? {})}`, { authedAdmin: true }),
+  adminResolveClientError: (id: string, resolved: boolean) =>
+    request<{ ok: true }>(`/admin/client-errors/${id}`, { method: 'PATCH', body: { resolved }, authedAdmin: true }),
+  adminDeleteClientError: (id: string) =>
+    request<{ ok: true }>(`/admin/client-errors/${id}`, { method: 'DELETE', authedAdmin: true }),
+
   // ------------------------------------------------------------ admin settings
   adminSettings: () => request<{ data: Record<string, unknown> }>('/admin/settings', { authedAdmin: true }),
   adminUpdateSettings: (patch: Record<string, unknown>) =>

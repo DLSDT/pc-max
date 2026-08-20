@@ -15,6 +15,7 @@ import {
   Rocket,
   UserCog,
   ScrollText,
+  Bug,
 } from 'lucide-react';
 import { errMessage, iconBtnClass, inputClass, primaryBtnClass } from './admin/shared';
 import DashboardTab from './admin/DashboardTab';
@@ -26,9 +27,10 @@ import ReleasesTab from './admin/ReleasesTab';
 import AdminsTab from './admin/AdminsTab';
 import UsersTab from './admin/UsersTab';
 import AuditTab from './admin/AuditTab';
+import CrashesTab from './admin/CrashesTab';
 import SettingsTab from './admin/SettingsTab';
 
-type AdminTab = 'dashboard' | 'games' | 'profiles' | 'packages' | 'taxonomy' | 'releases' | 'admins' | 'users' | 'audit' | 'settings';
+type AdminTab = 'dashboard' | 'games' | 'profiles' | 'packages' | 'taxonomy' | 'releases' | 'admins' | 'users' | 'audit' | 'crashes' | 'settings';
 
 const TABS: { key: AdminTab; i18nKey: string; icon: React.ReactNode }[] = [
   { key: 'dashboard', i18nKey: 'admin.tabDashboard', icon: <LayoutDashboard className="size-4" /> },
@@ -40,6 +42,7 @@ const TABS: { key: AdminTab; i18nKey: string; icon: React.ReactNode }[] = [
   { key: 'users', i18nKey: 'admin.tabUsers', icon: <Users className="size-4" /> },
   { key: 'admins', i18nKey: 'admin.tabAdmins', icon: <UserCog className="size-4" /> },
   { key: 'audit', i18nKey: 'admin.tabAudit', icon: <ScrollText className="size-4" /> },
+  { key: 'crashes', i18nKey: 'admin.tabCrashes', icon: <Bug className="size-4" /> },
   { key: 'settings', i18nKey: 'admin.tabSettings', icon: <Settings className="size-4" /> },
 ];
 
@@ -167,6 +170,7 @@ export default function AdminPage() {
       {tab === 'users' && <UsersTab />}
       {tab === 'admins' && <AdminsTab />}
       {tab === 'audit' && <AuditTab />}
+      {tab === 'crashes' && <CrashesTab />}
       {tab === 'settings' && <SettingsTab />}
     </div>
   );
