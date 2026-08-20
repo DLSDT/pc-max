@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { packageCompatibility, rankPackages } from '@/lib/compatibility';
 import type { HardwareProfileInput } from '@goh/types';
-import { ArrowLeft, Calendar, CheckCircle2, Cpu, Gamepad2, Heart, Loader2, MonitorCog, Package, RefreshCw, Server, Sparkles, Target, Zap } from 'lucide-react';
+import { ArrowLeft, Calendar, CheckCircle2, Cpu, Gamepad2, Heart, Loader2, MonitorCog, Package, RefreshCw, Server, Sparkles, Target, Zap, Download } from 'lucide-react';
 import { getGamePath, setGamePath } from '@/lib/gamePaths';
 import { optimizeGame, type OptimizeProgress, type OptimizeStep } from '@/lib/optimizer';
 import { useGameDetail, useOptimizations } from '@/hooks/useLibrary';
@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge, Button, EmptyState, Input, Skeleton } from '@/components/ui';
 import { CARD_TECHS, HARDWARE_TIER_LABEL, TECH_LABELS, formatDate } from '@/lib/labels';
 import { gameIconUrl } from '@/lib/gameIcons';
+import { downloadGameIcon } from '@/lib/downloadIcon';
 import type { GameRequirement, HardwareRecommendResponse, OptimizationProfile, OptimizationSetting, PackagePublic } from '@goh/types';
 import { toggleFavorite } from '@/lib/favorites';
 import { cn } from '@/lib/utils';
@@ -420,6 +421,11 @@ export default function GameDetailPage() {
   // brand pack). No shared/hardcoded banners — fall back to the game's own
   // cover from the catalogue, then to a neutral gradient tile.
   const heroImage = gameIconUrl(slug) ?? game?.coverUrl ?? null;
+  // Only the bundled per-slug artwork is downloadable — a remote cover URL is
+  // not ours to hand out as a file.
+  const iconUrl = gameIconUrl(slug);
+  const [iconSaving, setIconSaving] = useState(false);
+  const [iconSaved, setIconSaved] = useState(false);
   const techs = CARD_TECHS.filter((flag) => game?.technologies[flag]);
   // Games auto-created from Optimized Setting imports have no curated genres
   // and a placeholder performanceRating (50) — hide that fabricated number
@@ -464,7 +470,8 @@ export default function GameDetailPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
 
         <div className="relative flex flex-col gap-6 p-6 sm:flex-row sm:p-8">
-          <div className="w-40 shrink-0 overflow-hidden rounded-xl border border-border shadow-glow-sm sm:w-52">
+          <div className="w-40 shrink-0 space-y-2 sm:w-52">
+          <div className="overflow-hidden rounded-xl border border-border shadow-glow-sm">
             {heroImage ? (
               <div className="flex aspect-[3/4] size-full items-center justify-center bg-gradient-to-br from-secondary via-card to-primary/15 p-6">
                 <img
@@ -477,6 +484,28 @@ export default function GameDetailPage() {
               <div className="flex aspect-[3/4] items-center justify-center bg-gradient-to-br from-secondary to-primary/20">
                 <Gamepad2 aria-hidden className="size-12 text-foreground/15" />
               </div>
+            )}
+          </div>
+            {iconUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={iconSaving}
+                onClick={() => {
+                  setIconSaving(true);
+                  setIconSaved(false);
+                  void downloadGameIcon(iconUrl, `${slug}.png`)
+                    .then((saved) => {
+                      if (saved !== null) setIconSaved(true);
+                    })
+                    .catch(() => undefined)
+                    .finally(() => setIconSaving(false));
+                }}
+              >
+                {iconSaving ? <Loader2 aria-hidden className="size-3.5 animate-spin" /> : <Download aria-hidden className="size-3.5" />}
+                {iconSaved ? t('detail.iconSaved') : t('detail.downloadIcon')}
+              </Button>
             )}
           </div>
 
@@ -606,11 +635,27 @@ export default function GameDetailPage() {
             {selected && (
               <div className="space-y-4 rounded-xl border border-border bg-card p-5">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <Badge variant="secondary">
-                    <Target aria-hidden className="size-3" />
-                    {t('detail.targetFps', { fps: selected.targetFps ?? '—' })}
-                  </Badge>
-                  <Badge variant="secondary">{HARDWARE_TIER_LABEL[selected.hardwareTier]}</Badge>
+                  {/* Yellow/Green profiles advertise what they optimize FOR rather
+                      than a target frame rate: Green leads on FPS, Yellow on
+                      quality, with the other as the secondary tag. Non-colour
+                      profiles keep the original target-FPS + hardware-tier pair. */}
+                  {selected.colorProfile ? (
+                    <>
+                      <Badge variant="secondary">
+                        <Target aria-hidden className="size-3" />
+                        {t('detail.targetTag', { what: selected.colorProfile === 'green' ? 'FPS' : 'QUALITY' })}
+                      </Badge>
+                      <Badge variant="secondary">{selected.colorProfile === 'green' ? 'QUALITY' : 'FPS'}</Badge>
+                    </>
+                  ) : (
+                    <>
+                      <Badge variant="secondary">
+                        <Target aria-hidden className="size-3" />
+                        {t('detail.targetFps', { fps: selected.targetFps ?? '—' })}
+                      </Badge>
+                      <Badge variant="secondary">{HARDWARE_TIER_LABEL[selected.hardwareTier]}</Badge>
+                    </>
+                  )}
                   <Badge variant="secondary">
                     {t('settings.version', { version: selected.version })}
                   </Badge>
@@ -621,7 +666,16 @@ export default function GameDetailPage() {
                     </Badge>
                   )}
                 </div>
-                {selected.description && <p className="text-sm text-muted-foreground">{selected.description}</p>}
+                {/* Colour profiles show the standard explanation of what that tier
+                    means. The per-game `description` is deliberately not rendered
+                    here — it carries the imported tutorial text and its links. */}
+                {selected.colorProfile ? (
+                  <p className="text-sm text-muted-foreground">
+                    {selected.colorProfile === 'green' ? t('detail.greenExplain') : t('detail.yellowExplain')}
+                  </p>
+                ) : (
+                  selected.description && <p className="text-sm text-muted-foreground">{selected.description}</p>
+                )}
 
                 <SettingsTable profile={selected} />
               </div>

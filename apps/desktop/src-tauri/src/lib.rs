@@ -42,6 +42,7 @@ pub fn run() {
             detect_games,
             apply_game_files,
             extract_game_icon,
+            save_binary_file,
             windows_scan,
             windows_apply,
             windows_restore,
@@ -452,6 +453,27 @@ fn rollback(originals: &[(PathBuf, PathBuf)], applied: &[PathBuf], backup_root: 
         }
     }
     let _ = fs::remove_dir_all(backup_root);
+}
+
+/// Write raw bytes to a user-chosen path — used by the "download game icon"
+/// action, where the file dialog picks the destination and the webview hands
+/// over the already-fetched image. There is no fs plugin in this app, so this
+/// is the only write path outside the game-file installer.
+///
+/// The destination comes from the OS save dialog (never from page content),
+/// and only the parent directory is created — no traversal handling is needed
+/// because the path is absolute and user-chosen.
+#[tauri::command]
+fn save_binary_file(path: String, content_base64: String) -> Result<(), String> {
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(&content_base64)
+        .map_err(|_| "Invalid base64 content".to_string())?;
+    let target = PathBuf::from(&path);
+    if let Some(parent) = target.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("Cannot create {}: {e}", parent.display()))?;
+    }
+    fs::write(&target, bytes).map_err(|e| format!("Cannot write {path}: {e}"))?;
+    Ok(())
 }
 
 /// Extract the icon embedded in a Windows .exe and return it as a

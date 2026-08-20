@@ -261,6 +261,13 @@ void i18n.use(initReactI18next).init({
           back: 'Back',
           colorYellow: 'Yellow',
           colorGreen: 'Green',
+          targetTag: 'TARGET: {{what}}',
+          greenExplain:
+            'The Green optimized settings deliver the largest performance gain, with visual quality on par with ninth-generation consoles.',
+          yellowExplain:
+            'The Yellow optimized settings raise performance while delivering the highest visual quality — very close to the game\u2019s maximum settings.',
+          downloadIcon: 'Download icon',
+          iconSaved: 'Icon saved',
         },
         settings: {
           title: 'Settings',
@@ -867,6 +874,13 @@ void i18n.use(initReactI18next).init({
           back: 'بازگشت',
           colorYellow: 'زرد',
           colorGreen: 'سبز',
+          targetTag: 'تارگت: {{what}}',
+          greenExplain:
+            'تنظیمات بهینه سبز بیشترین افزایش راندمان را به همراه دارد و کیفیتی معادل کنسول‌های نسل نهم ارائه می‌دهد.',
+          yellowExplain:
+            'تنظیمات بهینه زرد در کنار افزایش راندمان، بالاترین کیفیت را ارائه می‌دهد که تقریباً معادل بالاترین تنظیمات بازی است.',
+          downloadIcon: 'دانلود آیکون',
+          iconSaved: 'آیکون ذخیره شد',
         },
         settings: {
           title: 'تنظیمات',
