@@ -5,9 +5,12 @@ import { HashRouter } from 'react-router-dom';
 import './index.css';
 import './i18n';
 import { applyTheme, loadPersistedTheme } from './lib/theme';
+import { installGlobalCrashHandlers } from './lib/crashReport';
 import App from './App';
 
 applyTheme(loadPersistedTheme());
+// Catch errors React's boundary can't see (async throws, event handlers).
+installGlobalCrashHandlers();
 
 const queryClient = new QueryClient({
   defaultOptions: {

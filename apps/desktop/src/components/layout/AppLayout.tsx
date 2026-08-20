@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { useUi } from '@/store/ui';
 import { useInitialSync } from '@/hooks/useLibrary';
 import { useAppVersionCheck } from '@/hooks/useAppVersion';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { Button } from '@/components/ui';
@@ -21,6 +22,7 @@ export default function AppLayout() {
   const { t, i18n } = useTranslation();
   const sidebarCollapsed = useUi((s) => s.sidebarCollapsed);
   const updateRequired = useUi((s) => s.updateRequired);
+  const { pathname } = useLocation();
 
   useInitialSync();
   useAppVersionCheck();
@@ -55,7 +57,9 @@ export default function AppLayout() {
           )}
         >
           <div className="mx-auto w-full max-w-7xl animate-fade-up">
-            <Outlet />
+            <ErrorBoundary resetKey={pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

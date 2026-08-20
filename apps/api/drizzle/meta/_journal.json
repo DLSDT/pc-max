@@ -71,6 +71,13 @@
       "when": 1787190000009,
       "tag": "0009_package_kind_upscaler",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787195000010,
+      "tag": "0010_client_errors",
+      "breakpoints": true
     }
   ]
 }

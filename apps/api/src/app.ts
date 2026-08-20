@@ -38,6 +38,7 @@ import { adminTaxonomyModule } from './modules/admin-taxonomy';
 import { adminUsersModule as adminAccountsModule } from './modules/admin-admins';
 import { adminAnalyticsModule } from './modules/admin-analytics';
 import { adminAuditModule } from './modules/admin-audit';
+import { clientErrorsModule } from './modules/client-errors';
 import { adminReleasesModule } from './modules/admin-releases';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -179,6 +180,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await api.register(adminAccountsModule, { prefix: '/api/v1' });
   await api.register(adminAnalyticsModule, { prefix: '/api/v1' });
   await api.register(adminAuditModule, { prefix: '/api/v1' });
+  await api.register(clientErrorsModule, { prefix: '/api/v1' });
   await api.register(adminReleasesModule, { prefix: '/api/v1' });
 
   return app;

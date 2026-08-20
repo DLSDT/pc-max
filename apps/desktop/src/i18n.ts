@@ -54,6 +54,11 @@ void i18n.use(initReactI18next).init({
           library: 'Library',
           collapse: 'Collapse sidebar',
         },
+        errorBoundary: {
+          title: 'Something went wrong on this page',
+          body: 'This screen hit an unexpected error. The report was sent automatically — reloading usually fixes it.',
+          reload: 'Reload the app',
+        },
         updater: {
           required: 'Your version is no longer supported — please update to continue.',
           updateNow: 'Update now',
@@ -628,6 +633,11 @@ void i18n.use(initReactI18next).init({
           about: 'درباره',
           library: 'کتابخانه',
           collapse: 'جمع‌کردن نوار کناری',
+        },
+        errorBoundary: {
+          title: 'در این صفحه مشکلی پیش آمد',
+          body: 'این صفحه با خطای غیرمنتظره‌ای مواجه شد. گزارش آن به‌صورت خودکار ارسال شد — معمولاً بارگذاری مجدد مشکل را حل می‌کند.',
+          reload: 'بارگذاری مجدد برنامه',
         },
         updater: {
           required: 'نسخه شما دیگر پشتیبانی نمی‌شود — برای ادامه لطفاً به‌روزرسانی کنید.',

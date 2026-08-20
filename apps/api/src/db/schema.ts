@@ -403,6 +403,37 @@ export const auditLogs = pgTable(
   (t) => [index('audit_logs_entity_idx').on(t.entityType, t.entityId), index('audit_logs_created_idx').on(t.createdAt)],
 );
 
+/**
+ * Crash/error reports sent by the desktop client. Anonymous by design — the
+ * deviceId is the client-generated install id already used for analytics, and
+ * no message/stack is ever attributed to a named user. `fingerprint` groups
+ * repeats of the same crash so the admin view can show "N occurrences".
+ */
+export const clientErrors = pgTable(
+  'client_errors',
+  {
+    id: uuidPk(),
+    fingerprint: text('fingerprint').notNull(),
+    message: text('message').notNull(),
+    stack: text('stack'),
+    route: text('route'),
+    appVersion: text('app_version'),
+    platform: text('platform'),
+    deviceId: text('device_id'),
+    /** 'render' (ErrorBoundary), 'window' (onerror), 'promise' (unhandledrejection). */
+    source: text('source').notNull().default('render'),
+    occurrences: integer('occurrences').notNull().default(1),
+    resolved: boolean('resolved').notNull().default(false),
+    firstSeenAt: timestamp('first_seen_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('client_errors_fingerprint_idx').on(t.fingerprint),
+    index('client_errors_last_seen_idx').on(t.lastSeenAt),
+  ],
+);
+
 // ---------------------------------------------------------------------------
 // Releases
 // ---------------------------------------------------------------------------
