@@ -8,6 +8,7 @@
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import path from 'node:path';
 import { db, pool } from './index';
+import { seedBootstrapAdmin } from './seed';
 
 async function main() {
   // eslint-disable-next-line no-console
@@ -15,6 +16,9 @@ async function main() {
   await migrate(db, { migrationsFolder: path.join(__dirname, '../../drizzle') });
   // eslint-disable-next-line no-console
   console.log('✅ Migrations up to date.');
+  // Idempotent — only inserts the bootstrap admin if the admins table has no
+  // matching row, so this is safe to run on every boot/restart.
+  await seedBootstrapAdmin();
   await pool.end();
 }
 
