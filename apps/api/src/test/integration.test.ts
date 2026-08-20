@@ -1203,6 +1203,38 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
     expect(body.files[0]!.expiresIn).toBeGreaterThan(0);
   });
 
+  /**
+   * Expiry is enforced purely by the entitlement query (status = active AND
+   * expirationDate > now()) — there is no job that flips expired rows. That is
+   * the right design, but it means a single dropped WHERE clause would silently
+   * hand every lapsed user permanent premium, with nothing failing anywhere.
+   */
+  it('denies downloads once the subscription lapses, and restores them when it is renewed', async () => {
+    const { db } = await import('../db');
+    const { sql } = await import('drizzle-orm');
+
+    const stillWorks = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(stillWorks.status, 'premium user starts with access').toBe(200);
+
+    // Backdate the subscription AND its entitlements — the paid window is over.
+    await db.execute(sql`UPDATE subscriptions SET expiration_date = now() - interval '1 day'
+      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+    await db.execute(sql`UPDATE entitlements SET expires_at = now() - interval '1 day'
+      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+
+    const lapsed = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(lapsed.status, 'lapsed subscription must lose premium').toBe(403);
+
+    // Renewing restores it — no re-login, the token is still the same one.
+    await db.execute(sql`UPDATE subscriptions SET expiration_date = now() + interval '30 days'
+      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+    await db.execute(sql`UPDATE entitlements SET expires_at = now() + interval '30 days'
+      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+
+    const renewed = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
+    expect(renewed.status, 'renewal restores access without re-login').toBe(200);
+  });
+
   it('revokes entitlements immediately on admin suspend and restores on re-activate (no premium window)', async () => {
     const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
       data: { id: string; userEmail: string; status: string }[];

@@ -38,6 +38,13 @@ const envSchema = z.object({
   // Payment system — provider-agnostic. `mock` auto-verifies (dev/tests);
   // `zarinpal` talks to the real gateway (sandbox by default).
   PAYMENT_PROVIDER: z.enum(['mock', 'zarinpal']).default('mock'),
+  /** Consciously run the always-approve mock gateway in production — only ever
+   *  correct while nobody is being charged (a free beta). Off by default so a
+   *  paid deployment can't ship it by accident. */
+  ALLOW_MOCK_PAYMENTS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
   ZARINPAL_MERCHANT_ID: z.string().min(1).default('sandbox-test-merchant'),
   ZARINPAL_SANDBOX: z
     .enum(['true', 'false'])
@@ -125,6 +132,19 @@ const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
   // eslint-disable-next-line no-console
   console.error('❌ Invalid environment configuration:', parsed.error.flatten().fieldErrors);
+  process.exit(1);
+}
+
+if (parsed.data.NODE_ENV === 'production' && parsed.data.PAYMENT_PROVIDER === 'mock' && !parsed.data.ALLOW_MOCK_PAYMENTS) {
+  // The mock gateway verifies EVERY payment, so running it in production hands
+  // out real premium subscriptions for free — and nothing in the app looks
+  // wrong while it happens. Refuse to boot instead.
+  // eslint-disable-next-line no-console
+  console.error(
+    '❌ PAYMENT_PROVIDER=mock approves every payment and would grant paid subscriptions for free.\n' +
+      '   Set PAYMENT_PROVIDER=zarinpal (with its credentials), or set ALLOW_MOCK_PAYMENTS=true\n' +
+      '   to run a deliberately free beta where nobody is charged.',
+  );
   process.exit(1);
 }
 

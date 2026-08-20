@@ -65,7 +65,13 @@ services:
       UPLOAD_DIR: /app/uploads
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@gamehub.local}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-Admin123!}
-      PAYMENT_PROVIDER: mock
+      # The mock gateway approves EVERY payment. It is fine only while nobody is
+      # being charged; the API refuses to boot with it in production unless
+      # ALLOW_MOCK_PAYMENTS is set, so this is a deliberate choice, not a default.
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+      ALLOW_MOCK_PAYMENTS: ${ALLOW_MOCK_PAYMENTS:-true}
+      ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-}
+      ZARINPAL_CALLBACK_BASE_URL: ${ZARINPAL_CALLBACK_BASE_URL:-https://pcmax-api.rixy.ir}
       # 300 (the app default) was sized before the catalog grew to 280+ games —
       # a single client's offline-first sync alone fires 2 requests per changed
       # game, so a full sync trips the default limit on its own.
