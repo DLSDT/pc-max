@@ -248,6 +248,7 @@ const ICON_SLUGS = new Set([
   'rocket-league',
   'rust',
   'saints-row',
+  'samson',
   'sekiro',
   'senua-s-saga-hellblade-ii',
   'shadow-of-the-tomb-raider-definitive-edition',
