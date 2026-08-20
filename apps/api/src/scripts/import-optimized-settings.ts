@@ -91,6 +91,39 @@ const PROFILE_TIER: Record<ParsedBlock, 'high_end' | 'ultra' | 'mid_range'> = {
 /** "NAME ---(2+ dashes)--- VALUE" — the format used throughout these files. */
 const SETTING_LINE = /^(.+?)-{2,}\s*(.+)$/;
 
+/**
+ * Tidy a raw value string.
+ *
+ * Some files (the ones with no YELLOW/GREEN header) write two options in one
+ * value — "LOW/HIGH", sometimes annotated "( For Yellow Optimised settings )".
+ * Both options are kept; only the presentation is cleaned:
+ *   - the profile annotation is dropped (these games render a single profile,
+ *     so a pointer to the other one only confuses),
+ *   - a bare `A/B` becomes `A / B` so it reads as two choices.
+ *
+ * Conditional values are deliberately left EXACTLY as written — the slash in
+ * "HIGH (0.5GB)For 8GB/HIGH (8GB)For 12GB" or "ON for 60 FPS/OFF for 120 FPS"
+ * separates hardware/target cases, not profiles, and reformatting it would
+ * destroy real guidance.
+ */
+export function tidySettingValue(raw: string): string {
+  let value = raw.trim();
+
+  // Drop "( For Yellow Optimised settings )" and friends.
+  value = value.replace(/\(\s*for\s+(yellow|green)\s+optimi(?:s|z)ed\s+settings\s*\)/gi, '').trim();
+  value = value.replace(/\s{2,}/g, ' ');
+
+  // Only space out a slash when BOTH sides are plain short tokens — never when
+  // the value carries a VRAM/GPU/FPS condition.
+  if (!/\b(gb|vram|gpu|fps|for)\b/i.test(value)) {
+    const parts = value.split('/');
+    if (parts.length === 2 && parts.every((t) => /^[A-Za-z0-9+.\s]{1,14}$/.test(t.trim()) && t.trim().length > 0)) {
+      value = `${parts[0]!.trim()} / ${parts[1]!.trim()}`;
+    }
+  }
+  return value;
+}
+
 export function parseOptimizedSettingsContent(fileName: string, content: string): ParsedGame {
   const gameName = fileName.replace(/\.txt$/i, '').trim();
   const blocks: Record<ParsedBlock, ParsedSetting[]> = { yellow: [], green: [], multiplay: [], ray_tracing: [] };
@@ -138,7 +171,7 @@ export function parseOptimizedSettingsContent(fileName: string, content: string)
 
     const match = SETTING_LINE.exec(line);
     if (match) {
-      const setting: ParsedSetting = { name: match[1]!.trim(), value: match[2]!.trim() };
+      const setting: ParsedSetting = { name: match[1]!.trim(), value: tidySettingValue(match[2]!) };
       if (category) setting.category = category;
       blocks[current ?? 'yellow']!.push(setting);
     } else {
