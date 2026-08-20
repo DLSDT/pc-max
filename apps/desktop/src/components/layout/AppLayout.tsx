@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { useUi } from '@/store/ui';
-import { useInitialSync } from '@/hooks/useLibrary';
+import { useInitialSync, useRefetchOnReconnect } from '@/hooks/useLibrary';
 import { useAppVersionCheck } from '@/hooks/useAppVersion';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './Sidebar';
@@ -25,6 +25,7 @@ export default function AppLayout() {
   const { pathname } = useLocation();
 
   useInitialSync();
+  useRefetchOnReconnect();
   useAppVersionCheck();
 
   useEffect(() => {

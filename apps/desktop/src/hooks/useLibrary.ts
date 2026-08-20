@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { api, isNetworkError } from '@/lib/api';
 import { cache } from '@/lib/cache';
 import { runSync } from '@/lib/sync';
 import { useUi } from '@/store/ui';
@@ -23,27 +24,67 @@ export function useHome() {
 }
 
 /** Filtered, paginated game list — instant from cache when filters are empty. */
+/**
+ * Refetch catalogue data as soon as the machine is back online.
+ *
+ * When the API is unreachable the catalogue queries fall back to the local
+ * cache and resolve *successfully*, so React Query treats that degraded result
+ * as fresh for the full staleTime. This server is self-hosted and gets
+ * switched off, so without this the app would keep showing stale offline data
+ * for minutes after it came back. Marking the queries stale on reconnect makes
+ * recovery immediate for whatever is on screen.
+ */
+export function useRefetchOnReconnect() {
+  const qc = useQueryClient();
+  useEffect(() => {
+    const onOnline = () => {
+      void qc.invalidateQueries({ queryKey: ['games'] });
+      void qc.invalidateQueries({ queryKey: ['optimized-setting-games'] });
+      void qc.invalidateQueries({ queryKey: ['home'] });
+      void qc.invalidateQueries({ queryKey: ['featured-games'] });
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [qc]);
+}
+
 export function useGames(page = 1) {
   const filters = useUi((s) => s.filters);
   const key = queryKeyOf(filters, page);
+  /** The cached catalogue, but only when it can honestly answer THIS query —
+   *  an unfiltered first page. A filtered or paged request must not be served
+   *  stale unfiltered rows. */
+  const cachedForThisQuery = (): GameListResponse | undefined => {
+    if (page > 1) return undefined;
+    if (filters.q || filters.genre || filters.year || filters.techs.length > 0) return undefined;
+    const cached = cache.getGames();
+    if (!cached.length) return undefined;
+    return { data: cached, meta: { page: 1, limit: cached.length, total: cached.length } } as GameListResponse;
+  };
+
   return useQuery<GameListResponse>({
     queryKey: key,
-    queryFn: () =>
-      api.games({
-        q: filters.q || undefined,
-        genre: filters.genre || undefined,
-        year: filters.year || undefined,
-        techs: filters.techs.length ? filters.techs.join(',') : undefined,
-        page: page > 1 ? String(page) : undefined,
-      }),
-    placeholderData: () => {
-      if (page > 1) return undefined;
-      const cached = cache.getGames();
-      if (!filters.q && !filters.genre && !filters.year && filters.techs.length === 0 && cached.length) {
-        return { data: cached, meta: { page: 1, limit: 100, total: cached.length } } as GameListResponse;
+    queryFn: async () => {
+      try {
+        return await api.games({
+          q: filters.q || undefined,
+          genre: filters.genre || undefined,
+          year: filters.year || undefined,
+          techs: filters.techs.length ? filters.techs.join(',') : undefined,
+          page: page > 1 ? String(page) : undefined,
+        });
+      } catch (err) {
+        // The API is self-hosted and can simply be switched off, so an
+        // unreachable server must fall back to the cache rather than showing
+        // an empty catalogue. placeholderData is not enough: it only renders
+        // while the query is pending and vanishes the moment it errors.
+        // HTTP errors still surface — those are real and worth showing.
+        const fallback = isNetworkError(err) ? cachedForThisQuery() : undefined;
+        if (fallback) return fallback;
+        throw err;
       }
-      return undefined;
     },
+    placeholderData: cachedForThisQuery,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -52,7 +93,22 @@ export function useGames(page = 1) {
 export function useOptimizedSettingGames() {
   return useQuery<GameListResponse['data']>({
     queryKey: ['optimized-setting-games'],
-    queryFn: async () => (await api.optimizedSettingGames()).data,
+    queryFn: async () => {
+      try {
+        return (await api.optimizedSettingGames()).data;
+      } catch (err) {
+        // Server unreachable → derive the list from the cached catalogue so
+        // the page still works offline. Every profile is cached alongside its
+        // game, so this is the same set the server would return.
+        if (isNetworkError(err)) {
+          const offline = cache
+            .getGames()
+            .filter((g) => (cache.getProfiles(g.slug) ?? []).some((p) => p.colorProfile));
+          if (offline.length) return offline;
+        }
+        throw err;
+      }
+    },
     staleTime: 5 * 60 * 1000,
   });
 }
