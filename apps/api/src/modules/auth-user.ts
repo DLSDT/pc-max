@@ -359,7 +359,7 @@ export async function authUserModule(app: FastifyInstance) {
     },
   );
 
-  // Token-link reset (email): https://pcmax.app/reset-password?token=…
+  // Token-link reset (email): ${RESET_LINK_BASE_URL}/reset-password?token=…
   typed.post(
     '/auth/password/reset-link',
     {

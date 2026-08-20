@@ -67,7 +67,7 @@ export function createMailProvider(): MailProvider {
 
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
 
-/** Mask an address for logs: g***r@pcmax.app / +98*****000. */
+/** Mask an address for logs: g***r@example.com / +98*****000. */
 export function maskRecipient(recipient: string): string {
   const at = recipient.lastIndexOf('@');
   if (at > 0) {
@@ -214,7 +214,7 @@ export function renderWelcomeEmail(identifier: string): string {
   return shell(`
     <h1 style="margin:0 0 8px;font-size:20px;font-weight:700;">Welcome to PC MAX</h1>
     <p style="margin:0 0 16px;font-size:14px;color:#4B5563;line-height:1.6;">Your account is ready, <strong dir="ltr">${identifier}</strong>. Discover optimized settings for your favorite games and unlock premium performance.</p>
-    ${button('https://pcmax.app/games', 'Browse Games')}
+    ${button(`${config.RESET_LINK_BASE_URL}/games`, 'Browse Games')}
   `);
 }
 

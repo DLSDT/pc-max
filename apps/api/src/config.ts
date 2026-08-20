@@ -65,7 +65,7 @@ const envSchema = z.object({
   // `console` is a dev/test no-op (codes exposed via OTP_EXPOSE/RESET_TOKEN_EXPOSE);
   // production MUST use `smtp` (validated at boot below).
   EMAIL_PROVIDER: z.enum(['console', 'smtp']).default('console'),
-  EMAIL_FROM: z.string().default('PC MAX <noreply@pcmax.app>'),
+  EMAIL_FROM: z.string().default('PC MAX <noreply@pcmax.rixy.ir>'),
   EMAIL_FROM_NAME: z.string().default('PC MAX'),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(587),
@@ -73,7 +73,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   /** Public base URL used for password-reset links inside emails. */
-  RESET_LINK_BASE_URL: z.string().default('https://pcmax.app'),
+  RESET_LINK_BASE_URL: z.string().default('https://pcmax.rixy.ir'),
 
   SMS_PROVIDER: z.enum(['console', 'kavenegar']).default('console'),
   KAVENEGAR_API_KEY: z.string().optional(),

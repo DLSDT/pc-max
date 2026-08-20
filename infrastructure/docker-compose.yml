@@ -6,10 +6,10 @@ services:
     container_name: goh-postgres
     environment:
       POSTGRES_USER: goh
-      POSTGRES_PASSWORD: goh
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-goh}
       POSTGRES_DB: goh
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - goh_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,10 +24,10 @@ services:
     command: server /data --console-address ':9001'
     environment:
       MINIO_ROOT_USER: goh
-      MINIO_ROOT_PASSWORD: goh-secret-key-123
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-goh-secret-key-123}
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - '127.0.0.1:9000:9000'
+      - '127.0.0.1:9001:9001'
     volumes:
       - goh_minio:/data
 
@@ -35,7 +35,7 @@ services:
     image: redis:7-alpine
     container_name: goh-redis
     ports:
-      - '6379:6379'
+      - '127.0.0.1:${REDIS_HOST_PORT:-6379}:6379'
     volumes:
       - goh_redis:/data
     healthcheck:
@@ -55,14 +55,23 @@ services:
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-in-production-please-32chars}
       DOWNLOAD_SIGNING_SECRET: ${DOWNLOAD_SIGNING_SECRET:-change-me-in-production-please-32chars}
-      PUBLIC_API_URL: http://localhost:4000
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3001,http://localhost:1420,http://127.0.0.1:1420,tauri://localhost,http://tauri.localhost,https://tauri.localhost}
       STORAGE_DRIVER: local
       UPLOAD_DIR: /app/uploads
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@gamehub.local}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-Admin123!}
       PAYMENT_PROVIDER: mock
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
+      EMAIL_FROM: ${EMAIL_FROM:-PC MAX <noreply@pcmax.rixy.ir>}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      RESET_LINK_BASE_URL: ${RESET_LINK_BASE_URL:-https://pcmax.rixy.ir}
     ports:
-      - '4000:4000'
+      - '127.0.0.1:4000:4000'
     volumes:
       - goh_uploads:/app/uploads
     depends_on:

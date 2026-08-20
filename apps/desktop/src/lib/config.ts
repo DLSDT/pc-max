@@ -17,7 +17,7 @@ function resolveApiUrl(): string {
   const injected = import.meta.env.VITE_API_URL as string | undefined;
   if (injected) return injected.replace(/\/+$/, '');
   if (import.meta.env.DEV) return 'http://localhost:4000/api/v1';
-  return 'https://api.pcmax.app/api/v1';
+  return 'https://api.pcmax.rixy.ir/api/v1';
 }
 
 export const config = {
