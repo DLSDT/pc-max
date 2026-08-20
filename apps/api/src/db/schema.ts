@@ -448,6 +448,8 @@ export const appVersions = pgTable(
     releaseNotes: text('release_notes'),
     downloadUrl: text('download_url').notNull(),
     checksumSha256: text('checksum_sha256'),
+    /** Detached minisign signature of the installer (Tauri updater verifies it). */
+    signature: text('signature'),
     minAppVersion: text('min_app_version'),
     isLatest: boolean('is_latest').notNull().default(false),
     releasedAt: timestamp('released_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),

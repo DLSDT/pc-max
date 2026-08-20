@@ -12,6 +12,8 @@ export const AppVersion = z.object({
   releaseNotes: z.string().nullable(),
   downloadUrl: z.string().url(),
   checksumSha256: z.string().nullable(),
+  /** Detached minisign signature — required for the Tauri auto-updater. */
+  signature: z.string().nullable(),
   minAppVersion: z.string().nullable(),
   isLatest: z.boolean(),
   releasedAt: IsoDate,
@@ -39,6 +41,7 @@ export const AppVersionCreateInput = z.object({
   releaseNotes: z.string().trim().max(10_000).optional().nullable(),
   downloadUrl: z.string().url(),
   checksumSha256: z.string().trim().max(128).optional().nullable(),
+  signature: z.string().trim().max(1000).optional().nullable(),
   minAppVersion: z.string().trim().max(50).optional().nullable(),
 });
 export type AppVersionCreateInput = z.infer<typeof AppVersionCreateInput>;

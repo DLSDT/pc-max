@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
 import { AppSettings, AppVersionCheckQuery, AppVersionCheckResponse } from '@goh/validation';
 import { db } from '../db';
 import { appVersions, categories, games, optimizationProfiles } from '../db/schema';
@@ -38,6 +39,7 @@ export async function systemModule(app: FastifyInstance) {
               releaseNotes: latest.releaseNotes,
               downloadUrl: latest.downloadUrl,
               checksumSha256: latest.checksumSha256,
+              signature: latest.signature,
               minAppVersion: latest.minAppVersion,
               isLatest: latest.isLatest,
               releasedAt: latest.releasedAt.toISOString(),
@@ -46,6 +48,50 @@ export async function systemModule(app: FastifyInstance) {
         updateAvailable,
         current: current ?? null,
       };
+    },
+  );
+
+  /**
+   * Tauri updater feed. The desktop app polls
+   * `/updates/{target}/{arch}/{currentVersion}` (see tauri.conf.json) and
+   * expects either 204 (already current) or the JSON body below. The
+   * `signature` is the detached minisign signature produced at build time —
+   * the client verifies it against the pubkey baked into the binary, so an
+   * unsigned row is unusable and is treated as "no update".
+   */
+  typed.get(
+    '/updates/:target/:arch/:currentVersion',
+    {
+      schema: {
+        params: z.object({
+          target: z.string().max(40),
+          arch: z.string().max(20),
+          currentVersion: z.string().max(50),
+        }),
+      },
+    },
+    async (request, reply) => {
+      const { target, currentVersion } = request.params;
+      // Tauri's {{target}} is the OS ("windows"/"darwin"/"linux").
+      const platform = target === 'darwin' ? 'macos' : target;
+
+      const latest = await db.query.appVersions.findFirst({
+        where: and(eq(appVersions.platform, platform), eq(appVersions.channel, 'stable')),
+        orderBy: desc(appVersions.releasedAt),
+      });
+
+      // No release, unsigned release, or the client is already up to date.
+      if (!latest || !latest.signature || compareSemver(latest.version, currentVersion) <= 0) {
+        return reply.status(204).send();
+      }
+
+      return reply.status(200).send({
+        version: latest.version,
+        notes: latest.releaseNotes ?? '',
+        pub_date: latest.releasedAt.toISOString(),
+        url: latest.downloadUrl,
+        signature: latest.signature,
+      });
     },
   );
 
