@@ -9,7 +9,7 @@ import { PresignUploadInput, PresignUploadResponse } from '@goh/validation';
 import { config } from '../config';
 import { badRequest, forbidden, notFound } from '../lib/errors';
 import { requirePermission } from '../lib/auth-middleware';
-import { resolveLocalPath, storage, verifySignedDownload } from '../lib/storage';
+import { resolveLocalPath, storage, verifySignedDownload, verifySignedUpload } from '../lib/storage';
 
 const MAX_UPLOAD = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp']);
@@ -36,15 +36,22 @@ export async function uploadsModule(app: FastifyInstance) {
   // Local-driver ingestion endpoint. The objectKey acts as a capability token:
   // only callers that received it from /admin/uploads/presign can PUT here.
   typed.put(
-    '/uploads/put/*',
+    '/uploads/put/:exp/:sig/*',
     {
-      schema: {},
+      schema: { params: z.object({ exp: z.string(), sig: z.string(), '*': z.string() }) },
     },
     async (request, reply) => {
       if (config.STORAGE_DRIVER !== 'local') throw forbidden('Upload endpoint is disabled when S3 storage is configured');
 
       const key = String((request.params as Record<string, unknown>)['*'] ?? '');
       if (!key) throw badRequest('Missing object key');
+
+      // The route is unauthenticated by design (the client PUTs the raw bytes
+      // to the URL it was handed), so the HMAC is what proves an admin
+      // presigned this exact key. Without it, anyone could write any key:
+      // filling the disk, or overwriting an image whose key is public.
+      const exp = Number(request.params.exp);
+      if (!verifySignedUpload(key, exp, request.params.sig)) throw forbidden('Invalid or expired upload URL');
       const ext = key.split('.').pop()?.toLowerCase() ?? '';
       if (!ALLOWED_EXT.has(ext)) throw badRequest('Unsupported file type');
       if (key.includes('..')) throw badRequest('Invalid key');

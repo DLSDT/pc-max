@@ -18,10 +18,10 @@ import {
 import { config } from '../config';
 import { db } from '../db';
 import { games, optimizationPackages, optimizationPackageVersions, packageFiles } from '../db/schema';
-import { badRequest, notFound } from '../lib/errors';
+import { badRequest, notFound , forbidden } from '../lib/errors';
 import { requirePermission } from '../lib/auth-middleware';
 import { recordAudit } from '../lib/audit';
-import { resolveLocalPath, storage } from '../lib/storage';
+import { resolveLocalPath, storage , verifySignedUpload } from '../lib/storage';
 import { assertSafeDestination, assertSafeFilename, findPackageById, listPackageFiles, publishPackage, toPackagePublic } from '../services/packages';
 
 const MAX_PACKAGE_FILE = 500 * 1024 * 1024; // 500 MB
@@ -320,12 +320,17 @@ export async function adminPackagesModule(app: FastifyInstance) {
 
   // Local-driver ingestion for package files (capability = server-issued key).
   typed.put(
-    '/uploads/packages/put/*',
-    { schema: {} },
+    '/uploads/packages/put/:exp/:sig/*',
+    { schema: { params: z.object({ exp: z.string(), sig: z.string(), '*': z.string() }) } },
     async (request, reply) => {
       if (config.STORAGE_DRIVER !== 'local') throw badRequest('Package upload endpoint is disabled when S3 storage is configured');
       const key = String((request.params as Record<string, unknown>)['*'] ?? '');
       if (!key.startsWith('packages/') || key.includes('..')) throw badRequest('Invalid object key');
+
+      // Unauthenticated by design — the HMAC from presign is the authorisation.
+      if (!verifySignedUpload(key, Number(request.params.exp), request.params.sig)) {
+        throw forbidden('Invalid or expired upload URL');
+      }
       const filename = key.split('/').pop() ?? '';
       if (!isValidPackageExt(filename)) throw badRequest('Unsupported file type');
 

@@ -1656,6 +1656,52 @@ describe('security audit (Phase 19)', () => {
     expect(bobMe.phone).toBe('+989120000006');
   });
 
+  /**
+   * The upload endpoints are unauthenticated by design — the client PUTs raw
+   * bytes to the URL presign handed it. That makes the HMAC the ONLY thing
+   * standing between the internet and arbitrary writes into the upload dir:
+   * without it anyone could invent a key (filling the disk on a self-hosted
+   * box) or overwrite an existing image whose key is public in the API.
+   */
+  it('refuses uploads that were not presigned, for both image and package keys', async () => {
+    const forged = [
+      '/api/v1/uploads/put/9999999999/deadbeef/attacker-controlled.png',
+      `/api/v1/uploads/put/9999999999/${'a'.repeat(64)}/games/anything.png`,
+      '/api/v1/uploads/packages/put/9999999999/deadbeef/packages/evil/payload.zip',
+    ];
+    for (const url of forged) {
+      const res = await app.inject({
+        method: 'PUT', url,
+        headers: { 'content-length': '10', 'content-type': 'application/octet-stream' },
+        payload: 'xxxxxxxxxx',
+      });
+      expect([400, 403], `unsigned PUT must be refused: ${url}`).toContain(res.statusCode);
+      expect(res.statusCode, `must not accept: ${url}`).not.toBe(201);
+    }
+  });
+
+  it('refuses an upload URL whose signature has expired', async () => {
+    const login = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    const t = (login.json as { accessToken: string }).accessToken;
+    const presign = (await inject('POST', '/api/v1/admin/uploads/presign', {
+      token: t,
+      body: { kind: 'cover', contentType: 'image/png', size: 10 },
+    })).json as { uploadUrl: string };
+
+    const path = presign.uploadUrl.replace(/^https?:\/\/[^/]+/, '');
+    const [, , , , exp, sig, ...rest] = path.split('/');
+    // Same signature, but claim it was issued for a moment already past.
+    const stale = `/api/v1/uploads/put/${Number(exp) - 10_000}/${sig}/${rest.join('/')}`;
+    const res = await app.inject({
+      method: 'PUT', url: stale,
+      headers: { 'content-length': '10', 'content-type': 'application/octet-stream' },
+      payload: 'xxxxxxxxxx',
+    });
+    expect(res.statusCode, 'expired upload URL must be refused').toBe(403);
+  });
+
   it('rejects price manipulation — the server prices from the plan table, never the client', async () => {
     // Client smuggles a discounted amount in the body — it must be ignored.
     const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {

@@ -36,6 +36,10 @@ export interface StorageDriver {
   signDownload(objectKey: string, ttlSeconds: number): Promise<string>;
 }
 
+/** How long a presigned upload stays usable. Long enough for a slow upload of
+ *  a large package file, short enough that a leaked URL is not a standing grant. */
+const UPLOAD_TTL_SECONDS = 15 * 60;
+
 // ---------------------------------------------------------------------------
 // Signed-URL helpers (local driver)
 // ---------------------------------------------------------------------------
@@ -45,6 +49,27 @@ function signToken(objectKey: string, expiresAt: number): string {
 }
 
 /** Validate a signed token — constant-time compare, rejects expired links. */
+/** Upload tokens are scoped separately so a download URL can never be replayed
+ *  as an upload grant (or vice versa). */
+function signUploadToken(objectKey: string, expiresAt: number): string {
+  return createHmac('sha256', config.DOWNLOAD_SIGNING_SECRET).update(`upload|${objectKey}|${expiresAt}`).digest('hex');
+}
+
+/** Build the signed PUT path for an object key, valid for `ttlSeconds`. */
+export function signedUploadPath(objectKey: string, ttlSeconds: number): string {
+  const exp = Math.floor(Date.now() / 1000) + ttlSeconds;
+  return `/api/v1/uploads/put/${exp}/${signUploadToken(objectKey, exp)}/${objectKey}`;
+}
+
+/** Constant-time check that this PUT was actually authorised by a presign. */
+export function verifySignedUpload(objectKey: string, expiresAt: number, signature: string): boolean {
+  if (!Number.isInteger(expiresAt) || expiresAt < Math.floor(Date.now() / 1000)) return false;
+  const expected = Buffer.from(signUploadToken(objectKey, expiresAt), 'hex');
+  const given = Buffer.from(signature, 'hex');
+  if (expected.length !== given.length) return false;
+  return timingSafeEqual(expected, given);
+}
+
 export function verifySignedDownload(objectKey: string, expiresAt: number, signature: string): boolean {
   if (!Number.isInteger(expiresAt) || expiresAt < Math.floor(Date.now() / 1000)) return false;
   const expected = Buffer.from(signToken(objectKey, expiresAt), 'hex');
@@ -66,7 +91,7 @@ class LocalStorageDriver implements StorageDriver {
     const ext = EXT_BY_TYPE[contentType] ?? 'bin';
     const objectKey = `${kind}/${randomUUID()}.${ext}`;
     const publicUrl = this.publicUrl(objectKey);
-    const uploadUrl = `${this.baseUrl}/api/v1/uploads/put/${objectKey}`;
+    const uploadUrl = `${this.baseUrl}${signedUploadPath(objectKey, UPLOAD_TTL_SECONDS)}`;
     return { uploadUrl, objectKey, publicUrl };
   }
 
@@ -74,7 +99,7 @@ class LocalStorageDriver implements StorageDriver {
     const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const objectKey = `packages/${randomUUID()}/${safe}`;
     const publicUrl = this.publicUrl(objectKey);
-    const uploadUrl = `${this.baseUrl}/api/v1/uploads/packages/put/${objectKey}`;
+    const uploadUrl = `${this.baseUrl}${signedUploadPath(objectKey, UPLOAD_TTL_SECONDS).replace('/uploads/put/', '/uploads/packages/put/')}`;
     return { uploadUrl, objectKey, publicUrl };
   }
 
