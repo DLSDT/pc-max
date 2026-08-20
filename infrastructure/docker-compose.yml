@@ -66,6 +66,10 @@ services:
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@gamehub.local}
       ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD:-Admin123!}
       PAYMENT_PROVIDER: mock
+      # 300 (the app default) was sized before the catalog grew to 280+ games —
+      # a single client's offline-first sync alone fires 2 requests per changed
+      # game, so a full sync trips the default limit on its own.
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-1500}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
       EMAIL_FROM: ${EMAIL_FROM:-PC MAX <noreply@pcmax.rixy.ir>}
       SMTP_HOST: ${SMTP_HOST:-}

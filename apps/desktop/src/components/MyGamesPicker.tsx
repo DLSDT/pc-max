@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FolderPlus, Gamepad2 } from 'lucide-react';
 import { useLibrary } from '@/store/library';
-import { useGames } from '@/hooks/useLibrary';
+import { useCatalog } from '@/hooks/useFavorites';
 import GameLibraryCard from '@/components/GameLibraryCard';
 
 /**
@@ -17,9 +17,9 @@ import GameLibraryCard from '@/components/GameLibraryCard';
 export default function MyGamesPicker() {
   const { t } = useTranslation();
   const games = useLibrary((s) => s.games);
-  const catalog = useGames();
+  const catalog = useCatalog();
 
-  const catalogBySlug = new Map((catalog.data?.data ?? []).map((g) => [g.slug, g]));
+  const catalogBySlug = new Map(catalog.map((g) => [g.slug, g]));
   const entries = Object.values(games).sort((a, b) => a.name.localeCompare(b.name));
 
   if (entries.length === 0) {

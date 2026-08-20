@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CloudOff, FilterX, SearchX, WifiOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CloudOff, FilterX, SearchX, WifiOff } from 'lucide-react';
 import { useGames, useHome } from '@/hooks/useLibrary';
 import { useUi } from '@/store/ui';
 import { ApiError } from '@/lib/api';
@@ -28,9 +28,16 @@ export default function GamesPage() {
   const resetFilters = useUi((s) => s.resetFilters);
 
   const { data: home } = useHome();
-  const { data, isLoading, isError, error, refetch } = useGames();
+  const [page, setPage] = useState(1);
+  const { data, isLoading, isError, error, refetch } = useGames(page);
 
   const [searchInput, setSearchInput] = useState(filters.q);
+
+  // Any filter change invalidates the current page.
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.q, filters.genre, filters.year, filters.techs.join(',')]);
 
   // Sync URL → store once on mount (deep links from the header search).
   useEffect(() => {
@@ -62,6 +69,7 @@ export default function GamesPage() {
   }, [filters]);
 
   const games = data?.data ?? [];
+  const totalPages = data ? Math.max(1, Math.ceil(data.meta.total / data.meta.limit)) : 1;
   const years = useMemo(
     () => Array.from(new Set(games.map((g) => g.releaseYear).filter((y): y is number => y !== null))).sort((a, b) => b - a),
     [games],
@@ -178,11 +186,40 @@ export default function GamesPage() {
       ) : games.length === 0 ? (
         <EmptyState icon={<SearchX aria-hidden />} title={t('games.noResults')} />
       ) : (
-        <GameGrid>
-          {games.map((g) => (
-            <GameCard key={g.id} game={g} />
-          ))}
-        </GameGrid>
+        <>
+          <GameGrid>
+            {games.map((g) => (
+              <GameCard key={g.id} game={g} />
+            ))}
+          </GameGrid>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+              >
+                <ChevronRight aria-hidden className="size-4 rtl:hidden" />
+                <ChevronLeft aria-hidden className="hidden size-4 rtl:block" />
+                {t('games.prevPage')}
+              </Button>
+              <span className="text-xs font-medium text-muted-foreground">
+                {t('games.pageOf', { page, total: totalPages })}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                {t('games.nextPage')}
+                <ChevronLeft aria-hidden className="size-4 rtl:hidden" />
+                <ChevronRight aria-hidden className="hidden size-4 rtl:block" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

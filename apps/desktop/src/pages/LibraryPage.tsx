@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CloudOff, FolderOpen, FolderPlus, Loader2, Radar, ScanSearch, WifiOff } from 'lucide-react';
-import { useGames } from '@/hooks/useLibrary';
+import { useCatalog } from '@/hooks/useFavorites';
 import { useLibrary } from '@/store/library';
-import { ApiError } from '@/lib/api';
+import { useUi } from '@/store/ui';
+import { runSync } from '@/lib/sync';
 import { detectGamesOnDisk, applyDetection, type KnownExecutable } from '@/lib/detect';
 import { extractGameIcon, selectGameExecutable, splitPath } from '@/lib/gameExe';
 import { isTauriShell } from '@/lib/optimizer';
@@ -16,7 +17,9 @@ export default function LibraryPage() {
   const games = useLibrary((s) => s.games);
   const addManual = useLibrary((s) => s.addManual);
   const updateSlug = useLibrary((s) => s.updateSlug);
-  const catalog = useGames();
+  const catalog = useCatalog();
+  const syncStatus = useUi((s) => s.syncStatus);
+  const setSyncStatus = useUi((s) => s.setSyncStatus);
 
   const [path, setPath] = useState('');
   const [detecting, setDetecting] = useState(false);
@@ -24,16 +27,27 @@ export default function LibraryPage() {
   const [browsing, setBrowsing] = useState(false);
   const [associating, setAssociating] = useState<string | null>(null);
   const [associateSlug, setAssociateSlug] = useState('');
+  const [retryingSync, setRetryingSync] = useState(false);
 
-  const catalogBySlug = new Map((catalog.data?.data ?? []).map((g) => [g.slug, g]));
+  const catalogBySlug = new Map(catalog.map((g) => [g.slug, g]));
 
   const entries = Object.values(games).sort((a, b) => a.name.localeCompare(b.name));
+
+  async function retrySync() {
+    setRetryingSync(true);
+    try {
+      const result = await runSync();
+      setSyncStatus(result.offline ? 'offline' : result.apiUnavailable ? 'api-unavailable' : 'online');
+    } finally {
+      setRetryingSync(false);
+    }
+  }
 
   async function handleDetect() {
     setDetecting(true);
     setDetectNote(null);
     try {
-      const known: KnownExecutable[] = (catalog.data?.data ?? [])
+      const known: KnownExecutable[] = catalog
         .filter((g) => g.executables.length > 0)
         .map((g) => ({ slug: g.slug, name: g.name, executables: g.executables }));
       const result = await detectGamesOnDisk(known);
@@ -69,9 +83,7 @@ export default function LibraryPage() {
       if (!exePath) return;
       const { dir, file } = splitPath(exePath);
       const iconDataUrl = (await extractGameIcon(exePath)) ?? undefined;
-      const matched = (catalog.data?.data ?? []).find((g) =>
-        g.executables.some((exe) => exe.toLowerCase() === file.toLowerCase()),
-      );
+      const matched = catalog.find((g) => g.executables.some((exe) => exe.toLowerCase() === file.toLowerCase()));
       addManual({
         slug: matched?.slug ?? '',
         name: matched?.name ?? file.replace(/\.exe$/i, ''),
@@ -92,20 +104,16 @@ export default function LibraryPage() {
         <p className="text-sm text-muted-foreground">{t('library.subtitle')}</p>
       </header>
 
-      {/* Catalog load failure — detection/association need the live catalog. */}
-      {catalog.isError && (
+      {/* Sync failure — detection/association need the full, synced catalog. */}
+      {(syncStatus === 'offline' || syncStatus === 'api-unavailable') && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
-          {catalog.error instanceof ApiError && typeof navigator !== 'undefined' && navigator.onLine === false ? (
+          {syncStatus === 'offline' ? (
             <WifiOff aria-hidden className="size-4 shrink-0 text-amber-600" />
           ) : (
             <CloudOff aria-hidden className="size-4 shrink-0 text-amber-600" />
           )}
-          <span className="min-w-0 flex-1">
-            {catalog.error instanceof ApiError && catalog.error.kind !== 'http'
-              ? catalog.error.message
-              : t('common.serviceUnavailable')}
-          </span>
-          <Button size="sm" variant="outline" onClick={() => void catalog.refetch()}>
+          <span className="min-w-0 flex-1">{t('common.serviceUnavailable')}</span>
+          <Button size="sm" variant="outline" onClick={() => void retrySync()} disabled={retryingSync}>
             {t('common.retry')}
           </Button>
         </div>

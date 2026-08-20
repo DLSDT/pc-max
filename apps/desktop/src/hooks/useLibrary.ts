@@ -8,8 +8,8 @@ import type { GameDetail, GameListResponse, HomeResponse, OptimizationProfile } 
 const HOME_KEY = ['home'] as const;
 const GAMES_KEY = ['games'] as const;
 
-function queryKeyOf(filters: { q: string; genre: string; year: string; techs: string[] }) {
-  return ['games', filters.q, filters.genre, filters.year, filters.techs.join(',')] as const;
+function queryKeyOf(filters: { q: string; genre: string; year: string; techs: string[] }, page: number) {
+  return ['games', filters.q, filters.genre, filters.year, filters.techs.join(','), page] as const;
 }
 
 /** Home content — instant from cache, refreshed from the server. */
@@ -22,10 +22,10 @@ export function useHome() {
   });
 }
 
-/** Filtered game list — instant from cache when filters are empty. */
-export function useGames() {
+/** Filtered, paginated game list — instant from cache when filters are empty. */
+export function useGames(page = 1) {
   const filters = useUi((s) => s.filters);
-  const key = queryKeyOf(filters);
+  const key = queryKeyOf(filters, page);
   return useQuery<GameListResponse>({
     queryKey: key,
     queryFn: () =>
@@ -34,8 +34,10 @@ export function useGames() {
         genre: filters.genre || undefined,
         year: filters.year || undefined,
         techs: filters.techs.length ? filters.techs.join(',') : undefined,
+        page: page > 1 ? String(page) : undefined,
       }),
     placeholderData: () => {
+      if (page > 1) return undefined;
       const cached = cache.getGames();
       if (!filters.q && !filters.genre && !filters.year && filters.techs.length === 0 && cached.length) {
         return { data: cached, meta: { page: 1, limit: 100, total: cached.length } } as GameListResponse;

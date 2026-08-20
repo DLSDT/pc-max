@@ -227,6 +227,9 @@ void i18n.use(initReactI18next).init({
           fps: '{{fps}} FPS',
           allGenres: 'All genres',
           allYears: 'All years',
+          prevPage: 'Previous',
+          nextPage: 'Next',
+          pageOf: 'Page {{page}} of {{total}}',
         },
         card: {
           newOptimization: 'New optimization v{{version}}',
@@ -797,6 +800,9 @@ void i18n.use(initReactI18next).init({
           fps: '{{fps}} فریم بر ثانیه',
           allGenres: 'همه ژانرها',
           allYears: 'همه سال‌ها',
+          prevPage: 'قبلی',
+          nextPage: 'بعدی',
+          pageOf: 'صفحه {{page}} از {{total}}',
         },
         card: {
           newOptimization: 'بهینه‌سازی جدید نسخه {{version}}',

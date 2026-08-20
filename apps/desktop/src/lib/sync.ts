@@ -1,6 +1,23 @@
-import { api, isNetworkError } from './api';
+import { api, isNetworkError, ApiError } from './api';
 import { cache } from './cache';
 import { ensureDeviceRegistered } from './device';
+
+/**
+ * A rate-limited (429) response is transient — the request itself is fine,
+ * the server just wants it slower. Retrying (with backoff) is the difference
+ * between "this game is missing from the cache until it happens to change
+ * again" and a sync that actually finishes complete.
+ */
+async function withRetry429<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (i >= attempts - 1 || !(err instanceof ApiError) || err.status !== 429) throw err;
+      await new Promise((r) => setTimeout(r, 500 * 2 ** i));
+    }
+  }
+}
 
 /**
  * Run `fn` over `items` with at most `limit` in flight at once. A first sync
@@ -64,12 +81,22 @@ export async function runSync(): Promise<SyncResult> {
     const changed = manifest.games.filter((g) => !g.deleted);
     await runWithConcurrency(changed, 8, async (g) => {
       try {
-        const [detail, profiles] = await Promise.all([api.game(g.slug), api.optimizations(g.slug)]);
+        const [detail, profiles] = await Promise.all([
+          withRetry429(() => api.game(g.slug)),
+          withRetry429(() => api.optimizations(g.slug)),
+        ]);
         cache.setGame(detail);
         cache.setProfiles(g.slug, profiles.data);
         changedGames += 1;
-      } catch {
-        // The game may have been unpublished — skip it this round.
+      } catch (err) {
+        // A real 404 (unpublished mid-sync) is expected and fine to skip;
+        // anything else (still-429 after retries, network hiccup) means this
+        // game stays stale until the next sync — log it so that's visible
+        // instead of silently invisible.
+        if (!(err instanceof ApiError) || err.status !== 404) {
+          // eslint-disable-next-line no-console
+          console.warn(`[sync] failed to refresh ${g.slug}:`, err);
+        }
       }
     });
 
