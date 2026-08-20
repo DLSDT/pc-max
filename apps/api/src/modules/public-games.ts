@@ -66,7 +66,12 @@ export async function publicGamesModule(app: FastifyInstance) {
       where.push(sql`(${games.technologies} ->> '${sql.raw(tech)}')::boolean = true`);
     }
 
-    const orderBy =
+    // Every sort key here is non-unique — imported games share a viewCount, a
+    // null releaseDate and a placeholder rating — so ordering by it alone makes
+    // LIMIT/OFFSET non-deterministic: Postgres is free to return a tied row on
+    // two different pages while another never appears at all. `games.id` is the
+    // stable tiebreaker that makes pagination total.
+    const primaryOrder =
       sort === 'popular'
         ? desc(games.viewCount)
         : sort === 'new'
@@ -74,6 +79,7 @@ export async function publicGamesModule(app: FastifyInstance) {
           : sort === 'rating'
             ? desc(games.performanceRating)
             : asc(games.name);
+    const orderBy = [primaryOrder, asc(games.id)];
 
     const totalRows = await db.select({ n: count() }).from(games).where(and(...where));
     const total = Number(totalRows[0]?.n ?? 0);
@@ -82,7 +88,7 @@ export async function publicGamesModule(app: FastifyInstance) {
       .select()
       .from(games)
       .where(and(...where))
-      .orderBy(orderBy)
+      .orderBy(...orderBy)
       .limit(limit)
       .offset((page - 1) * limit);
 

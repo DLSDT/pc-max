@@ -187,6 +187,63 @@ describe('public API', () => {
     const view = await inject('POST', '/api/v1/views', { body: { deviceId: 'test-device-0001', gameId: games[0]!.id } });
     expect(view.status).toBe(200);
   });
+
+  /**
+   * Regression: the list ordered only by a non-unique column, so rows tied on
+   * that column could repeat on one page and be skipped on another — the real
+   * catalogue had 313 games but only 213 were ever reachable.
+   *
+   * The tie is the whole point, so this seeds a block of games that share a
+   * viewCount, a null releaseDate AND a rating. Without the id tiebreaker in
+   * the query's ORDER BY, paging these drops/duplicates rows.
+   */
+  it('paginates every sort without repeating or dropping tied games', async () => {
+    const login = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    const adminToken = (login.json as { accessToken: string }).accessToken;
+
+    for (let i = 0; i < 14; i += 1) {
+      const res = await inject('POST', '/api/v1/admin/games', {
+        token: adminToken,
+        body: {
+          name: `Tied Game ${String(i).padStart(2, '0')}`,
+          slug: `tied-game-${String(i).padStart(2, '0')}`,
+          status: 'published',
+          // identical across every row → ties on popular/new/rating
+          performanceRating: 50,
+        },
+      });
+      expect(res.status).toBe(201);
+    }
+
+    try {
+
+      for (const sort of ['popular', 'new', 'rating', 'name']) {
+        const first = await inject('GET', `/api/v1/games?limit=5&page=1&sort=${sort}`);
+        expect(first.status).toBe(200);
+        const total = (first.json as { meta: { total: number } }).meta.total;
+
+        const seen = new Set<string>();
+        const pages = Math.ceil(total / 5);
+        for (let page = 1; page <= pages; page += 1) {
+          const res = await inject('GET', `/api/v1/games?limit=5&page=${page}&sort=${sort}`);
+          for (const g of res.json.data as { id: string }[]) seen.add(g.id);
+        }
+        expect(seen.size, `sort=${sort} lost or duplicated rows`).toBe(total);
+      }
+    } finally {
+      // The suite shares one database — leave the catalogue exactly as found so
+      // later assertions about game counts still hold. Ids are looked up rather
+      // than taken from the create response, which does not return them.
+      const listed = await inject('GET', '/api/v1/admin/games?q=Tied%20Game&limit=100', { token: adminToken });
+      for (const g of (listed.json.data ?? []) as { id: string; slug: string }[]) {
+        if (g.slug.startsWith('tied-game-')) {
+          await inject('DELETE', `/api/v1/admin/games/${g.id}`, { token: adminToken });
+        }
+      }
+    }
+  });
 });
 
 describe('admin API', () => {
