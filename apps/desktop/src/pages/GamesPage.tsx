@@ -80,9 +80,7 @@ export default function GamesPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('games.title')}</h1>
           {data && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {data.meta.total} {t('categories.games', { count: data.meta.total })}
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{t('categories.games', { count: data.meta.total })}</p>
           )}
         </div>
         {hasFilters && (

@@ -401,6 +401,12 @@ void i18n.use(initReactI18next).init({
           deviceHint: 'Devices are bound to your account. The limit depends on your plan.',
           support: 'Contact Support',
           supportUnavailable: 'Support contact info is not configured yet.',
+          feature: {
+            premium_optimization: 'Premium optimization',
+            automatic_hardware_detection: 'Automatic hardware detection',
+            one_click_optimization: 'One-click optimization',
+            priority_support: 'Priority support',
+          },
         },
         categories: {
           title: 'Categories',
@@ -963,6 +969,12 @@ void i18n.use(initReactI18next).init({
           deviceHint: 'دستگاه‌ها به حساب شما متصل هستند. سقف تعداد آن به پلن شما بستگی دارد.',
           support: 'ارتباط با پشتیبانی',
           supportUnavailable: 'اطلاعات تماس پشتیبانی هنوز تنظیم نشده است.',
+          feature: {
+            premium_optimization: 'بهینه‌سازی حرفه‌ای',
+            automatic_hardware_detection: 'شناسایی خودکار سخت‌افزار',
+            one_click_optimization: 'بهینه‌سازی تک‌کلیکی',
+            priority_support: 'پشتیبانی اولویت‌دار',
+          },
         },
         categories: {
           title: 'دسته‌بندی‌ها',

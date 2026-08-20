@@ -180,7 +180,7 @@ export default function SubscriptionPage() {
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-1.5">
                       <Check aria-hidden className="size-3.5 text-emerald-400" />
-                      {f}
+                      {t(`subscription.feature.${f}`, { defaultValue: f })}
                     </li>
                   ))}
                 </ul>

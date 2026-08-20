@@ -414,6 +414,10 @@ export default function GameDetailPage() {
   // cover from the catalogue, then to a neutral gradient tile.
   const heroImage = gameIconUrl(slug) ?? game?.coverUrl ?? null;
   const techs = CARD_TECHS.filter((flag) => game?.technologies[flag]);
+  // Games auto-created from Optimized Setting imports have no curated genres
+  // and a placeholder performanceRating (50) — hide that fabricated number
+  // rather than presenting it as a real rating.
+  const hasCuratedMeta = (game?.genres.length ?? 0) > 0;
 
   if (isLoading && !game) {
     return (
@@ -481,9 +485,11 @@ export default function GameDetailPage() {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{game.name}</h1>
-                <Badge variant="default" className="tabular-nums">
-                  {t('detail.rating')}: {game.performanceRating}
-                </Badge>
+                {hasCuratedMeta && (
+                  <Badge variant="default" className="tabular-nums">
+                    {t('detail.rating')}: {game.performanceRating}
+                  </Badge>
+                )}
                 <button
                   type="button"
                   onClick={() => void toggleFavorite(game).catch(() => undefined)}
@@ -517,7 +523,7 @@ export default function GameDetailPage() {
                 { icon: Calendar, k: t('detail.releaseDate'), v: formatDate(game.releaseDate) },
                 { icon: Cpu, k: t('detail.engine'), v: game.engine },
                 { icon: MonitorCog, k: t('detail.api'), v: game.api },
-                { icon: Gamepad2, k: t('detail.rating'), v: `${game.performanceRating}/100` },
+                { icon: Gamepad2, k: t('detail.rating'), v: hasCuratedMeta ? `${game.performanceRating}/100` : null },
               ].map(
                 ({ icon: Icon, k, v }) =>
                   v && (

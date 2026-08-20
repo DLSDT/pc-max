@@ -13,6 +13,10 @@ import { Badge } from './ui';
 
 function Cover({ game }: { game: GameSummary }) {
   const icon = gameIconUrl(game.slug);
+  // Games auto-created from Optimized Setting imports have no curated genres
+  // and a placeholder performanceRating (50) — hide that fabricated number
+  // rather than presenting it as a real rating.
+  const hasCuratedMeta = game.genres.length > 0;
   return (
     <div className="relative aspect-[3/4] w-full overflow-hidden bg-secondary">
       {icon ? (
@@ -39,16 +43,17 @@ function Cover({ game }: { game: GameSummary }) {
         </div>
       )}
 
-      {/* Performance rating */}
-      <div className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-background/80 px-1.5 py-0.5 backdrop-blur">
-        <span className="h-1 w-8 overflow-hidden rounded-full bg-secondary">
-          <span
-            className="block h-full rounded-full bg-primary"
-            style={{ width: `${game.performanceRating}%` }}
-          />
-        </span>
-        <span className="text-[10px] font-bold tabular-nums text-foreground">{game.performanceRating}</span>
-      </div>
+      {hasCuratedMeta && (
+        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-md bg-background/80 px-1.5 py-0.5 backdrop-blur">
+          <span className="h-1 w-8 overflow-hidden rounded-full bg-secondary">
+            <span
+              className="block h-full rounded-full bg-primary"
+              style={{ width: `${game.performanceRating}%` }}
+            />
+          </span>
+          <span className="text-[10px] font-bold tabular-nums text-foreground">{game.performanceRating}</span>
+        </div>
+      )}
     </div>
   );
 }
