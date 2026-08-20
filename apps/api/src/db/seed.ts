@@ -82,15 +82,30 @@ async function clearContentTables() {
   `);
 }
 
-async function seedTaxonomy() {
-  await db.insert(optimizationCategories).values(
-    OPTIMIZATION_CATEGORIES.map((c, i) => ({ slug: c.slug, name: c.name, sortOrder: i })),
-  );
-  await db.insert(categories).values(
-    BROWSE_CATEGORIES.map((c, i) => ({ slug: c.slug, name: c.name, description: c.description ?? null, sortOrder: i })),
-  );
-  await db.insert(tags).values(TAGS.map((t) => ({ slug: t, name: t })));
+/**
+ * Baseline taxonomy (browse categories, tags, optimization categories).
+ *
+ * Idempotent via ON CONFLICT DO NOTHING so it is safe to run on every boot —
+ * a fresh production deployment otherwise starts with zero categories, which
+ * leaves the Categories page and the genre filter empty.
+ */
+export async function ensureTaxonomy(): Promise<void> {
+  await db
+    .insert(optimizationCategories)
+    .values(OPTIMIZATION_CATEGORIES.map((c, i) => ({ slug: c.slug, name: c.name, sortOrder: i })))
+    .onConflictDoNothing();
+  await db
+    .insert(categories)
+    .values(BROWSE_CATEGORIES.map((c, i) => ({ slug: c.slug, name: c.name, description: c.description ?? null, sortOrder: i })))
+    .onConflictDoNothing();
+  await db
+    .insert(tags)
+    .values(TAGS.map((t) => ({ slug: t, name: t })))
+    .onConflictDoNothing();
+  process.stdout.write(`  ✓ Ensured ${BROWSE_CATEGORIES.length} categories, ${TAGS.length} tags\n`);
 }
+
+const seedTaxonomy = ensureTaxonomy;
 
 async function seedGame(gameIndex: number) {
   const game = GAMES[gameIndex]!;

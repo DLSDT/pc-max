@@ -8,7 +8,7 @@
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import path from 'node:path';
 import { db, pool } from './index';
-import { seedBootstrapAdmin } from './seed';
+import { ensureSubscriptionPlans, ensureTaxonomy, seedBootstrapAdmin } from './seed';
 
 async function main() {
   // eslint-disable-next-line no-console
@@ -16,9 +16,13 @@ async function main() {
   await migrate(db, { migrationsFolder: path.join(__dirname, '../../drizzle') });
   // eslint-disable-next-line no-console
   console.log('✅ Migrations up to date.');
-  // Idempotent — only inserts the bootstrap admin if the admins table has no
-  // matching row, so this is safe to run on every boot/restart.
+  // All three are idempotent, so they are safe on every boot/restart. Without
+  // them a fresh deployment comes up with no admin, no browse categories (the
+  // Categories page and genre filter render empty) and no subscription plans
+  // (the Subscription page has nothing to buy).
   await seedBootstrapAdmin();
+  await ensureTaxonomy();
+  await ensureSubscriptionPlans();
   await pool.end();
 }
 
