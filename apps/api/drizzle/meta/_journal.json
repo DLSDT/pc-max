@@ -85,6 +85,13 @@
       "when": 1787196000011,
       "tag": "0011_app_version_signature",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1787197000012,
+      "tag": "0012_profile_color_multiplay_rt",
+      "breakpoints": true
     }
   ]
 }

@@ -23,7 +23,7 @@ export const ProfileStatus = z.enum(['draft', 'published', 'archived']);
 export type ProfileStatus = z.infer<typeof ProfileStatus>;
 
 /** Yellow/Green optimization-profile color tag (Optimized Setting). */
-export const ProfileColor = z.enum(['yellow', 'green']);
+export const ProfileColor = z.enum(['yellow', 'green', 'multiplay', 'ray_tracing']);
 export type ProfileColor = z.infer<typeof ProfileColor>;
 
 export const AdminRole = z.enum(['super_admin', 'admin', 'editor', 'viewer']);

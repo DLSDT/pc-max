@@ -20,6 +20,25 @@ import type { GameRequirement, HardwareRecommendResponse, OptimizationProfile, O
 import { toggleFavorite } from '@/lib/favorites';
 import { cn } from '@/lib/utils';
 
+/**
+ * Presentation for each Optimized Setting block type. The source files carry
+ * four: Yellow/Green (quality vs performance), a competitive Multiplayer
+ * preset, and an opt-in Ray Tracing add-on.
+ */
+const COLOR_PROFILE_UI: Record<
+  string,
+  { dot: string; badge: 'warning' | 'success' | 'default' | 'secondary'; labelKey: string; explainKey: string; target: string; tag: string }
+> = {
+  yellow: { dot: 'bg-amber-400', badge: 'warning', labelKey: 'detail.colorYellow', explainKey: 'detail.yellowExplain', target: 'QUALITY', tag: 'FPS' },
+  green: { dot: 'bg-emerald-400', badge: 'success', labelKey: 'detail.colorGreen', explainKey: 'detail.greenExplain', target: 'FPS', tag: 'QUALITY' },
+  multiplay: { dot: 'bg-sky-400', badge: 'default', labelKey: 'detail.colorMultiplay', explainKey: 'detail.multiplayExplain', target: 'FPS', tag: 'COMPETITIVE' },
+  ray_tracing: { dot: 'bg-violet-400', badge: 'secondary', labelKey: 'detail.colorRayTracing', explainKey: 'detail.rayTracingExplain', target: 'QUALITY', tag: 'ADD-ON' },
+};
+
+function colorProfileUi(c: string | null | undefined) {
+  return c ? COLOR_PROFILE_UI[c] : undefined;
+}
+
 function SettingValue({ setting }: { setting: OptimizationSetting }) {
   const match = setting.options.find((o) => o.value === setting.value);
   return <span className="font-medium text-foreground">{match?.label ?? setting.value}</span>;
@@ -619,7 +638,7 @@ export default function GameDetailPage() {
                     {p.colorProfile && (
                       <span
                         aria-hidden
-                        className={cn('size-2 rounded-full', p.colorProfile === 'yellow' ? 'bg-amber-400' : 'bg-emerald-400')}
+                        className={cn('size-2 rounded-full', colorProfileUi(p.colorProfile)?.dot ?? 'bg-emerald-400')}
                       />
                     )}
                     {p.name}
@@ -639,13 +658,13 @@ export default function GameDetailPage() {
                       than a target frame rate: Green leads on FPS, Yellow on
                       quality, with the other as the secondary tag. Non-colour
                       profiles keep the original target-FPS + hardware-tier pair. */}
-                  {selected.colorProfile ? (
+                  {colorProfileUi(selected.colorProfile) ? (
                     <>
                       <Badge variant="secondary">
                         <Target aria-hidden className="size-3" />
-                        {t('detail.targetTag', { what: selected.colorProfile === 'green' ? 'FPS' : 'QUALITY' })}
+                        {t('detail.targetTag', { what: colorProfileUi(selected.colorProfile)!.target })}
                       </Badge>
-                      <Badge variant="secondary">{selected.colorProfile === 'green' ? 'QUALITY' : 'FPS'}</Badge>
+                      <Badge variant="secondary">{colorProfileUi(selected.colorProfile)!.tag}</Badge>
                     </>
                   ) : (
                     <>
@@ -660,19 +679,17 @@ export default function GameDetailPage() {
                     {t('settings.version', { version: selected.version })}
                   </Badge>
                   {selected.isDefault && <Badge variant="success">Default</Badge>}
-                  {selected.colorProfile && (
-                    <Badge variant={selected.colorProfile === 'yellow' ? 'warning' : 'success'}>
-                      {selected.colorProfile === 'yellow' ? t('detail.colorYellow') : t('detail.colorGreen')}
+                  {colorProfileUi(selected.colorProfile) && (
+                    <Badge variant={colorProfileUi(selected.colorProfile)!.badge}>
+                      {t(colorProfileUi(selected.colorProfile)!.labelKey)}
                     </Badge>
                   )}
                 </div>
                 {/* Colour profiles show the standard explanation of what that tier
                     means. The per-game `description` is deliberately not rendered
                     here — it carries the imported tutorial text and its links. */}
-                {selected.colorProfile ? (
-                  <p className="text-sm text-muted-foreground">
-                    {selected.colorProfile === 'green' ? t('detail.greenExplain') : t('detail.yellowExplain')}
-                  </p>
+                {colorProfileUi(selected.colorProfile) ? (
+                  <p className="text-sm text-muted-foreground">{t(colorProfileUi(selected.colorProfile)!.explainKey)}</p>
                 ) : (
                   selected.description && <p className="text-sm text-muted-foreground">{selected.description}</p>
                 )}

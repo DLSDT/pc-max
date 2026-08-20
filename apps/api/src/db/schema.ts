@@ -32,7 +32,7 @@ export const packageArchEnum = pgEnum('package_arch', ['any', 'x64', 'arm64']);
  * (Optimized Setting vs Multi-Frame Generation) surfaces it. */
 export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation', 'upscaler']);
 export const fileOperationEnum = pgEnum('file_operation', ['replace', 'add']);
-export const profileColorEnum = pgEnum('profile_color', ['yellow', 'green']);
+export const profileColorEnum = pgEnum('profile_color', ['yellow', 'green', 'multiplay', 'ray_tracing']);
 
 // ---------------------------------------------------------------------------
 // Helpers

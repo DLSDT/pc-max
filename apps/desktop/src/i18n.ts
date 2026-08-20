@@ -266,6 +266,12 @@ void i18n.use(initReactI18next).init({
             'The Green optimized settings deliver the largest performance gain, with visual quality on par with ninth-generation consoles.',
           yellowExplain:
             'The Yellow optimized settings raise performance while delivering the highest visual quality — very close to the game\u2019s maximum settings.',
+          colorMultiplay: 'Multiplayer',
+          colorRayTracing: 'Ray Tracing',
+          multiplayExplain:
+            'The Multiplayer settings strip back everything that costs frames or adds latency — built for competitive play, where responsiveness matters more than looks.',
+          rayTracingExplain:
+            'Optional ray tracing add-on. Apply it on top of either profile when you have frames to spare for better lighting and reflections.',
           downloadIcon: 'Download icon',
           iconSaved: 'Icon saved',
         },
@@ -879,6 +885,12 @@ void i18n.use(initReactI18next).init({
             'تنظیمات بهینه سبز بیشترین افزایش راندمان را به همراه دارد و کیفیتی معادل کنسول‌های نسل نهم ارائه می‌دهد.',
           yellowExplain:
             'تنظیمات بهینه زرد در کنار افزایش راندمان، بالاترین کیفیت را ارائه می‌دهد که تقریباً معادل بالاترین تنظیمات بازی است.',
+          colorMultiplay: 'مولتی‌پلیر',
+          colorRayTracing: 'ری‌تریسینگ',
+          multiplayExplain:
+            'تنظیمات مولتی‌پلیر هر چیزی که فریم می‌گیرد یا تأخیر اضافه می‌کند را حذف می‌کند — مناسب بازی رقابتی، جایی که سرعت واکنش از زیبایی مهم‌تر است.',
+          rayTracingExplain:
+            'افزونه اختیاری ری‌تریسینگ. اگر فریم اضافه داشتی، آن را روی هر کدام از پروفایل‌ها اعمال کن تا نورپردازی و انعکاس‌ها بهتر شود.',
           downloadIcon: 'دانلود آیکون',
           iconSaved: 'آیکون ذخیره شد',
         },
