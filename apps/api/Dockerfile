@@ -13,7 +13,11 @@ COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/validation/package.json packages/validation/package.json
 COPY packages/types/package.json packages/types/package.json
-RUN npm ci
+
+# --ignore-scripts: the root "prepare" script builds the shared packages,
+# but their source isn't copied in yet at this point — it's built explicitly
+# below once it is.
+RUN npm ci --ignore-scripts
 # Compile the shared packages, then the API itself.
 COPY packages packages
 COPY apps/api apps/api
