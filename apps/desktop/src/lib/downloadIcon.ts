@@ -33,7 +33,7 @@ export async function downloadGameIcon(iconUrl: string, fileName: string): Promi
 
   const path = await save({
     defaultPath: fileName,
-    filters: [{ name: 'PNG image', extensions: ['png'] }],
+    filters: [{ name: 'WebP image', extensions: ['webp'] }],
   });
   if (!path) return null; // user cancelled
 

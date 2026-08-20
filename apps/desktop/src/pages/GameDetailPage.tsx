@@ -514,7 +514,7 @@ export default function GameDetailPage() {
                 onClick={() => {
                   setIconSaving(true);
                   setIconSaved(false);
-                  void downloadGameIcon(iconUrl, `${slug}.png`)
+                  void downloadGameIcon(iconUrl, `${slug}.webp`)
                     .then((saved) => {
                       if (saved !== null) setIconSaved(true);
                     })

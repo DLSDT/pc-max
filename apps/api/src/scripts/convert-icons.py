@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Convert catalog icons to 256×256 PNGs for the desktop app.
+"""Convert catalog icons to 256×256 WebPs for the desktop app.
 
 Invoked by scripts/import-catalog.ts. Reads a JSON manifest on argv[1]:
 
     [{"slug": "game-slug", "path": "/abs/path/to/favicon.ico"}, ...]
 
-and writes one PNG per entry into argv[2]. Exits non-zero only if every file
+and writes one WebP per entry into argv[2]. Exits non-zero only if every file
 failed; per-file failures are reported in the JSON printed to stdout.
 """
 import json
@@ -28,7 +28,7 @@ def main() -> int:
             im = im.convert("RGBA")
             if im.size != (256, 256):
                 im = im.resize((256, 256), Image.LANCZOS)
-            im.save(os.path.join(out_dir, f"{slug}.png"), "PNG")
+            im.save(os.path.join(out_dir, f"{slug}.webp"), "WEBP", quality=88, method=6)
             ok += 1
         except Exception as exc:  # noqa: BLE001 — report and continue
             failed.append({"slug": slug, "error": str(exc)})

@@ -133,8 +133,8 @@ export function convertIcons(entries: IconEntry[], outputDir: string): { iconsWr
 /** Regenerate `gameIcons.ts` from whatever PNGs exist in the output dir. */
 export function writeGameIconsModule(outputDir: string): string {
   const slugs = readdirSync(outputDir)
-    .filter((f) => f.endsWith('.png'))
-    .map((f) => f.replace(/\.png$/, ''))
+    .filter((f) => f.endsWith('.webp'))
+    .map((f) => f.replace(/\.webp$/, ''))
     .sort();
   const lines = [
     '/**',
@@ -153,7 +153,7 @@ export function writeGameIconsModule(outputDir: string): string {
     '/** Absolute icon URL for a game slug, or null when none is bundled. */',
     'export function gameIconUrl(slug: string): string | null {',
     '  const resolved = ICON_SLUGS.has(slug) ? slug : ICON_ALIASES[slug];',
-    '  return resolved && ICON_SLUGS.has(resolved) ? `/game-icons/${resolved}.png` : null;',
+    '  return resolved && ICON_SLUGS.has(resolved) ? `/game-icons/${resolved}.webp` : null;',
     '}',
     '',
   ];

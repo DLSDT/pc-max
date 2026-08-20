@@ -317,5 +317,5 @@ const ICON_SLUGS = new Set([
 /** Absolute icon URL for a game slug, or null when none is bundled. */
 export function gameIconUrl(slug: string): string | null {
   const resolved = ICON_SLUGS.has(slug) ? slug : ICON_ALIASES[slug];
-  return resolved && ICON_SLUGS.has(resolved) ? `/game-icons/${resolved}.png` : null;
+  return resolved && ICON_SLUGS.has(resolved) ? `/game-icons/${resolved}.webp` : null;
 }
