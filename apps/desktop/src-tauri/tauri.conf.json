@@ -35,7 +35,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIxOEEwNTg5MTk5RDgyQUIKUldTcmdwMFppUVdLc2VtN3MydFRISC9JOWhlTVVmVERGM2lEK1VXdFJWbXh0ekpJMWR4SmorR24K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhCQzc2OTkwN0Q2NkY0MkQKUldRdDlHWjlrR25IaTdoQmhFam4vanhVODF3aGNRQm5TM1Z2MG5rODJXYUhUbGhXb0FGMklCRloK",
       "endpoints": [
         "https://pcmax-api.rixy.ir/updates/{{target}}/{{arch}}/{{current_version}}"
       ],
