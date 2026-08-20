@@ -4,6 +4,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: goh-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: goh
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-goh}
@@ -21,6 +22,7 @@ services:
   minio:
     image: minio/minio:latest
     container_name: goh-minio
+    restart: unless-stopped
     command: server /data --console-address ':9001'
     environment:
       MINIO_ROOT_USER: goh
@@ -34,6 +36,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: goh-redis
+    restart: unless-stopped
     ports:
       - '127.0.0.1:${REDIS_HOST_PORT:-6379}:6379'
     volumes:
@@ -49,6 +52,7 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
     container_name: goh-api
+    restart: unless-stopped
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://goh:${POSTGRES_PASSWORD:-goh}@postgres:5432/goh

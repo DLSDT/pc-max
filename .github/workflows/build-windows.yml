@@ -4,6 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/build-windows.yml'
 
 jobs:
   build:
