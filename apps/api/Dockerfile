@@ -31,6 +31,10 @@ COPY --from=build /app/package.json /app/package-lock.json ./
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/api/package.json ./apps/api/package.json
+# npm workspaces nests some deps under the workspace's own node_modules when
+# a version conflicts with the hoisted root version (e.g. @fastify/swagger,
+# fastify-plugin) — the root node_modules copy above doesn't include these.
+COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 # Migrations SQL — needed by the startup migration runner.
 COPY --from=build /app/apps/api/drizzle ./apps/api/drizzle
