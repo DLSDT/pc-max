@@ -9,7 +9,7 @@ export type PackageArch = z.infer<typeof PackageArch>;
 
 /** Which product area a package belongs to — Optimized Setting (graphics
  *  config files) vs Multi-Frame Generation (upscaler/frame-gen components). */
-export const PackageKind = z.enum(['graphics', 'frame_generation']);
+export const PackageKind = z.enum(['graphics', 'frame_generation', 'upscaler']);
 export type PackageKind = z.infer<typeof PackageKind>;
 
 /** Allowed file operations — packages can only replace or add files, never

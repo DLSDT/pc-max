@@ -64,6 +64,13 @@
       "when": 1787180000008,
       "tag": "0008_package_kind",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787190000009,
+      "tag": "0009_package_kind_upscaler",
+      "breakpoints": true
     }
   ]
 }

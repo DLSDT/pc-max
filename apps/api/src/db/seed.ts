@@ -260,7 +260,29 @@ export async function ensureDemoUser(): Promise<void> {
   process.stdout.write(`  ✓ Created demo user: ${phone} / Demo123!\n`);
 }
 
+/** The dev-only defaults from config.ts — never acceptable in production. */
+const DEFAULT_BOOTSTRAP_EMAIL = 'admin@gamehub.local';
+const DEFAULT_BOOTSTRAP_PASSWORD = 'Admin123!';
+
 export async function seedBootstrapAdmin() {
+  // This runs on every boot (migrate.ts). Running it in production without
+  // ADMIN_BOOTSTRAP_* set would silently mint a super_admin whose credentials
+  // are public knowledge — refuse instead of creating a backdoor.
+  if (
+    config.NODE_ENV === 'production' &&
+    (config.ADMIN_BOOTSTRAP_EMAIL === DEFAULT_BOOTSTRAP_EMAIL || config.ADMIN_BOOTSTRAP_PASSWORD === DEFAULT_BOOTSTRAP_PASSWORD)
+  ) {
+    const anyAdmin = await db.query.admins.findFirst({});
+    if (anyAdmin) {
+      process.stdout.write('  ✓ Admin exists — skipping bootstrap (default credentials refused in production).\n');
+      return;
+    }
+    throw new Error(
+      'Refusing to create the bootstrap admin with default credentials in production. ' +
+        'Set ADMIN_BOOTSTRAP_EMAIL and ADMIN_BOOTSTRAP_PASSWORD to real values.',
+    );
+  }
+
   const existing = await db.query.admins.findFirst({
     where: sql`${admins.email} = ${config.ADMIN_BOOTSTRAP_EMAIL}`,
   });

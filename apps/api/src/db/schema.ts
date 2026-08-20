@@ -30,7 +30,7 @@ export const packageGpuVendorEnum = pgEnum('package_gpu_vendor', ['any', 'nvidia
 export const packageArchEnum = pgEnum('package_arch', ['any', 'x64', 'arm64']);
 /** What kind of optimization package this is — drives which product area
  * (Optimized Setting vs Multi-Frame Generation) surfaces it. */
-export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation']);
+export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation', 'upscaler']);
 export const fileOperationEnum = pgEnum('file_operation', ['replace', 'add']);
 export const profileColorEnum = pgEnum('profile_color', ['yellow', 'green']);
 

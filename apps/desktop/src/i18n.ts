@@ -321,6 +321,7 @@ void i18n.use(initReactI18next).init({
           downloaded: 'Downloaded',
           downloadError: 'Could not download this package. A premium subscription may be required.',
           frameGeneration: 'Multi-Frame Generation',
+          upscaler: 'Upscaler',
           graphics: 'Graphics Packages',
         },
         optimize: {
@@ -520,6 +521,7 @@ void i18n.use(initReactI18next).init({
           kind: 'Kind',
           kindGraphics: 'Graphics',
           kindFrameGeneration: 'Multi-Frame Generation',
+          kindUpscaler: 'Upscaler',
           backToPackages: 'Back to packages',
           gpuVendor: 'GPU vendor',
           gpuFamily: 'GPU family',
@@ -893,6 +895,7 @@ void i18n.use(initReactI18next).init({
           downloaded: 'دانلود شد',
           downloadError: 'دانلود این بسته ممکن نشد. احتمالاً اشتراک حرفه‌ای لازم است.',
           frameGeneration: 'تولید فریم چندگانه',
+          upscaler: 'آپ‌اسکیلر',
           graphics: 'بسته‌های گرافیکی',
         },
         optimize: {
@@ -1092,6 +1095,7 @@ void i18n.use(initReactI18next).init({
           kind: 'نوع',
           kindGraphics: 'گرافیکی',
           kindFrameGeneration: 'تولید فریم چندگانه',
+          kindUpscaler: 'آپ‌اسکیلر',
           backToPackages: 'بازگشت به پکیج‌ها',
           gpuVendor: 'سازنده گرافیک',
           gpuFamily: 'خانواده گرافیک',

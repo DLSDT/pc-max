@@ -329,8 +329,13 @@ function PackagesSection({ slug, gameName }: { slug: string; gameName: string })
       .catch(() => setPackages([]));
   }, [slug]);
 
+  // Grouped by kind so Frame Generation / Upscaler drops are visually distinct
+  // from plain graphics packages. `graphics` is the catch-all so an unknown
+  // future kind still renders instead of silently disappearing.
   const frameGen = packages?.filter((p) => p.kind === 'frame_generation') ?? [];
-  const graphics = packages?.filter((p) => p.kind !== 'frame_generation') ?? [];
+  const upscaler = packages?.filter((p) => p.kind === 'upscaler') ?? [];
+  const graphics = packages?.filter((p) => p.kind !== 'frame_generation' && p.kind !== 'upscaler') ?? [];
+  const grouped = frameGen.length + upscaler.length > 0;
 
   return (
     <section className="space-y-4">
@@ -347,8 +352,9 @@ function PackagesSection({ slug, gameName }: { slug: string; gameName: string })
       ) : (
         <div className="space-y-6">
           {frameGen.length > 0 && <PackageGroup title={t('packages.frameGeneration')} packages={frameGen} slug={slug} gameName={gameName} hw={hw} />}
+          {upscaler.length > 0 && <PackageGroup title={t('packages.upscaler')} packages={upscaler} slug={slug} gameName={gameName} hw={hw} />}
           {graphics.length > 0 && (
-            <PackageGroup title={frameGen.length > 0 ? t('packages.graphics') : t('packages.title')} packages={graphics} slug={slug} gameName={gameName} hw={hw} />
+            <PackageGroup title={grouped ? t('packages.graphics') : t('packages.title')} packages={graphics} slug={slug} gameName={gameName} hw={hw} />
           )}
         </div>
       )}

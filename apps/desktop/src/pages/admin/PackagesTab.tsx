@@ -4,20 +4,42 @@ import { ArrowLeft, Loader2, Plus, Rocket, Settings2, Trash2, Upload } from 'luc
 import { api } from '@/lib/api';
 import { errMessage, iconBtnClass, inputClass, LoadingState, ErrorState, EmptyState, primaryBtnClass, dangerIconBtnClass, TableWrap } from './shared';
 
-const KINDS = ['graphics', 'frame_generation'] as const;
+const KINDS = ['graphics', 'frame_generation', 'upscaler'] as const;
 const GPU_VENDORS = ['any', 'nvidia', 'amd', 'intel'] as const;
 const ARCHES = ['any', 'x64', 'arm64'] as const;
 const OPERATIONS = ['replace', 'add'] as const;
 
-function KindBadge({ kind }: { kind: string }) {
+/** i18n key + badge colour per package kind (single source for both selects). */
+const KIND_META: Record<(typeof KINDS)[number], { i18nKey: string; badge: string }> = {
+  graphics: { i18nKey: 'admin.kindGraphics', badge: 'bg-secondary text-secondary-foreground' },
+  frame_generation: { i18nKey: 'admin.kindFrameGeneration', badge: 'bg-primary/10 text-primary' },
+  upscaler: { i18nKey: 'admin.kindUpscaler', badge: 'bg-emerald-500/10 text-emerald-400' },
+};
+
+function kindMeta(kind: string) {
+  return KIND_META[kind as (typeof KINDS)[number]] ?? KIND_META.graphics;
+}
+
+/** Options for a package-kind <select> — keeps both selects in sync. */
+function KindOptions() {
   const { t } = useTranslation();
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-        kind === 'frame_generation' ? 'bg-primary/10 text-primary' : 'bg-secondary text-secondary-foreground'
-      }`}
-    >
-      {kind === 'frame_generation' ? t('admin.kindFrameGeneration') : t('admin.kindGraphics')}
+    <>
+      {KINDS.map((k) => (
+        <option key={k} value={k}>
+          {t(KIND_META[k].i18nKey)}
+        </option>
+      ))}
+    </>
+  );
+}
+
+function KindBadge({ kind }: { kind: string }) {
+  const { t } = useTranslation();
+  const meta = kindMeta(kind);
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${meta.badge}`}>
+      {t(meta.i18nKey)}
     </span>
   );
 }
@@ -122,8 +144,7 @@ function PackagesList({ onManage }: { onManage: (id: string) => void }) {
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-muted-foreground">{t('admin.kind')}</label>
           <select value={kind} onChange={(e) => setKind(e.target.value as (typeof KINDS)[number])} className={inputClass}>
-            <option value="graphics">{t('admin.kindGraphics')}</option>
-            <option value="frame_generation">{t('admin.kindFrameGeneration')}</option>
+            <KindOptions />
           </select>
         </div>
         <button type="button" onClick={() => void handleCreate()} disabled={creating || !gameId || !name.trim() || !slug.trim()} className={primaryBtnClass}>
@@ -360,8 +381,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
           <Field label={t('admin.name')}><input value={String(form.name ?? '')} onChange={(e) => setField('name', e.target.value)} className={inputClass} /></Field>
           <Field label={t('admin.kind')}>
             <select value={String(form.kind ?? 'graphics')} onChange={(e) => setField('kind', e.target.value)} className={inputClass}>
-              <option value="graphics">{t('admin.kindGraphics')}</option>
-              <option value="frame_generation">{t('admin.kindFrameGeneration')}</option>
+              <KindOptions />
             </select>
           </Field>
           <Field label={t('admin.gpuVendor')}>
