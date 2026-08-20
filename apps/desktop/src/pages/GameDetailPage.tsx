@@ -11,6 +11,7 @@ import { useIsFavorite } from '@/hooks/useFavorites';
 import { api } from '@/lib/api';
 import { cache } from '@/lib/cache';
 import { useHardware } from '@/store/hardware';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge, Button, EmptyState, Input, Skeleton } from '@/components/ui';
 import { CARD_TECHS, HARDWARE_TIER_LABEL, TECH_LABELS, formatDate } from '@/lib/labels';
 import { gameIconUrl } from '@/lib/gameIcons';
@@ -571,21 +572,20 @@ export default function GameDetailPage() {
         ) : (
           <div className="space-y-4">
             {/* Profile selector */}
-            <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('detail.optimizationProfiles')}>
-              {profiles.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={selected?.id === p.id}
-                  onClick={() => setSelectedSlug(p.slug)}
-                  className={cn(
-                    'rounded-lg border px-3.5 py-2 text-left text-sm font-medium transition-all',
-                    selected?.id === p.id
-                      ? 'border-primary/40 bg-primary/10 text-primary shadow-glow-sm'
-                      : 'border-border bg-card text-muted-foreground hover:bg-accent',
-                  )}
-                >
+            {/* Radix tabs: keyboard arrow-key selection, same card styling. */}
+            <Tabs value={selected?.slug ?? ''} onValueChange={setSelectedSlug}>
+              <TabsList variant="button" className="flex-wrap gap-2 p-0" aria-label={t('detail.optimizationProfiles')}>
+                {profiles.map((p) => (
+                  <TabsTrigger
+                    key={p.id}
+                    value={p.slug}
+                    className={cn(
+                      'flex-col items-start rounded-lg border px-3.5 py-2 text-left text-sm font-medium transition-all',
+                      selected?.id === p.id
+                        ? 'border-primary/40 bg-primary/10 text-primary shadow-glow-sm'
+                        : 'border-border bg-card text-muted-foreground hover:bg-accent',
+                    )}
+                  >
                   <span className="flex items-center gap-1.5">
                     {p.colorProfile && (
                       <span
@@ -598,9 +598,10 @@ export default function GameDetailPage() {
                   <span className="block text-[10px] font-normal opacity-70">
                     v{p.version} · {HARDWARE_TIER_LABEL[p.hardwareTier]}
                   </span>
-                </button>
-              ))}
-            </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
 
             {selected && (
               <div className="space-y-4 rounded-xl border border-border bg-card p-5">

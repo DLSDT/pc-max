@@ -28,6 +28,7 @@ import AdminsTab from './admin/AdminsTab';
 import UsersTab from './admin/UsersTab';
 import AuditTab from './admin/AuditTab';
 import CrashesTab from './admin/CrashesTab';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SettingsTab from './admin/SettingsTab';
 
 type AdminTab = 'dashboard' | 'games' | 'profiles' | 'packages' | 'taxonomy' | 'releases' | 'admins' | 'users' | 'audit' | 'crashes' | 'settings';
@@ -143,23 +144,18 @@ export default function AdminPage() {
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1" role="tablist" aria-label={t('admin.title')}>
-        {TABS.map((tb) => (
-          <button
-            key={tb.key}
-            type="button"
-            role="tab"
-            aria-selected={tab === tb.key}
-            onClick={() => setTab(tb.key)}
-            className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              tab === tb.key ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-            }`}
-          >
-            {tb.icon}
-            {t(tb.i18nKey)}
-          </button>
-        ))}
-      </div>
+      {/* Radix tabs give proper roving-tabindex + arrow-key navigation across
+          this many tabs, which the previous plain buttons did not. */}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as AdminTab)}>
+        <TabsList variant="button" size="sm" className="flex-wrap rounded-lg border border-border bg-card p-1" aria-label={t('admin.title')}>
+          {TABS.map((tb) => (
+            <TabsTrigger key={tb.key} value={tb.key}>
+              {tb.icon}
+              {t(tb.i18nKey)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {tab === 'dashboard' && <DashboardTab />}
       {tab === 'games' && <GamesTab />}

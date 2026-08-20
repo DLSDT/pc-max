@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { KeyRound, MessageSquareText } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Input } from '@/components/ui';
+import { PasswordStrength, type PasswordRule } from '@/components/ui/password-strength';
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation();
@@ -11,6 +12,26 @@ export default function ForgotPasswordPage() {
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
+
+  const pwRules = useMemo<PasswordRule[]>(
+    () => [
+      { id: 'length', label: t('auth.pwStrength.ruleLength'), test: (v) => v.length >= 12 },
+      { id: 'case', label: t('auth.pwStrength.ruleCase'), test: (v) => /[a-z]/.test(v) && /[A-Z]/.test(v) },
+      { id: 'digit', label: t('auth.pwStrength.ruleDigit'), test: (v) => /\d/.test(v) },
+      { id: 'symbol', label: t('auth.pwStrength.ruleSymbol'), test: (v) => /[!-/:-@[-`{-~]/.test(v) },
+    ],
+    [t],
+  );
+  const pwLabels = useMemo(
+    () => [
+      t('auth.pwStrength.empty'),
+      t('auth.pwStrength.weak'),
+      t('auth.pwStrength.fair'),
+      t('auth.pwStrength.good'),
+      t('auth.pwStrength.strong'),
+    ],
+    [t],
+  );
   const [confirm, setConfirm] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -137,6 +158,15 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
+              {password.length > 0 && (
+                <PasswordStrength
+                  value={password}
+                  rules={pwRules}
+                  labels={pwLabels}
+                  guessableLabel={t('auth.pwStrength.guessable')}
+                  className="pt-1"
+                />
+              )}
             </div>
             <div className="space-y-1.5">
               <label htmlFor="fp-confirm" className="text-sm font-medium">

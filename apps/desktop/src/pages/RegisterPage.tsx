@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageSquareText, UserPlus } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { api } from '@/lib/api';
 import { Button, Input } from '@/components/ui';
+import { PasswordStrength, type PasswordRule } from '@/components/ui/password-strength';
 
 export default function RegisterPage() {
   const { t } = useTranslation();
@@ -13,6 +14,28 @@ export default function RegisterPage() {
   const [identifier, setIdentifier] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+
+  // Rule copy is localized, so build the rule set from i18n rather than the
+  // component's English defaults.
+  const pwRules = useMemo<PasswordRule[]>(
+    () => [
+      { id: 'length', label: t('auth.pwStrength.ruleLength'), test: (v) => v.length >= 12 },
+      { id: 'case', label: t('auth.pwStrength.ruleCase'), test: (v) => /[a-z]/.test(v) && /[A-Z]/.test(v) },
+      { id: 'digit', label: t('auth.pwStrength.ruleDigit'), test: (v) => /\d/.test(v) },
+      { id: 'symbol', label: t('auth.pwStrength.ruleSymbol'), test: (v) => /[!-/:-@[-`{-~]/.test(v) },
+    ],
+    [t],
+  );
+  const pwLabels = useMemo(
+    () => [
+      t('auth.pwStrength.empty'),
+      t('auth.pwStrength.weak'),
+      t('auth.pwStrength.fair'),
+      t('auth.pwStrength.good'),
+      t('auth.pwStrength.strong'),
+    ],
+    [t],
+  );
   const [confirm, setConfirm] = useState('');
   const [otp, setOtp] = useState('');
   const [codeSent, setCodeSent] = useState(false);
@@ -142,6 +165,15 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
               />
+              {password.length > 0 && (
+                <PasswordStrength
+                  value={password}
+                  rules={pwRules}
+                  labels={pwLabels}
+                  guessableLabel={t('auth.pwStrength.guessable')}
+                  className="pt-1"
+                />
+              )}
             </div>
             <div className="space-y-1.5">
               <label htmlFor="reg-confirm" className="text-sm font-medium">
