@@ -73,7 +73,7 @@ export default function CrashesTab() {
                 <th className="px-3 py-2 text-start">{t('admin.crashVersion')}</th>
                 <th className="px-3 py-2 text-start">{t('admin.crashCount')}</th>
                 <th className="px-3 py-2 text-start">{t('admin.crashLastSeen')}</th>
-                <th className="px-3 py-2 text-end">{t('admin.operations')}</th>
+                <th className="px-3 py-2 text-end">{t('admin.actions')}</th>
               </tr>
             </thead>
             <tbody>
