@@ -48,6 +48,20 @@ echo "→ Routing DNS: ${HOSTNAME} -> tunnel ${TUNNEL_ID}"
 cloudflared tunnel route dns "$TUNNEL_NAME" "$HOSTNAME" || echo "  (already routed, continuing)"
 
 echo "→ Installing cloudflared as a systemd service (needs sudo)..."
+# `sudo cloudflared service install` runs as root, whose $HOME is /root — it
+# won't see this user's ~/.cloudflared. Stage the config where the service
+# actually looks (/etc/cloudflared) before installing it.
+sudo mkdir -p /etc/cloudflared
+sudo cp "$HOME/.cloudflared/${TUNNEL_ID}.json" /etc/cloudflared/
+sudo tee /etc/cloudflared/config.yml > /dev/null <<EOF
+tunnel: ${TUNNEL_ID}
+credentials-file: /etc/cloudflared/${TUNNEL_ID}.json
+
+ingress:
+  - hostname: ${HOSTNAME}
+    service: ${LOCAL_SERVICE}
+  - service: http_status:404
+EOF
 sudo cloudflared service install
 
 echo "✅ Done. Check status with: sudo systemctl status cloudflared"
