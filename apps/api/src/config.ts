@@ -88,6 +88,20 @@ const envSchema = z.object({
   OTP_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).default(5),
   OTP_RESEND_COOLDOWN: z.coerce.number().int().min(10).max(3600).default(60),
 
+  // ---- data retention (days) --------------------------------------------
+  // These tables grow on every auth attempt and page view. Trimming keeps the
+  // database, its backups and the queries that scan them from degrading as the
+  // user base grows. Business data is never covered by these.
+  RETENTION_OTP_DAYS: z.coerce.number().int().min(1).max(3650).default(7),
+  RETENTION_LOGIN_ATTEMPT_DAYS: z.coerce.number().int().min(1).max(3650).default(90),
+  RETENTION_SESSION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
+  RETENTION_VIEW_DAYS: z.coerce.number().int().min(1).max(3650).default(365),
+  RETENTION_CLIENT_ERROR_DAYS: z.coerce.number().int().min(1).max(3650).default(180),
+  RETENTION_EMAIL_LOG_DAYS: z.coerce.number().int().min(1).max(3650).default(180),
+  RETENTION_AUDIT_LOG_DAYS: z.coerce.number().int().min(1).max(3650).default(730),
+  /** How often the API runs the trim. 0 disables the in-process schedule. */
+  RETENTION_INTERVAL_HOURS: z.coerce.number().int().min(0).max(24 * 30).default(24),
+
   RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(10_000).default(300),
   /** Per-IP bound for the anonymous /views endpoint (abuse/analytics inflation). */
   RATE_LIMIT_VIEWS: z.coerce.number().int().min(1).max(10_000).default(120),

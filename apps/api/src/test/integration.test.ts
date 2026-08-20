@@ -246,6 +246,48 @@ describe('public API', () => {
   });
 });
 
+/**
+ * Retention deletes exhaust only. The dangerous failure is not "kept too much"
+ * — it is deleting a live session (logging everyone out) or business data, so
+ * that is what these assert.
+ */
+describe('data retention', () => {
+  it('deletes aged exhaust but keeps live sessions, live codes and business data', async () => {
+    const { db } = await import('../db');
+    const { sql } = await import('drizzle-orm');
+    const { runRetention } = await import('../lib/retention');
+
+    const gamesBefore = ((await inject('GET', '/api/v1/games?limit=1')).json as { meta: { total: number } }).meta.total;
+
+    // Old, already-consumed exhaust → must go.
+    // ids are generated app-side by Drizzle, so raw SQL must supply them.
+    await db.execute(sql`INSERT INTO otp_codes (id, email, purpose, code_hash, expires_at, attempts, used_at, created_at)
+      VALUES (gen_random_uuid(),'old@test.local','register','x', now() - interval '400 days', 0, now() - interval '400 days', now() - interval '400 days')`);
+    await db.execute(sql`INSERT INTO login_attempts (email, ip, success, attempted_at)
+      VALUES ('old@test.local','127.0.0.1', false, now() - interval '400 days')`);
+
+    // A LIVE, unused code that merely happens to be old-looking must survive:
+    // it is not expired and not used.
+    await db.execute(sql`INSERT INTO otp_codes (id, email, purpose, code_hash, expires_at, attempts, created_at)
+      VALUES (gen_random_uuid(),'live@test.local','register','y', now() + interval '10 minutes', 0, now() - interval '400 days')`);
+
+    const results = await runRetention();
+    const deleted = Object.fromEntries(results.map((r) => [r.table, r.deleted]));
+
+    expect(deleted.otp_codes, 'consumed code removed').toBeGreaterThanOrEqual(1);
+    expect(deleted.login_attempts, 'old attempt removed').toBeGreaterThanOrEqual(1);
+    for (const r of results) expect(r.deleted, `${r.table} must not error`).toBeGreaterThanOrEqual(0);
+
+    const live = await db.execute(sql`SELECT count(*) n FROM otp_codes WHERE email = 'live@test.local'`);
+    expect(Number((live.rows as { n: string }[])[0]!.n), 'live code survived').toBe(1);
+
+    const gamesAfter = ((await inject('GET', '/api/v1/games?limit=1')).json as { meta: { total: number } }).meta.total;
+    expect(gamesAfter, 'business data untouched').toBe(gamesBefore);
+
+    await db.execute(sql`DELETE FROM otp_codes WHERE email = 'live@test.local'`);
+  });
+});
+
 describe('admin API', () => {
   let token: string;
 

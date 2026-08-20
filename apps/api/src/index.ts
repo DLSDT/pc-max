@@ -2,6 +2,7 @@ import { buildApp } from './app';
 import { config } from './config';
 import { pool } from './db';
 import { initMonitoring } from './lib/monitoring';
+import { formatRetention, runRetention } from './lib/retention';
 
 async function main() {
   initMonitoring();
@@ -15,6 +16,27 @@ async function main() {
   };
   process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
+
+  // Trim aged exhaust (OTP codes, login attempts, dead sessions, old view
+  // events). Runs in-process because this deploys as a single container with
+  // no scheduler; RETENTION_INTERVAL_HOURS=0 turns it off if an external cron
+  // takes over. Failures are logged, never fatal — a stuck cleanup must not
+  // take the API down.
+  let retentionTimer: NodeJS.Timeout | undefined;
+  if (config.RETENTION_INTERVAL_HOURS > 0) {
+    const trim = async () => {
+      try {
+        app.log.info(formatRetention(await runRetention()));
+      } catch (err) {
+        app.log.error({ err }, 'retention run failed');
+      }
+    };
+    void trim();
+    retentionTimer = setInterval(() => void trim(), config.RETENTION_INTERVAL_HOURS * 3600_000);
+    // Don't hold the process open on shutdown.
+    retentionTimer.unref();
+  }
+  void retentionTimer;
 
   try {
     await app.listen({ host: config.HOST, port: config.PORT });
