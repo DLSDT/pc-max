@@ -9,7 +9,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 # Install with the workspace lockfile first for layer caching.
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json tsconfig.base.json ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/validation/package.json packages/validation/package.json
 COPY packages/types/package.json packages/types/package.json
