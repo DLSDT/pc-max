@@ -8,11 +8,13 @@
  * Guarantees:
  *   - Every folder becomes exactly one game (deterministic slug; folders are
  *     sorted first, then collisions get `-2`, `-3`, … suffixes in scan order).
- *   - Idempotent: re-running never duplicates rows (upsert by slug, profiles
- *     created only when missing).
- *   - Each game gets the default 4 optimization profiles + a converted
- *     256×256 PNG in `apps/desktop/public/game-icons/`, and
+ *   - Idempotent: re-running never duplicates rows (upsert by slug).
+ *   - Each game gets a converted 256×256 PNG in
+ *     `apps/desktop/public/game-icons/`, and
  *     `apps/desktop/src/lib/gameIcons.ts` is regenerated from the PNGs.
+ *     No optimization profiles are fabricated here — real Yellow/Green
+ *     profiles come from `import-optimized-settings.ts`; a game with none
+ *     yet just shows an empty state, which is honest.
  *   - Prints a full validation summary; failures are reported, never silent.
  *
  * The database modules are imported dynamically so this script runs standalone
@@ -21,7 +23,6 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import type { ProfileSlug, SeedGame } from '../db/seed-data';
 
 const ICON_EXTS = new Set(['.ico', '.png', '.jpg', '.jpeg', '.webp', '.bmp']);
 
@@ -158,69 +159,6 @@ export function writeGameIconsModule(outputDir: string): string {
   return outFile;
 }
 
-/** Ensure the default 4 optimization profiles exist for a game (idempotent). */
-export async function ensureProfiles(gameId: string, slug: string): Promise<void> {
-  const { db } = await import('../db');
-  const { optimizationCategories, optimizationOptions, optimizationProfiles, optimizationSettings } = await import('../db/schema');
-  const { PROFILE_SLUGS, PROFILES, settingsForGame } = await import('../db/seed-data');
-  const { DEFAULT_TECHNOLOGIES } = await import('../services/games');
-  const { eq } = await import('drizzle-orm');
-
-  const existing = await db.query.optimizationProfiles.findFirst({ where: eq(optimizationProfiles.gameId, gameId) });
-  if (existing) return;
-
-  const catRows = await db.select({ id: optimizationCategories.id, slug: optimizationCategories.slug }).from(optimizationCategories);
-  const optCatIdBySlug = new Map(catRows.map((c) => [c.slug, c.id]));
-  const gameLike = { slug, name: slug, technologies: DEFAULT_TECHNOLOGIES } as unknown as SeedGame;
-
-  for (const profileSlug of PROFILE_SLUGS) {
-    const meta = PROFILES[profileSlug];
-    const [profile] = await db
-      .insert(optimizationProfiles)
-      .values({
-        gameId,
-        slug: profileSlug,
-        name: meta.name,
-        description: meta.description,
-        targetFps: meta.targetFps,
-        hardwareTier: meta.tier,
-        version: '1.0.0',
-        status: 'published',
-        isDefault: profileSlug === 'balanced',
-        publishedAt: new Date(),
-      })
-      .returning();
-    const profileRow = profile!;
-
-    for (const [settingIndex, def] of settingsForGame(gameLike).entries()) {
-      const [setting] = await db
-        .insert(optimizationSettings)
-        .values({
-          profileId: profileRow.id,
-          categoryId: optCatIdBySlug.get(def.category) ?? null,
-          key: def.key,
-          name: def.name,
-          type: 'select',
-          value: def.values[profileSlug as ProfileSlug],
-          sortOrder: settingIndex,
-        })
-        .returning();
-      const settingRow = setting!;
-
-      const recommendedValue = def.values.balanced;
-      await db.insert(optimizationOptions).values(
-        def.options.map((value, i) => ({
-          settingId: settingRow.id,
-          value,
-          label: value,
-          isRecommended: value === recommendedValue && profileSlug === 'balanced',
-          sortOrder: i,
-        })),
-      );
-    }
-  }
-}
-
 export interface ImportOptions {
   iconDir?: string;
   outputDir?: string;
@@ -263,22 +201,17 @@ export async function importCatalog(opts: ImportOptions = {}): Promise<ImportSum
       const existing = await db.query.games.findFirst({ where: eq(games.slug, entry.slug) });
       if (existing) {
         summary.gamesAlreadyPresent += 1;
-        await ensureProfiles(existing.id, entry.slug);
         continue;
       }
-      const [row] = await db
-        .insert(games)
-        .values({
-          slug: entry.slug,
-          name: entry.folder,
-          technologies: DEFAULT_TECHNOLOGIES,
-          performanceRating: 50,
-          featured: false,
-          status: 'published',
-          viewCount: 0,
-        })
-        .returning();
-      await ensureProfiles(row!.id, entry.slug);
+      await db.insert(games).values({
+        slug: entry.slug,
+        name: entry.folder,
+        technologies: DEFAULT_TECHNOLOGIES,
+        performanceRating: 50,
+        featured: false,
+        status: 'published',
+        viewCount: 0,
+      });
       summary.gamesImported += 1;
     } catch (err) {
       summary.databaseErrors.push({ slug: entry.slug, error: err instanceof Error ? err.message : String(err) });
