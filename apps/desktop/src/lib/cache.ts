@@ -56,6 +56,9 @@ interface CacheShape {
   home: HomeResponse | null;
   games: Record<string, GameSummary>;
   gamesOrder: string[];
+  /** Derived from `games`/`gamesOrder` — kept as a stable reference between
+   *  mutations so it can back a useSyncExternalStore snapshot without looping. */
+  gamesList: GameSummary[];
   details: Record<string, GameDetail>;
   profiles: Record<string, OptimizationProfile[]>;
   profileVersions: Record<string, Record<string, string>>;
@@ -75,6 +78,7 @@ function emptyShape(): CacheShape {
     home: null,
     games: {},
     gamesOrder: [],
+    gamesList: [],
     details: {},
     profiles: {},
     profileVersions: {},
@@ -104,9 +108,18 @@ export const cache: CacheStore = (() => {
       if (raw) state = { ...emptyShape(), ...(JSON.parse(raw) as CacheShape) };
       // Backward compatibility: caches saved before `favoritesList` existed.
       if (!state.favoritesList) state.favoritesList = Object.values(state.favorites);
+      // Backward compatibility + rebuild the stable catalog snapshot on boot.
+      rebuildGamesList();
     } catch {
       state = emptyShape();
     }
+  }
+
+  /** Rebuild the stable `gamesList` reference from `games`/`gamesOrder`.
+   *  Called after every catalog mutation so getGames() can back a
+   *  useSyncExternalStore snapshot without creating a new array each render. */
+  function rebuildGamesList() {
+    state.gamesList = state.gamesOrder.map((slug) => state.games[slug]!).filter(Boolean);
   }
 
   function save() {
@@ -146,7 +159,7 @@ export const cache: CacheStore = (() => {
       save();
     },
 
-    getGames: () => state.gamesOrder.map((slug) => state.games[slug]!).filter(Boolean),
+    getGames: () => state.gamesList,
     setGames: (games) => {
       state.games = {};
       state.gamesOrder = [];
@@ -154,6 +167,7 @@ export const cache: CacheStore = (() => {
         state.games[g.slug] = g;
         state.gamesOrder.push(g.slug);
       }
+      rebuildGamesList();
       save();
     },
     upsertGames: (games) => {
@@ -161,6 +175,7 @@ export const cache: CacheStore = (() => {
         if (!state.games[g.slug]) state.gamesOrder.push(g.slug);
         state.games[g.slug] = g;
       }
+      rebuildGamesList();
       save();
     },
     removeGame: (slug) => {
@@ -168,6 +183,7 @@ export const cache: CacheStore = (() => {
       state.gamesOrder = state.gamesOrder.filter((s) => s !== slug);
       delete state.details[slug];
       delete state.profiles[slug];
+      rebuildGamesList();
       save();
     },
 
@@ -175,7 +191,10 @@ export const cache: CacheStore = (() => {
     setGame: (game) => {
       state.details[game.slug] = game;
       state.games[game.slug] = game;
-      if (!state.gamesOrder.includes(game.slug)) state.gamesOrder.push(game.slug);
+      if (!state.gamesOrder.includes(game.slug)) {
+        state.gamesOrder.push(game.slug);
+        rebuildGamesList();
+      }
       save();
     },
 

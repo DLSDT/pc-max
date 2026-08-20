@@ -200,8 +200,8 @@ export default function GamesPage() {
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
               >
-                <ChevronRight aria-hidden className="size-4 rtl:hidden" />
-                <ChevronLeft aria-hidden className="hidden size-4 rtl:block" />
+                <ChevronLeft aria-hidden className="size-4 rtl:hidden" />
+                <ChevronRight aria-hidden className="hidden size-4 rtl:block" />
                 {t('games.prevPage')}
               </Button>
               <span className="text-xs font-medium text-muted-foreground">
@@ -214,8 +214,8 @@ export default function GamesPage() {
                 disabled={page >= totalPages}
               >
                 {t('games.nextPage')}
-                <ChevronLeft aria-hidden className="size-4 rtl:hidden" />
-                <ChevronRight aria-hidden className="hidden size-4 rtl:block" />
+                <ChevronRight aria-hidden className="size-4 rtl:hidden" />
+                <ChevronLeft aria-hidden className="hidden size-4 rtl:block" />
               </Button>
             </div>
           )}
