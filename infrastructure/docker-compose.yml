@@ -51,7 +51,7 @@ services:
     container_name: goh-api
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://goh:goh@postgres:5432/goh
+      DATABASE_URL: postgres://goh:${POSTGRES_PASSWORD:-goh}@postgres:5432/goh
       REDIS_URL: redis://redis:6379
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-in-production-please-32chars}
       DOWNLOAD_SIGNING_SECRET: ${DOWNLOAD_SIGNING_SECRET:-change-me-in-production-please-32chars}
