@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import AboutPage from './pages/AboutPage';
 import AdminPage from './pages/AdminPage';
+import CategoriesPage from './pages/CategoriesPage';
 import FavoritesPage from './pages/FavoritesPage';
 import GameDetailPage from './pages/GameDetailPage';
 import GamesPage from './pages/GamesPage';
@@ -10,6 +11,8 @@ import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import MultiFrameGenerationPage from './pages/MultiFrameGenerationPage';
 import OptimizedSettingPage from './pages/OptimizedSettingPage';
+import RecentlyViewedPage from './pages/RecentlyViewedPage';
+import RecommendedPage from './pages/RecommendedPage';
 import WindowsOptimizerPage from './pages/WindowsOptimizerPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import LoginPage from './pages/LoginPage';
@@ -58,7 +61,10 @@ export default function App() {
         <Route path="admin" element={<AdminPage />} />
         <Route path="games" element={<GamesPage />} />
         <Route path="games/:slug" element={<GameDetailPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
         <Route path="favorites" element={<FavoritesPage />} />
+        <Route path="recently-viewed" element={<RecentlyViewedPage />} />
+        <Route path="recommended" element={<RecommendedPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="login" element={<LoginPage />} />

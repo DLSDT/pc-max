@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
+  Clock,
   Heart,
   Home,
   Info,
@@ -11,6 +12,8 @@ import {
   Settings,
   Shield,
   SlidersHorizontal,
+  Sparkles,
+  Tags,
   Wrench,
 } from 'lucide-react';
 import { useAdminAuth } from '@/store/adminAuth';
@@ -19,8 +22,8 @@ import { cn } from '@/lib/utils';
 
 type Icon = typeof Home;
 
-/** Dashboard → Multi-Frame Generation → Optimized Setting → Optimized Windows →
- * General Setting, in that exact order (per spec). */
+/** Dashboard → Multi Frame Generation → Optimised settings → Optimised Windows →
+ * General Settings, in that exact order and wording (per spec). */
 const PRIMARY: { to: string; i18nKey: string; icon: Icon; end?: boolean }[] = [
   { to: '/', i18nKey: 'sidebar.dashboard', icon: Home, end: true },
   { to: '/multi-frame-generation', i18nKey: 'sidebar.multiFrameGeneration', icon: Layers },
@@ -31,7 +34,10 @@ const PRIMARY: { to: string; i18nKey: string; icon: Icon; end?: boolean }[] = [
 
 const SECONDARY: { to: string; i18nKey: string; icon: Icon }[] = [
   { to: '/games', i18nKey: 'sidebar.games', icon: LayoutGrid },
+  { to: '/categories', i18nKey: 'sidebar.categories', icon: Tags },
   { to: '/favorites', i18nKey: 'sidebar.favorites', icon: Heart },
+  { to: '/recently-viewed', i18nKey: 'sidebar.recentlyViewed', icon: Clock },
+  { to: '/recommended', i18nKey: 'sidebar.recommended', icon: Sparkles },
 ];
 
 function NavLinkItem({ to, i18nKey, icon: Icon, end, collapsed }: { to: string; i18nKey: string; icon: Icon; end?: boolean; collapsed: boolean }) {

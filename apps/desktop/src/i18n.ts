@@ -38,9 +38,9 @@ void i18n.use(initReactI18next).init({
           main: 'Main',
           dashboard: 'Dashboard',
           gameOptimizer: 'Game Optimizer',
-          multiFrameGeneration: 'Multi-Frame Generation',
-          optimizedSetting: 'Optimized Setting',
-          windowsOptimizer: 'Windows Optimizer',
+          multiFrameGeneration: 'Multi Frame Generation',
+          optimizedSetting: 'Optimised settings',
+          windowsOptimizer: 'Optimised Windows',
           history: 'History',
           home: 'Home',
           games: 'Games',
@@ -48,7 +48,7 @@ void i18n.use(initReactI18next).init({
           recommended: 'Recommended',
           recentlyViewed: 'Recently Viewed',
           favorites: 'Favorites',
-          settings: 'Settings',
+          settings: 'General Settings',
           admin: 'Admin',
           about: 'About',
           library: 'Library',
@@ -281,9 +281,8 @@ void i18n.use(initReactI18next).init({
           empty: 'Games you open will show up here.',
         },
         recommended: {
-          title: 'Recommended For Your PC',
-          placeholder:
-            'Hardware detection is coming in a future version. The architecture is ready — just not shipped yet.',
+          title: 'Recommended',
+          placeholder: 'No recommended games yet — check back soon.',
         },
         about: {
           title: 'About',
@@ -411,6 +410,7 @@ void i18n.use(initReactI18next).init({
         categories: {
           title: 'Categories',
           games: '{{count}} games',
+          empty: 'No categories yet — check back soon.',
         },
         admin: {
           title: 'Admin Panel',
@@ -618,7 +618,7 @@ void i18n.use(initReactI18next).init({
           recommended: 'پیشنهادی',
           recentlyViewed: 'بازدیدهای اخیر',
           favorites: 'علاقه‌مندی‌ها',
-          settings: 'تنظیمات',
+          settings: 'تنظیمات عمومی',
           admin: 'مدیریت',
           about: 'درباره',
           library: 'کتابخانه',
@@ -851,8 +851,8 @@ void i18n.use(initReactI18next).init({
           empty: 'بازی‌هایی که باز کنید اینجا نمایش داده می‌شوند.',
         },
         recommended: {
-          title: 'پیشنهادی برای سیستم شما',
-          placeholder: 'تشخیص سخت‌افزار در نسخه‌های آینده اضافه می‌شود. معماری آن آماده است.',
+          title: 'پیشنهادی',
+          placeholder: 'هنوز بازی پیشنهادی‌ای ثبت نشده — بعداً دوباره سر بزنید.',
         },
         about: {
           title: 'درباره',
@@ -979,6 +979,7 @@ void i18n.use(initReactI18next).init({
         categories: {
           title: 'دسته‌بندی‌ها',
           games: '{{count}} بازی',
+          empty: 'هنوز دسته‌بندی‌ای ثبت نشده — بعداً دوباره سر بزنید.',
         },
         admin: {
           title: 'پنل مدیریت',

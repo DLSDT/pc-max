@@ -55,6 +55,15 @@ export function useOptimizedSettingGames() {
   });
 }
 
+/** Admin-curated "featured" games — backs the Recommended page. */
+export function useFeatured() {
+  return useQuery<GameListResponse['data']>({
+    queryKey: ['featured-games'],
+    queryFn: async () => (await api.featured()).data,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 /** Game detail — cache-first, background refresh. */
 export function useGameDetail(slug: string) {
   return useQuery<GameDetail>({
