@@ -39,7 +39,27 @@ async function main() {
       throw new Error(`Target database already has ${rows[0]!.n} games. Re-run with --force to overwrite.`);
     }
 
+    // node-postgres turns a JS array into a Postgres ARRAY literal ({a,b,c}),
+    // which a json/jsonb column rejects — objects happen to serialise fine, so
+    // this only bites on array-valued JSON columns like subscription_plans
+    // .features. Look the JSON columns up and stringify their values instead.
+    const jsonCols = new Map<string, Set<string>>();
+    const { rows: jsonMeta } = await client.query<{ table_name: string; column_name: string }>(
+      `SELECT table_name, column_name FROM information_schema.columns
+        WHERE table_schema = 'public' AND data_type IN ('json', 'jsonb')`,
+    );
+    for (const r of jsonMeta) {
+      if (!jsonCols.has(r.table_name)) jsonCols.set(r.table_name, new Set());
+      jsonCols.get(r.table_name)!.add(r.column_name);
+    }
+
     await client.query('BEGIN');
+
+    // subscriptions and payments reference each other, so no single insert
+    // order satisfies both. Suspend FK enforcement for this session — the data
+    // came out of a consistent database, and the whole thing is one
+    // transaction, so a failure still rolls back to a clean state.
+    await client.query(`SET session_replication_role = 'replica'`);
 
     // Children first when clearing, parents first when inserting.
     for (const table of [...dump.tableOrder].reverse()) {
@@ -60,8 +80,10 @@ async function main() {
         const batch = records.slice(i, i + perBatch);
         const values: unknown[] = [];
         const tuples = batch.map((row) => {
+          const jsonForTable = jsonCols.get(table);
           const placeholders = columns.map((c) => {
-            values.push(row[c]);
+            const v = row[c];
+            values.push(jsonForTable?.has(c) && v !== null && v !== undefined ? JSON.stringify(v) : v);
             return `$${values.length}`;
           });
           return `(${placeholders.join(', ')})`;
@@ -72,6 +94,7 @@ async function main() {
       process.stdout.write(`  ${table}: ${records.length}\n`);
     }
 
+    await client.query(`SET session_replication_role = 'origin'`);
     await client.query('COMMIT');
     process.stdout.write(`\n✅ Restored ${total} rows.\n`);
   } catch (err) {
