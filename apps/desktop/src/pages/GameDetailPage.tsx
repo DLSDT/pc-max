@@ -18,6 +18,7 @@ import { gameIconUrl } from '@/lib/gameIcons';
 import { downloadGameIcon } from '@/lib/downloadIcon';
 import type { GameRequirement, HardwareRecommendResponse, OptimizationProfile, OptimizationSetting, PackagePublic } from '@goh/types';
 import { toggleFavorite } from '@/lib/favorites';
+import { hasCuratedMetadata } from '@/lib/curation';
 import { cn } from '@/lib/utils';
 
 /**
@@ -446,10 +447,7 @@ export default function GameDetailPage() {
   const [iconSaving, setIconSaving] = useState(false);
   const [iconSaved, setIconSaved] = useState(false);
   const techs = CARD_TECHS.filter((flag) => game?.technologies[flag]);
-  // Games auto-created from Optimized Setting imports have no curated genres
-  // and a placeholder performanceRating (50) — hide that fabricated number
-  // rather than presenting it as a real rating.
-  const hasCuratedMeta = (game?.genres.length ?? 0) > 0;
+  const hasCuratedMeta = hasCuratedMetadata(game);
 
   if (isLoading && !game) {
     return (
@@ -575,7 +573,10 @@ export default function GameDetailPage() {
               {[
                 { icon: Server, k: t('detail.developer'), v: game.developer },
                 { icon: Server, k: t('detail.publisher'), v: game.publisher },
-                { icon: Calendar, k: t('detail.releaseDate'), v: formatDate(game.releaseDate) },
+                // formatDate renders a missing date as an em-dash, which is truthy
+                // and so survives the `v &&` filter below — leaving a lone
+                // "Release date —" row while every other empty field vanishes.
+                { icon: Calendar, k: t('detail.releaseDate'), v: game.releaseDate ? formatDate(game.releaseDate) : null },
                 { icon: Cpu, k: t('detail.engine'), v: game.engine },
                 { icon: MonitorCog, k: t('detail.api'), v: game.api },
                 { icon: Gamepad2, k: t('detail.rating'), v: hasCuratedMeta ? `${game.performanceRating}/100` : null },

@@ -112,6 +112,8 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(10_000).default(300),
   /** Per-IP bound for the anonymous /views endpoint (abuse/analytics inflation). */
   RATE_LIMIT_VIEWS: z.coerce.number().int().min(1).max(10_000).default(120),
+  /** Device registration inserts a users row; kept well under the global cap. */
+  RATE_LIMIT_DEVICE: z.coerce.number().int().min(1).max(10_000).default(30),
 
   // Caching / performance (Phase 16). Shared Redis is optional — without it a
   // per-instance in-memory TTL cache is used. TTLs are kept short so admin

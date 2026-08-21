@@ -9,15 +9,13 @@ import { useIsFavorite } from '@/hooks/useFavorites';
 import { CARD_TECHS, TECH_LABELS } from '@/lib/labels';
 import { gameIconUrl } from '@/lib/gameIcons';
 import { toggleFavorite } from '@/lib/favorites';
+import { hasCuratedMetadata } from '@/lib/curation';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui';
 
 function Cover({ game }: { game: GameSummary }) {
   const icon = gameIconUrl(game.slug);
-  // Games auto-created from Optimized Setting imports have no curated genres
-  // and a placeholder performanceRating (50) — hide that fabricated number
-  // rather than presenting it as a real rating.
-  const hasCuratedMeta = game.genres.length > 0;
+  const hasCuratedMeta = hasCuratedMetadata(game);
   return (
     <div className="relative aspect-[3/4] w-full overflow-hidden bg-secondary">
       {icon ? (

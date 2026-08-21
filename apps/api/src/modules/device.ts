@@ -14,6 +14,11 @@ export async function deviceModule(app: FastifyInstance) {
   typed.post(
     '/users/device',
     {
+      // A real client calls this once per install, but deviceId is
+      // client-asserted and an unknown one inserts a users row — so the global
+      // 300/min ceiling would let one IP mint 300 anonymous accounts a minute.
+      // Same reasoning as /views below, applied to a table that actually grows.
+      config: { rateLimit: { max: config.RATE_LIMIT_DEVICE, timeWindow: '1 minute' } },
       schema: {
         body: DeviceRegisterInput,
         response: { 200: DeviceRegisterResponse },
