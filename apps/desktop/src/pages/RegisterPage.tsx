@@ -5,7 +5,8 @@ import { MessageSquareText, UserPlus } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { api } from '@/lib/api';
 import { Button, Input } from '@/components/ui';
-import { PasswordStrength, type PasswordRule } from '@/components/ui/password-strength';
+import { PasswordStrength } from '@/components/ui/password-strength';
+import { usePasswordRules, MIN_PASSWORD_LENGTH } from '@/lib/passwordRules';
 import { OtpInput } from '@/components/ui/otp-input';
 
 export default function RegisterPage() {
@@ -15,28 +16,8 @@ export default function RegisterPage() {
   const [identifier, setIdentifier] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { rules: pwRules, labels: pwLabels } = usePasswordRules();
 
-  // Rule copy is localized, so build the rule set from i18n rather than the
-  // component's English defaults.
-  const pwRules = useMemo<PasswordRule[]>(
-    () => [
-      { id: 'length', label: t('auth.pwStrength.ruleLength'), test: (v) => v.length >= 12 },
-      { id: 'case', label: t('auth.pwStrength.ruleCase'), test: (v) => /[a-z]/.test(v) && /[A-Z]/.test(v) },
-      { id: 'digit', label: t('auth.pwStrength.ruleDigit'), test: (v) => /\d/.test(v) },
-      { id: 'symbol', label: t('auth.pwStrength.ruleSymbol'), test: (v) => /[!-/:-@[-`{-~]/.test(v) },
-    ],
-    [t],
-  );
-  const pwLabels = useMemo(
-    () => [
-      t('auth.pwStrength.empty'),
-      t('auth.pwStrength.weak'),
-      t('auth.pwStrength.fair'),
-      t('auth.pwStrength.good'),
-      t('auth.pwStrength.strong'),
-    ],
-    [t],
-  );
   const [confirm, setConfirm] = useState('');
   const [otp, setOtp] = useState('');
   const [codeSent, setCodeSent] = useState(false);
@@ -65,7 +46,7 @@ export default function RegisterPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       setError(t('auth.passwordTooShort'));
       return;
     }

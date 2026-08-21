@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { KeyRound, MessageSquareText } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Button, Input } from '@/components/ui';
-import { PasswordStrength, type PasswordRule } from '@/components/ui/password-strength';
+import { PasswordStrength } from '@/components/ui/password-strength';
+import { usePasswordRules, MIN_PASSWORD_LENGTH } from '@/lib/passwordRules';
 import { OtpInput } from '@/components/ui/otp-input';
 
 export default function ForgotPasswordPage() {
@@ -13,26 +14,8 @@ export default function ForgotPasswordPage() {
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
+  const { rules: pwRules, labels: pwLabels } = usePasswordRules();
 
-  const pwRules = useMemo<PasswordRule[]>(
-    () => [
-      { id: 'length', label: t('auth.pwStrength.ruleLength'), test: (v) => v.length >= 12 },
-      { id: 'case', label: t('auth.pwStrength.ruleCase'), test: (v) => /[a-z]/.test(v) && /[A-Z]/.test(v) },
-      { id: 'digit', label: t('auth.pwStrength.ruleDigit'), test: (v) => /\d/.test(v) },
-      { id: 'symbol', label: t('auth.pwStrength.ruleSymbol'), test: (v) => /[!-/:-@[-`{-~]/.test(v) },
-    ],
-    [t],
-  );
-  const pwLabels = useMemo(
-    () => [
-      t('auth.pwStrength.empty'),
-      t('auth.pwStrength.weak'),
-      t('auth.pwStrength.fair'),
-      t('auth.pwStrength.good'),
-      t('auth.pwStrength.strong'),
-    ],
-    [t],
-  );
   const [confirm, setConfirm] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -61,7 +44,7 @@ export default function ForgotPasswordPage() {
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
+    if (password.length < MIN_PASSWORD_LENGTH) {
       setError(t('auth.passwordTooShort'));
       return;
     }
