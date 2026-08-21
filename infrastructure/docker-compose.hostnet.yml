@@ -1,0 +1,41 @@
+# Host-network override — for hosts where Docker's bridge networking is broken.
+#
+# Some Docker builds (notably 29.x, which moved container networking to
+# nftables) fail to wire containers into the bridge on servers that already run
+# their own firewall stack: the container gets an IP but no connectivity, and
+# every symptom shows up somewhere else — npm downloading nothing, a build
+# dying on a missing compiler.
+#
+# Running on the host network sidesteps the bridge entirely. The services keep
+# the same exposure as before, because they already bound to 127.0.0.1 only:
+# with host networking they bind to 127.0.0.1 directly instead of being
+# published there. Nothing new becomes reachable from the internet.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.hostnet.yml up -d
+#
+# Service discovery changes: on the host network there are no container
+# hostnames, so `postgres:5432` and `redis:6379` become 127.0.0.1.
+services:
+  postgres:
+    network_mode: host
+    # `ports:` is invalid with host networking; bind the daemon to loopback so
+    # the database is not exposed beyond this machine.
+    ports: !reset []
+    command: >
+      postgres -c listen_addresses=127.0.0.1
+
+  redis:
+    network_mode: host
+    ports: !reset []
+    command: >
+      redis-server --bind 127.0.0.1 --port ${REDIS_HOST_PORT:-6379}
+
+  api:
+    network_mode: host
+    ports: !reset []
+    environment:
+      DATABASE_URL: postgres://goh:${POSTGRES_PASSWORD:-goh}@127.0.0.1:5432/goh
+      REDIS_URL: redis://127.0.0.1:${REDIS_HOST_PORT:-6379}
+      # Fastify must listen on loopback only — with host networking, 0.0.0.0
+      # would put the API straight on the public interface.
+      HOST: 127.0.0.1
