@@ -244,6 +244,58 @@ describe('public API', () => {
       }
     }
   });
+
+  /**
+   * Featured games are ordered by viewCount, and every imported game shares a
+   * viewCount of 0 — so without a unique tiebreaker Postgres is free to return
+   * a different arbitrary slice each request and the Recommended page
+   * reshuffles on every visit.
+   */
+  it('returns a stable featured slice when view counts tie', async () => {
+    const login = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    const adminToken = (login.json as { accessToken: string }).accessToken;
+
+    const created: string[] = [];
+    for (let i = 0; i < 12; i += 1) {
+      const res = await inject('POST', '/api/v1/admin/games', {
+        token: adminToken,
+        body: {
+          name: `Featured Tie ${String(i).padStart(2, '0')}`,
+          slug: `featured-tie-${String(i).padStart(2, '0')}`,
+          status: 'published',
+          featured: true,
+        },
+      });
+      expect(res.status).toBe(201);
+      created.push(`featured-tie-${String(i).padStart(2, '0')}`);
+    }
+
+    try {
+      const ids = async (limit: number) =>
+        ((await inject('GET', `/api/v1/featured?limit=${limit}`)).json.data as { id: string }[]).map((g) => g.id);
+
+      const first = await ids(6);
+      expect(first).toHaveLength(6);
+      for (let i = 0; i < 4; i += 1) {
+        expect(await ids(6), 'featured slice changed between identical requests').toEqual(first);
+      }
+
+      // The Recommended page asks for a full grid, which the row-sized default
+      // ceiling used to cap; the wider slice must start with the same rows.
+      const wide = await ids(24);
+      expect(wide.length).toBeGreaterThan(6);
+      expect(wide.slice(0, 6)).toEqual(first);
+    } finally {
+      const listed = await inject('GET', '/api/v1/admin/games?q=Featured%20Tie&limit=100', { token: adminToken });
+      for (const g of (listed.json.data ?? []) as { id: string; slug: string }[]) {
+        if (created.includes(g.slug)) {
+          await inject('DELETE', `/api/v1/admin/games/${g.id}`, { token: adminToken });
+        }
+      }
+    }
+  });
 });
 
 /**

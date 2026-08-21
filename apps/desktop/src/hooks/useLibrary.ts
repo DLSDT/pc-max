@@ -113,11 +113,17 @@ export function useOptimizedSettingGames() {
   });
 }
 
-/** Admin-curated "featured" games — backs the Recommended page. */
-export function useFeatured() {
+/**
+ * Admin-curated "featured" games.
+ *
+ * The endpoint defaults to a 6-wide dashboard row, so the full-page Recommended
+ * grid has to ask for more explicitly or it renders one row under a page
+ * heading.
+ */
+export function useFeatured(limit?: number) {
   return useQuery<GameListResponse['data']>({
-    queryKey: ['featured-games'],
-    queryFn: async () => (await api.featured()).data,
+    queryKey: ['featured-games', limit ?? 'default'],
+    queryFn: async () => (await api.featured(limit)).data,
     staleTime: 5 * 60 * 1000,
   });
 }

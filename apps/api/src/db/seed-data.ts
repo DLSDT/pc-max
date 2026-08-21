@@ -29,6 +29,17 @@ export const BROWSE_CATEGORIES = [
   { slug: 'horror', name: 'Horror', description: 'Atmospheric and survival-focused experiences' },
   { slug: 'platformer', name: 'Platformer', description: 'Jump-and-run gameplay' },
   { slug: 'comedy', name: 'Comedy', description: 'Humorous tone and writing' },
+  { slug: 'racing', name: 'Racing', description: 'Cars, bikes and motorsport' },
+  { slug: 'sports', name: 'Sports', description: 'Football, wrestling and other sports simulations' },
+  { slug: 'strategy', name: 'Strategy', description: 'Tactics, base building and army management' },
+  { slug: 'simulation', name: 'Simulation', description: 'Vehicles, life and systems simulated in detail' },
+  { slug: 'fighting', name: 'Fighting', description: 'One-on-one arena combat' },
+  { slug: 'stealth', name: 'Stealth', description: 'Avoiding detection over direct confrontation' },
+  { slug: 'survival', name: 'Survival', description: 'Crafting and staying alive against the odds' },
+  { slug: 'battle-royale', name: 'Battle Royale', description: 'Last-player-standing multiplayer matches' },
+  { slug: 'soulslike', name: 'Soulslike', description: 'Punishing stamina-based combat and tight level design' },
+  { slug: 'metroidvania', name: 'Metroidvania', description: 'Interconnected maps gated by abilities' },
+  { slug: 'puzzle', name: 'Puzzle', description: 'Logic and environmental problem solving' },
 ] as const;
 
 export const TAGS = ['singleplayer', 'multiplayer', 'classic', 'story-rich', 'difficult', 'co-op', 'esports'] as const;

@@ -1,4 +1,4 @@
-import { count, desc, eq, isNull } from 'drizzle-orm';
+import { asc, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -139,14 +139,16 @@ export async function paymentsModule(app: FastifyInstance) {
           status: payments.status,
           providerRef: payments.providerRef,
           createdAt: payments.createdAt,
-          userEmail: users.phone,
+          // Accounts sign up with either an email or a phone, so fall back
+          // rather than showing a blank identifier for half the payments.
+          userEmail: sql<string>`coalesce(${users.email}, ${users.phone}, ${users.username}, '')`,
           planName: subscriptionPlans.name,
         })
         .from(payments)
         .innerJoin(users, eq(payments.userId, users.id))
         .innerJoin(subscriptionPlans, eq(payments.planId, subscriptionPlans.id))
         .where(isNull(payments.refundedAt))
-        .orderBy(desc(payments.createdAt))
+        .orderBy(desc(payments.createdAt), asc(payments.id))
         .limit(limit)
         .offset(offset);
 

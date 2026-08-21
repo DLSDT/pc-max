@@ -133,7 +133,7 @@ export async function adminGamesModule(app: FastifyInstance) {
           .select()
           .from(games)
           .where(and(...where))
-          .orderBy(desc(games.updatedAt))
+          .orderBy(desc(games.updatedAt), asc(games.id))
           .limit(limit)
           .offset((page - 1) * limit),
       ]);

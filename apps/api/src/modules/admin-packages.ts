@@ -4,7 +4,7 @@ import { pipeline } from 'node:stream/promises';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { and, count, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNull } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -101,7 +101,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
         .from(optimizationPackages)
         .innerJoin(games, eq(optimizationPackages.gameId, games.id))
         .where(where)
-        .orderBy(desc(optimizationPackages.updatedAt))
+        .orderBy(desc(optimizationPackages.updatedAt), asc(optimizationPackages.id))
         .limit(limit)
         .offset(offset);
 

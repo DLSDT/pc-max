@@ -18,7 +18,7 @@ import { db } from '../db';
 import { loginAttempts, passwordResets, userSessions, users } from '../db/schema';
 import { z } from 'zod';
 import { AppError, badRequest, conflict, unauthorized } from '../lib/errors';
-import { hashPassword, verifyPassword } from '../lib/password';
+import { hashPassword, verifyPasswordOrDecoy } from '../lib/password';
 import { signUserAccessToken } from '../lib/jwt';
 import { authenticateUser } from '../lib/auth-middleware';
 import {
@@ -226,7 +226,10 @@ export async function authUserModule(app: FastifyInstance) {
       }
 
       const user = await db.query.users.findFirst({ where: and(userByIdentifier(id.value), eq(users.status, 'active')) });
-      const ok = user ? await verifyPassword(password, user.passwordHash!) : false;
+      // Runs the hash even when there is no match, so a wrong identifier and a
+      // wrong password take the same time — the generic message below hides
+      // nothing if the response time does not.
+      const ok = await verifyPasswordOrDecoy(password, user?.passwordHash);
       if (!user || !ok) {
         await recordFailedAttempt(id.value, request.ip);
         throw unauthorized('Invalid email, phone number or password');

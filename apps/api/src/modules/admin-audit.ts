@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ilike } from 'drizzle-orm';
+import { and, asc, count, desc, eq, ilike } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -52,7 +52,7 @@ export async function adminAuditModule(app: FastifyInstance) {
           .from(auditLogs)
           .leftJoin(admins, eq(auditLogs.adminId, admins.id))
           .where(and(...where))
-          .orderBy(desc(auditLogs.createdAt))
+          .orderBy(desc(auditLogs.createdAt), asc(auditLogs.id))
           .limit(limit)
           .offset((page - 1) * limit),
       ]);

@@ -1,4 +1,4 @@
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, asc, count, desc, eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -152,7 +152,7 @@ export async function adminSubscriptionsModule(app: FastifyInstance) {
         .innerJoin(users, eq(subscriptions.userId, users.id))
         .innerJoin(subscriptionPlans, eq(subscriptions.planId, subscriptionPlans.id))
         .where(where)
-        .orderBy(desc(subscriptions.createdAt))
+        .orderBy(desc(subscriptions.createdAt), asc(subscriptions.id))
         .limit(limit)
         .offset(offset);
 

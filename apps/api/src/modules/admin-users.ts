@@ -60,7 +60,7 @@ export async function adminUsersModule(app: FastifyInstance) {
       const totalRows = await db.select({ value: count() }).from(users).where(where);
       const total = totalRows[0]?.value ?? 0;
 
-      const rows = await db.select(USER_COLUMNS).from(users).where(where).orderBy(desc(users.createdAt)).limit(limit).offset(offset);
+      const rows = await db.select(USER_COLUMNS).from(users).where(where).orderBy(desc(users.createdAt), asc(users.id)).limit(limit).offset(offset);
 
       return {
         data: rows.map((u) => ({

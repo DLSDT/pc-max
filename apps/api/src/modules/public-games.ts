@@ -193,7 +193,10 @@ export async function publicGamesModule(app: FastifyInstance) {
     '/featured',
     {
       schema: {
-        querystring: z.object({ limit: z.coerce.number().int().min(1).max(20).default(6) }),
+        // The dashboard renders a 6-wide row; the Recommended page renders a
+        // full grid and asks for more, so the ceiling has to clear the whole
+        // curated set rather than one row of it.
+        querystring: z.object({ limit: z.coerce.number().int().min(1).max(60).default(6) }),
         response: { 200: dataListSchema },
       },
     },
@@ -203,7 +206,10 @@ export async function publicGamesModule(app: FastifyInstance) {
         .select()
         .from(games)
         .where(and(publishedGameWhere(), eq(games.featured, true)))
-        .orderBy(desc(games.viewCount))
+        // Imported games all share view_count 0, so ordering on it alone lets
+        // Postgres return a different arbitrary slice on every request — the
+        // page would reshuffle on each visit. Break the tie on a unique column.
+        .orderBy(desc(games.viewCount), asc(games.id))
         .limit(limit);
       const enriched = await attachGameMetadata(rows);
       return { data: enriched.map(toSummary) };
@@ -233,19 +239,19 @@ export async function publicGamesModule(app: FastifyInstance) {
           .select()
           .from(games)
           .where(and(publishedGameWhere(), eq(games.featured, true)))
-          .orderBy(desc(games.viewCount))
+          .orderBy(desc(games.viewCount), asc(games.id))
           .limit(5),
         db
           .select()
           .from(games)
           .where(publishedGameWhere())
-          .orderBy(desc(games.viewCount))
+          .orderBy(desc(games.viewCount), asc(games.id))
           .limit(12),
         db
           .select()
           .from(games)
           .where(publishedGameWhere())
-          .orderBy(desc(games.createdAt))
+          .orderBy(desc(games.createdAt), asc(games.id))
           .limit(12),
         categoriesWithCounts(),
       ]);
@@ -280,19 +286,19 @@ export async function publicGamesModule(app: FastifyInstance) {
             .select()
             .from(games)
             .where(and(publishedGameWhere(), eq(games.featured, true)))
-            .orderBy(desc(games.viewCount))
+            .orderBy(desc(games.viewCount), asc(games.id))
             .limit(5),
           db
             .select()
             .from(games)
             .where(publishedGameWhere())
-            .orderBy(desc(games.viewCount))
+            .orderBy(desc(games.viewCount), asc(games.id))
             .limit(12),
           db
             .select()
             .from(games)
             .where(publishedGameWhere())
-            .orderBy(desc(games.createdAt))
+            .orderBy(desc(games.createdAt), asc(games.id))
             .limit(12),
           categoriesWithCounts(),
         ]);

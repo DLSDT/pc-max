@@ -7,7 +7,7 @@ import { config } from '../config';
 import { db } from '../db';
 import { admins, sessions } from '../db/schema';
 import { AppError, unauthorized } from '../lib/errors';
-import { verifyPassword } from '../lib/password';
+import { verifyPasswordOrDecoy } from '../lib/password';
 import { signAccessToken } from '../lib/jwt';
 import { permissionsFor } from '../lib/rbac';
 import { authenticate } from '../lib/auth-middleware';
@@ -68,7 +68,7 @@ export async function authModule(app: FastifyInstance) {
       });
 
       // Always run a verify to reduce user-enumeration timing differences.
-      const ok = admin ? await verifyPassword(password, admin.passwordHash) : false;
+      const ok = await verifyPasswordOrDecoy(password, admin?.passwordHash);
       if (!admin || !ok) throw unauthorized('Invalid email or password');
 
       await db.update(admins).set({ lastLoginAt: new Date() }).where(eq(admins.id, admin.id));

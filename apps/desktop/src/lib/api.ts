@@ -231,7 +231,8 @@ export const api = {
     request<ProfileListResponse>(`/games/${slug}/optimizations`, { signal }),
   profile: (slug: string, profileSlug: string, signal?: AbortSignal) =>
     request<OptimizationProfile>(`/games/${slug}/optimizations/${profileSlug}`, { signal }),
-  featured: (signal?: AbortSignal) => request<{ data: GameSummary[] }>('/featured', { signal }),
+  featured: (limit?: number, signal?: AbortSignal) =>
+    request<{ data: GameSummary[] }>(`/featured${limit ? `?limit=${limit}` : ''}`, { signal }),
   optimizedSettingGames: (signal?: AbortSignal) => request<{ data: GameSummary[] }>('/optimized-setting/games', { signal }),
   sync: (since: string | null, signal?: AbortSignal) =>
     request<SyncResponse>(`/sync${since ? `?since=${encodeURIComponent(since)}` : ''}`, { signal }),

@@ -11,9 +11,12 @@ import { GameGrid } from '@/components/Section';
  * the admin Games tab), not a placeholder. Same source the Dashboard's
  * "Popular Games" featured row uses.
  */
+/** A full grid of picks, not the dashboard's single 6-wide row. */
+const RECOMMENDED_LIMIT = 24;
+
 export default function RecommendedPage() {
   const { t } = useTranslation();
-  const { data: games, isLoading } = useFeatured();
+  const { data: games, isLoading } = useFeatured(RECOMMENDED_LIMIT);
 
   return (
     <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNull } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -46,7 +46,7 @@ export async function adminDevicesModule(app: FastifyInstance) {
         .from(devices)
         .innerJoin(users, eq(devices.userId, users.id))
         .where(where)
-        .orderBy(desc(devices.lastSeenAt))
+        .orderBy(desc(devices.lastSeenAt), asc(devices.id))
         .limit(limit)
         .offset(offset);
 
