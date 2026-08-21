@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream, createWriteStream, existsSync } from 'node:fs';
+import { pipeline } from 'node:stream/promises';
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -340,9 +341,9 @@ export async function adminPackagesModule(app: FastifyInstance) {
       const diskPath = resolveLocalPath(key);
       mkdirSync(dirname(diskPath), { recursive: true });
       const tmpPath = `${diskPath}.${randomUUID()}.tmp`;
-      // The buffered content-type parser has already consumed the stream, so
-      // write the parsed buffer to disk (atomic rename) instead of request.raw.
-      await import('node:fs/promises').then((fs) => fs.writeFile(tmpPath, request.body as Buffer, { mode: 0o644 }));
+      // Stream to disk — a package file can be hundreds of megabytes, and
+      // buffering one would hold all of it in memory at once.
+      await pipeline(request.raw, createWriteStream(tmpPath, { mode: 0o644 }));
       await import('node:fs/promises').then((fs) => fs.rename(tmpPath, diskPath));
       void reply.status(201).send({ ok: true, key });
     },

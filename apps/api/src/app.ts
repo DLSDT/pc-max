@@ -91,9 +91,14 @@ export async function buildApp(): Promise<FastifyInstance> {
   // Binary uploads (images + optimization package files). Fastify 415s unknown
   // content-types unless a parser is registered; we buffer the body and let
   // the upload handlers write it to storage (S3 presign bypasses this).
+  // Hand the routes the raw stream instead of a Buffer. Buffering meant a
+  // package upload was held entirely in memory AND capped by Fastify's 1 MB
+  // default bodyLimit — so the advertised 500 MB ceiling was fiction and every
+  // real package file came back 413. The upload handlers pipe straight to disk
+  // and enforce their own size limit from content-length.
   for (const ct of ['application/octet-stream', 'application/zip', 'application/x-tar', 'image/jpeg', 'image/png', 'image/webp']) {
-    app.addContentTypeParser(ct, { parseAs: 'buffer' }, (_request, body, done) => {
-      done(null, body as Buffer);
+    app.addContentTypeParser(ct, (_request, payload, done) => {
+      done(null, payload);
     });
   }
 

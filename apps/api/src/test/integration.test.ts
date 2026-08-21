@@ -1172,6 +1172,29 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
     expect(files.data[0]!.sha256).toBe(expected);
   });
 
+  /**
+   * Regression: the binary content-type parser buffered the whole body, putting
+   * every upload under Fastify's 1 MB default bodyLimit. The route advertised a
+   * 500 MB ceiling, but anything over 1 MB came back 413 — and a large file
+   * would have been held entirely in memory anyway.
+   */
+  it('accepts a package file larger than the default body limit', async () => {
+    const presign = (await inject('POST', `/api/v1/admin/packages/${pkgId}/files/presign`, {
+      token: adminToken,
+      body: { filename: 'big.pak', size: 2 * 1024 * 1024 },
+    })).json as { uploadUrl: string };
+
+    const path = presign.uploadUrl.replace(/^https?:\/\/[^/]+/, '');
+    const payload = Buffer.alloc(2 * 1024 * 1024, 7); // 2 MB — over the 1 MB default
+    const res = await app.inject({
+      method: 'PUT',
+      url: path,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(payload.length) },
+      payload,
+    });
+    expect(res.statusCode, '2 MB package upload must not be rejected as too large').toBe(201);
+  });
+
   it('publishes the package (semver bump) and gates downloads behind entitlements', async () => {
     const publish = await inject('POST', `/api/v1/admin/packages/${pkgId}/publish`, {
       token: adminToken,
