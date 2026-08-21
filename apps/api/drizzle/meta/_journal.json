@@ -99,6 +99,13 @@
       "when": 1787198000013,
       "tag": "0013_retention_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1787340059148,
+      "tag": "0014_genre_filter_indexes",
+      "breakpoints": true
     }
   ]
 }

@@ -225,7 +225,11 @@ export const gameCategories = pgTable(
       .notNull()
       .references(() => categories.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.gameId, t.categoryId] })],
+  // The composite PK covers lookups by game (its leading column), which is
+  // what the detail page does. The genre filter goes the other way — every
+  // game in one category — and a btree cannot lead on the second column, so
+  // that browse query seq-scanned the whole join table.
+  (t) => [primaryKey({ columns: [t.gameId, t.categoryId] }), index('game_categories_category_idx').on(t.categoryId)],
 );
 
 export const gameTags = pgTable(
@@ -238,7 +242,9 @@ export const gameTags = pgTable(
       .notNull()
       .references(() => tags.id, { onDelete: 'cascade' }),
   },
-  (t) => [primaryKey({ columns: [t.gameId, t.tagId] })],
+  // Same reasoning as game_categories: search matches games by tag, which is
+  // the non-leading column of the PK.
+  (t) => [primaryKey({ columns: [t.gameId, t.tagId] }), index('game_tags_tag_idx').on(t.tagId)],
 );
 
 export const gameRequirements = pgTable(
