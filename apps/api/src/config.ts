@@ -157,6 +157,20 @@ if (parsed.data.NODE_ENV === 'production' && parsed.data.PAYMENT_PROVIDER === 'm
   process.exit(1);
 }
 
+// PUBLIC_API_URL is the host baked into every signed download link, package
+// upload URL and stored image URL the API hands out. Left at its localhost
+// default in production, all of those point at the user's own machine and fail
+// everywhere, with the API itself looking perfectly healthy.
+if (parsed.data.NODE_ENV === 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:|$|\/)/.test(parsed.data.PUBLIC_API_URL)) {
+  // eslint-disable-next-line no-console
+  console.error(
+    `❌ PUBLIC_API_URL is ${parsed.data.PUBLIC_API_URL} in production.\n` +
+      '   Every download link, upload URL and image URL is built from it, so they would\n' +
+      "   all point at the client's own machine. Set it to the public API origin.",
+  );
+  process.exit(1);
+}
+
 if (parsed.data.NODE_ENV === 'production' && parsed.data.JWT_ACCESS_SECRET === 'dev-only-access-secret-change-me-in-production') {
   // eslint-disable-next-line no-console
   console.error('❌ JWT_ACCESS_SECRET must be overridden in production.');

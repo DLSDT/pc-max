@@ -248,6 +248,20 @@ sed -i 's|^CORS_ORIGINS=.*|CORS_ORIGINS=https://pc-maxapp.rixy.ir,https://pcmax-
 ./pcmax up
 ```
 
+⚠️ `PUBLIC_API_URL` باید **دامنه‌ی اصلی جدید** باشد، نه دامنه‌ی قدیمی. هر لینک
+دانلود امضاشده، هر URL آپلود پکیج و هر آدرس تصویری که سرور تولید می‌کند از روی
+همین ساخته می‌شود؛ اگر روی دامنه‌ی قدیمی بماند، روزی که آن دامنه را بردارید همه‌ی
+آن‌ها با هم می‌شکنند:
+
+```bash
+cd /www/pcmax/infrastructure
+sed -i 's|^PUBLIC_API_URL=.*|PUBLIC_API_URL=https://pc-maxapp.rixy.ir|' .env
+pcmax up
+```
+
+API از نسخه‌ی فعلی اگر `PUBLIC_API_URL` روی `localhost` مانده باشد اصلاً بالا
+نمی‌آید — چون در آن حالت به هر کاربر لینکی می‌دهد که به کامپیوتر خودش اشاره می‌کند.
+
 ## گام ۲ — اسکریپت مدیریت
 
 ```bash
