@@ -21,7 +21,7 @@ export async function adminReleasesModule(app: FastifyInstance) {
       schema: { response: { 200: dataListSchema } },
     },
     async () => ({
-      data: await db.select().from(appVersions).orderBy(desc(appVersions.releasedAt)),
+      data: await db.select().from(appVersions).orderBy(desc(appVersions.releasedAt), asc(appVersions.id)),
     }),
   );
 

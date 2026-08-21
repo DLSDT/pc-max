@@ -61,6 +61,10 @@ services:
       DOWNLOAD_SIGNING_SECRET: ${DOWNLOAD_SIGNING_SECRET:-change-me-in-production-please-32chars}
       PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:4000}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3001,http://localhost:1420,http://127.0.0.1:1420,tauri://localhost,http://tauri.localhost,https://tauri.localhost}
+      # This image runs NODE_ENV=production even locally, where a Vite dev
+      # server on :1420 calls it — so the production CORS guard needs an
+      # explicit opt-out. Defaults to false: the server must never set it.
+      ALLOW_DEV_CORS_ORIGINS: ${ALLOW_DEV_CORS_ORIGINS:-false}
       STORAGE_DRIVER: local
       UPLOAD_DIR: /app/uploads
       ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL:-admin@gamehub.local}

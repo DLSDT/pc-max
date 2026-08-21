@@ -127,6 +127,7 @@ export default function ReleasesTab() {
                 <th className="px-4 py-3">{t('admin.version')}</th>
                 <th className="px-4 py-3">{t('admin.channel')}</th>
                 <th className="px-4 py-3">{t('admin.latest')}</th>
+                <th className="px-4 py-3">{t('admin.signed')}</th>
                 <th className="px-4 py-3">{t('admin.released')}</th>
                 <th className="px-4 py-3 text-right">{t('admin.actions')}</th>
               </tr>
@@ -147,15 +148,27 @@ export default function ReleasesTab() {
                         '—'
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      {row.signature ? (
+                        <span className="text-xs text-muted-foreground">{t('admin.signed')}</span>
+                      ) : (
+                        // An unsigned build can never be offered to clients, and
+                        // the API refuses to pin it — say so here rather than
+                        // leaving the admin to wonder why nothing happens.
+                        <span className="text-xs font-medium text-amber-500" title={t('admin.unsignedHint')}>
+                          {t('admin.unsigned')}
+                        </span>
+                      )}
+                    </td>
                     <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{row.releasedAt ? new Date(String(row.releasedAt)).toLocaleDateString() : '—'}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"
                           onClick={() => void handleMarkLatest(row)}
-                          disabled={busyId === id}
-                          title={t('admin.recomputeLatest')}
-                          aria-label={t('admin.recomputeLatest')}
+                          disabled={busyId === id || !row.signature || Boolean(row.isLatest)}
+                          title={row.signature ? t('admin.markLatest') : t('admin.unsignedHint')}
+                          aria-label={t('admin.markLatest')}
                           className={iconBtnClass}
                         >
                           {busyId === id ? <Loader2 aria-hidden className="size-3.5 animate-spin" /> : <Star aria-hidden className="size-3.5" />}

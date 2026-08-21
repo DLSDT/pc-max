@@ -17,6 +17,13 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   REFRESH_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 
+  /** Consciously allow localhost origins under NODE_ENV=production — the local
+   *  Docker stack runs the production image while a Vite dev server calls it.
+   *  Off by default so a real deployment cannot ship a dev CORS policy. */
+  ALLOW_DEV_CORS_ORIGINS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
   CORS_ORIGINS: z.string().default(
     'http://localhost:3001,http://localhost:1420,http://127.0.0.1:1420,tauri://localhost,http://tauri.localhost,https://tauri.localhost',
   ),
@@ -160,7 +167,7 @@ if (parsed.data.NODE_ENV === 'production' && parsed.data.JWT_ACCESS_SECRET === '
 // on :3001). Shipping it unchanged would let a page served from localhost on a
 // user's machine call the production API with their cookies attached, so a
 // deployment that forgot to set CORS_ORIGINS must not start.
-if (parsed.data.NODE_ENV === 'production') {
+if (parsed.data.NODE_ENV === 'production' && !parsed.data.ALLOW_DEV_CORS_ORIGINS) {
   const devOrigins = parsed.data.CORS_ORIGINS.split(',')
     .map((o) => o.trim())
     .filter((o) => /^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(o));
@@ -169,7 +176,9 @@ if (parsed.data.NODE_ENV === 'production') {
     console.error(
       `❌ CORS_ORIGINS still allows development origins in production: ${devOrigins.join(', ')}\n` +
         '   Set CORS_ORIGINS to the app origins only (tauri://localhost, http(s)://tauri.localhost\n' +
-        '   and your admin domain). Note tauri.localhost is the packaged app, not a dev server.',
+        '   and your admin domain). Note tauri.localhost is the packaged app, not a dev server.\n' +
+        '   For the local Docker stack, which runs this image against a Vite dev server,\n' +
+        '   set ALLOW_DEV_CORS_ORIGINS=true instead.',
     );
     process.exit(1);
   }
