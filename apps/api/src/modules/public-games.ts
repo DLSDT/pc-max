@@ -9,6 +9,7 @@ import { HomeResponse } from '@goh/validation';
 import { db } from '../db';
 import { categories, gameCategories, gameImages, games, gameTags, gameRequirements, tags } from '../db/schema';
 import { notFound } from '../lib/errors';
+import { sanitizeSearchTerm } from '../lib/search';
 import { paginationMeta } from '../lib/http';
 import { catalogCache } from '../lib/ttl-cache';
 import { config } from '../config';
@@ -27,8 +28,9 @@ export async function publicGamesModule(app: FastifyInstance) {
   async function listGames(q: string | undefined, genre: string | undefined, year: string | number | undefined, techs: string[] | undefined, sort: string | undefined, page: number, limit: number) {
     const where: ReturnType<typeof and>[] = [publishedGameWhere()];
 
-    if (q) {
-      const pattern = `%${q}%`;
+    const term = sanitizeSearchTerm(q);
+    if (term) {
+      const pattern = `%${term}%`;
       const byTags = db
         .select({ gameId: gameTags.gameId })
         .from(gameTags)
