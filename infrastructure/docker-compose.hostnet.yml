@@ -31,6 +31,11 @@ services:
       redis-server --bind 127.0.0.1 --port ${REDIS_HOST_PORT:-6379}
 
   api:
+    build:
+      # network_mode below only covers the RUNNING container. Build steps use
+      # their own network, so without this `npm ci` still runs over the broken
+      # bridge and silently installs nothing.
+      network: host
     network_mode: host
     ports: !reset []
     environment:
