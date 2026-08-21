@@ -75,9 +75,17 @@ export async function systemModule(app: FastifyInstance) {
       // Tauri's {{target}} is the OS ("windows"/"darwin"/"linux").
       const platform = target === 'darwin' ? 'macos' : target;
 
+      // `isLatest` is the highest semver per platform+channel, reconciled on
+      // every release mutation. Ordering by releasedAt instead would disagree
+      // with it whenever releases are published out of semver order — e.g.
+      // re-creating a 0.4.0 row after 0.5.0 exists would push 0.4.0 to every
+      // user still on 0.3.x while the system itself considers 0.5.0 latest.
       const latest = await db.query.appVersions.findFirst({
-        where: and(eq(appVersions.platform, platform), eq(appVersions.channel, 'stable')),
-        orderBy: desc(appVersions.releasedAt),
+        where: and(
+          eq(appVersions.platform, platform),
+          eq(appVersions.channel, 'stable'),
+          eq(appVersions.isLatest, true),
+        ),
       });
 
       // No release, unsigned release, or the client is already up to date.

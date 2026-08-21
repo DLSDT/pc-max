@@ -299,6 +299,78 @@ describe('public API', () => {
 });
 
 /**
+ * The auto-updater installs whatever this feed returns, unattended, on every
+ * user's machine — so "which row is latest" has to be one answer, not two.
+ */
+describe('updater feed', () => {
+  let adminToken: string;
+  const created: string[] = [];
+
+  async function publish(version: string) {
+    const res = await inject('POST', '/api/v1/admin/app-versions', {
+      token: adminToken,
+      body: {
+        version,
+        platform: 'windows',
+        channel: 'stable',
+        downloadUrl: `https://example.test/PCMAX-${version}.exe`,
+        signature: `sig-${version}`,
+      },
+    });
+    expect(res.status, `publishing ${version}`).toBe(201);
+    created.push(version);
+  }
+
+  beforeAll(async () => {
+    const login = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (login.json as { accessToken: string }).accessToken;
+  });
+
+  afterAll(async () => {
+    const listed = await inject('GET', '/api/v1/admin/app-versions', { token: adminToken });
+    for (const v of (listed.json.data ?? listed.json ?? []) as { id: string; version: string }[]) {
+      if (created.includes(v.version)) {
+        await inject('DELETE', `/api/v1/admin/app-versions/${v.id}`, { token: adminToken });
+      }
+    }
+  });
+
+  it('serves the highest semver, not the most recently created row', async () => {
+    await publish('9.1.0');
+    // Created later, but a LOWER version — ordering on releasedAt would hand
+    // this to every user still on an older build.
+    await publish('9.0.5');
+
+    const res = await inject('GET', '/api/v1/updates/windows/x86_64/8.0.0');
+    expect(res.status).toBe(200);
+    expect((res.json as { version: string }).version).toBe('9.1.0');
+  });
+
+  it('tells an up-to-date client there is nothing to install', async () => {
+    const res = await inject('GET', '/api/v1/updates/windows/x86_64/9.1.0');
+    expect(res.status).toBe(204);
+  });
+
+  it('stops offering a release once it is deleted', async () => {
+    // Deleting the latest row must re-reconcile; otherwise no row is flagged
+    // and the feed goes silent for everyone, or keeps naming a row that is gone.
+    const listed = await inject('GET', '/api/v1/admin/app-versions', { token: adminToken });
+    const top = ((listed.json.data ?? listed.json ?? []) as { id: string; version: string }[]).find(
+      (v) => v.version === '9.1.0',
+    );
+    expect(top, 'expected the 9.1.0 row to exist').toBeDefined();
+    await inject('DELETE', `/api/v1/admin/app-versions/${top!.id}`, { token: adminToken });
+    created.splice(created.indexOf('9.1.0'), 1);
+
+    const res = await inject('GET', '/api/v1/updates/windows/x86_64/8.0.0');
+    expect(res.status).toBe(200);
+    expect((res.json as { version: string }).version).toBe('9.0.5');
+  });
+});
+
+/**
  * Retention deletes exhaust only. The dangerous failure is not "kept too much"
  * — it is deleting a live session (logging everyone out) or business data, so
  * that is what these assert.

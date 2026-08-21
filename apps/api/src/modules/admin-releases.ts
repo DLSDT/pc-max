@@ -58,6 +58,10 @@ export async function adminReleasesModule(app: FastifyInstance) {
         .set({ ...request.body, updatedAt: new Date() })
         .where(eq(appVersions.id, existing.id))
         .returning();
+      // The body can change `version`, which moves which row is the highest
+      // semver — leave isLatest stale and the updater feed points at the wrong
+      // release.
+      await reconcileLatest();
       await recordAudit(request, { action: 'release.update', entityType: 'app_version', entityId: existing.id, after: request.body });
       return row;
     },
@@ -73,6 +77,10 @@ export async function adminReleasesModule(app: FastifyInstance) {
       const existing = await db.query.appVersions.findFirst({ where: eq(appVersions.id, request.params.id) });
       if (!existing) throw notFound('App version');
       await db.delete(appVersions).where(eq(appVersions.id, existing.id));
+      // Deleting the current latest would otherwise leave no row flagged, and
+      // the updater feed would serve 204 to everyone until someone touched a
+      // release by hand.
+      await reconcileLatest();
       await recordAudit(request, { action: 'release.delete', entityType: 'app_version', entityId: existing.id, before: { version: existing.version } });
       return { ok: true };
     },
