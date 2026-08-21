@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { dataListSchema } from '../lib/schemas';
@@ -31,10 +31,15 @@ export async function publicOptimizedSettingModule(app: FastifyInstance) {
           ),
         );
 
+      // Neither this query nor the page sorts, so the order was whatever the
+      // planner happened to produce — stable today, but free to change on a
+      // plan or statistics change, which would silently reshuffle the list
+      // between visits. Alphabetical is what a browsable page should be.
       const rows = await db
         .select()
         .from(games)
-        .where(and(publishedGameWhere(), inArray(games.id, taggedGameIds)));
+        .where(and(publishedGameWhere(), inArray(games.id, taggedGameIds)))
+        .orderBy(asc(games.name), asc(games.id));
 
       const enriched = await attachGameMetadata(rows);
       return { data: enriched.map(toSummary) };
