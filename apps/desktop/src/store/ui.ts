@@ -37,6 +37,11 @@ interface UiState {
   updateAvailable: boolean;
   setUpdateAvailable: (v: boolean) => void;
 
+  /** Install updates without asking. Persisted; defaults ON so a beta tester
+   *  is never left running a build with a known fix already published. */
+  autoUpdate: boolean;
+  setAutoUpdate: (v: boolean) => void;
+
   /** Running version is below the server-mandated minimum (blocking banner). */
   updateRequired: boolean;
   setUpdateRequired: (v: boolean) => void;
@@ -66,12 +71,15 @@ export const useUi = create<UiState>()(
       updateAvailable: false,
       setUpdateAvailable: (updateAvailable) => set({ updateAvailable }),
 
+      autoUpdate: true,
+      setAutoUpdate: (autoUpdate) => set({ autoUpdate }),
+
       updateRequired: false,
       setUpdateRequired: (updateRequired) => set({ updateRequired }),
     }),
     {
       name: 'goh_ui',
-      partialize: (s) => ({ sidebarCollapsed: s.sidebarCollapsed, language: s.language, theme: s.theme }),
+      partialize: (s) => ({ sidebarCollapsed: s.sidebarCollapsed, language: s.language, theme: s.theme, autoUpdate: s.autoUpdate }),
     },
   ),
 );

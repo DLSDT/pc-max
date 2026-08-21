@@ -9,6 +9,7 @@ import { cache } from '@/lib/cache';
 import { config, getRuntimeAppVersion } from '@/lib/config';
 import { applyTheme } from '@/lib/theme';
 import { runSync } from '@/lib/sync';
+import { checkNativeUpdate, installNativeUpdate, isTauriShell } from '@/lib/updater';
 import { getSubscription } from '@/lib/subscription';
 import { createBackup, deleteBackup, getApplied, listBackups, restoreBackup, type BackupSnapshot } from '@/lib/backup';
 import { useAuth } from '@/store/auth';
@@ -32,11 +33,15 @@ export default function SettingsPage() {
   const theme = useUi((s) => s.theme);
   const setTheme = useUi((s) => s.setTheme);
   const setSyncStatus = useUi((s) => s.setSyncStatus);
+  const autoUpdate = useUi((s) => s.autoUpdate);
+  const setAutoUpdate = useUi((s) => s.setAutoUpdate);
   const user = useAuth((s) => s.user);
   const authReady = useAuth((s) => s.ready);
   const logout = useAuth((s) => s.logout);
 
   const [syncing, setSyncing] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateMsg, setUpdateMsg] = useState<string | null>(null);
   const [cleared, setCleared] = useState(false);
   const [subActive, setSubActive] = useState(false);
   const [subChecked, setSubChecked] = useState(false);
@@ -101,6 +106,30 @@ export default function SettingsPage() {
       })
       .catch(() => setSubChecked(true));
   }, [user]);
+
+  async function onCheckUpdate() {
+    setCheckingUpdate(true);
+    setUpdateMsg(null);
+    try {
+      const res = await checkNativeUpdate();
+      if (!isTauriShell()) {
+        setUpdateMsg(t('settings.updateDesktopOnly'));
+      } else if (!res.hasUpdate) {
+        setUpdateMsg(t('settings.upToDate'));
+      } else if (autoUpdate) {
+        // Installing relaunches the app, so this only returns on failure.
+        setUpdateMsg(t('settings.installing', { version: res.version ?? '' }));
+        const ok = await installNativeUpdate();
+        if (!ok) setUpdateMsg(t('settings.updateFailed'));
+      } else {
+        setUpdateMsg(t('settings.updateFound', { version: res.version ?? '' }));
+      }
+    } catch {
+      setUpdateMsg(t('settings.updateFailed'));
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }
 
   async function onSignOut() {
     await logout();
@@ -182,7 +211,8 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {/* Theme */}
+      {/* Appearance — theme and language are the same shape, so they pair up. */}
+      <div className="grid gap-4 lg:grid-cols-2">
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           {theme === 'dark' ? <Moon aria-hidden className="size-4 text-primary" /> : <Sun aria-hidden className="size-4 text-primary" />}
@@ -221,7 +251,6 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Language */}
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Globe aria-hidden className="size-4 text-primary" />
@@ -245,6 +274,34 @@ export default function SettingsPage() {
               {l.label}
             </button>
           ))}
+        </div>
+      </section>
+      </div>
+
+      {/* Updates */}
+      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <RefreshCw aria-hidden className="size-4 text-primary" />
+          {t('settings.updates')}
+        </h2>
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={autoUpdate}
+            onChange={(e) => setAutoUpdate(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span className="space-y-0.5">
+            <span className="block text-sm font-medium">{t('settings.autoUpdate')}</span>
+            <span className="block text-xs text-muted-foreground">{t('settings.autoUpdateHint')}</span>
+          </span>
+        </label>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <Button variant="outline" size="sm" disabled={checkingUpdate} onClick={() => void onCheckUpdate()}>
+            {checkingUpdate ? <Loader2 aria-hidden className="animate-spin" /> : <RefreshCw aria-hidden />}
+            {t('settings.checkUpdate')}
+          </Button>
+          {updateMsg && <span className="text-xs text-muted-foreground">{updateMsg}</span>}
         </div>
       </section>
 
@@ -295,7 +352,8 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {/* Sync */}
+      {/* Maintenance — sync and cache are both a line of text plus one button. */}
+      <div className="grid gap-4 lg:grid-cols-2">
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <RefreshCw aria-hidden className="size-4 text-primary" />
@@ -310,7 +368,6 @@ export default function SettingsPage() {
         </Button>
       </section>
 
-      {/* Cache */}
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <Database aria-hidden className="size-4 text-primary" />
@@ -325,6 +382,8 @@ export default function SettingsPage() {
           {cleared && <span className="text-xs text-emerald-400">{t('settings.clearCacheDone')}</span>}
         </div>
       </section>
+
+      </div>
 
       {/* About */}
       <section className="space-y-1.5 rounded-xl border border-border bg-card p-5 text-sm">
