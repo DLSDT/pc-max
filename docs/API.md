@@ -56,7 +56,8 @@ The API contract is defined once in `packages/validation` (Zod) and shared by ev
 | Method | Path | Description |
 |---|---|---|
 | POST | `/admin/uploads/presign` | `{ kind, contentType, size }` → `{ uploadUrl, objectKey, publicUrl }`; the browser PUTs bytes directly to storage |
-| PUT | `/uploads/put/:key` | Dev-only endpoint backing the local storage driver |
+| PUT | `/uploads/put/:exp/:sig/*` | Local storage driver's write path. Unauthenticated by design — the HMAC and expiry minted by `presign` **are** the authorisation, and are verified constant-time |
+| PUT | `/uploads/packages/put/:exp/:sig/*` | Same, for package files. Streams to disk; extension allowlist and 500 MB cap enforced here, not only at presign |
 
 ### Optimization profiles
 | Method | Path | Description |
@@ -154,7 +155,7 @@ POST /hardware/recommend        # { gameSlug, hardware } → { recommended?, alt
 GET  /games/:slug/packages                  # published packages for a game
 GET  /games/:slug/packages/:packageSlug     # detail + manifest (no URLs)
 POST /games/:slug/packages/:packageSlug/download   # 403 without premium_optimization; else manifest + per-file SIGNED URLs
-GET  /api/v1/uploads/signed/:exp/:sig/:objectKey   # local driver — HMAC-validated, TTL-bounded file fetch
+GET  /api/v1/uploads/signed/:exp/:sig/*            # local driver — HMAC-validated, TTL-bounded file fetch
 GET  /admin/packages/:id/versions                  # release history (manifest snapshot per publish)
 
 # Admin — packages (create → upload → complete(hash) → publish)
@@ -225,7 +226,7 @@ Roles are enforced by middleware (permission map in `apps/api/src/lib/rbac.ts`),
 # Anonymous desktop flow
 curl http://localhost:4000/api/v1/home
 curl "http://localhost:4000/api/v1/games?q=gta&techs=dlss,fsr"
-curl http://localhost:4000/api/v1/games/gta-v/optimizations
+curl http://localhost:4000/api/v1/games/cyberpunk-2077/optimizations
 curl "http://localhost:4000/api/v1/sync?since=2026-08-17T00:00:00Z"
 
 # Admin flow
