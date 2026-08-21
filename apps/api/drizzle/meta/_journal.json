@@ -92,6 +92,13 @@
       "when": 1787197000012,
       "tag": "0012_profile_color_multiplay_rt",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1787198000013,
+      "tag": "0013_retention_indexes",
+      "breakpoints": true
     }
   ]
 }

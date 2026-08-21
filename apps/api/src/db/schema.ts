@@ -104,7 +104,7 @@ export const sessions = pgTable(
     userAgent: text('user_agent'),
     createdAt: createdAt(),
   },
-  (t) => [index('sessions_admin_idx').on(t.adminId)],
+  (t) => [index('sessions_admin_idx').on(t.adminId), index('sessions_expires_idx').on(t.expiresAt)],
 );
 
 /** Refresh-token store (rotating sessions) — desktop end-user accounts. */
@@ -122,7 +122,7 @@ export const userSessions = pgTable(
     userAgent: text('user_agent'),
     createdAt: createdAt(),
   },
-  (t) => [index('user_sessions_user_idx').on(t.userId)],
+  (t) => [index('user_sessions_user_idx').on(t.userId), index('user_sessions_expires_idx').on(t.expiresAt)],
 );
 
 // ---------------------------------------------------------------------------
@@ -617,7 +617,7 @@ export const loginAttempts = pgTable(
     success: boolean('success').notNull().default(false),
     attemptedAt: timestamp('attempted_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },
-  (t) => [index('login_attempts_email_time_idx').on(t.email, t.attemptedAt)],
+  (t) => [index('login_attempts_email_time_idx').on(t.email, t.attemptedAt), index('login_attempts_attempted_idx').on(t.attemptedAt)],
 );
 
 /** One-time passcodes for verification (register / password reset).
@@ -638,32 +638,44 @@ export const otpCodes = pgTable(
     usedAt: timestamp('used_at', { withTimezone: true, mode: 'date' }),
     createdAt: createdAt(),
   },
-  (t) => [index('otp_codes_phone_purpose_idx').on(t.phone, t.purpose), index('otp_codes_email_purpose_idx').on(t.email, t.purpose)],
+  (t) => [
+    index('otp_codes_phone_purpose_idx').on(t.phone, t.purpose),
+    index('otp_codes_email_purpose_idx').on(t.email, t.purpose),
+    index('otp_codes_created_idx').on(t.createdAt),
+  ],
 );
 
 /** Password reset tokens (only the hash is stored). */
-export const passwordResets = pgTable('password_resets', {
-  id: uuidPk(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  tokenHash: text('token_hash').notNull().unique(),
-  expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
-  usedAt: timestamp('used_at', { withTimezone: true, mode: 'date' }),
-  createdAt: createdAt(),
-});
+export const passwordResets = pgTable(
+  'password_resets',
+  {
+    id: uuidPk(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true, mode: 'date' }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('password_resets_created_idx').on(t.createdAt)],
+);
 
 /** Safe email delivery log — masked recipient + status only, never codes/tokens. */
-export const emailLogs = pgTable('email_logs', {
-  id: uuidPk(),
-  event: text('event').notNull(), // verification | password_reset | security | welcome | admin_test
-  recipientHash: text('recipient_hash').notNull(),
-  maskedRecipient: text('masked_recipient').notNull(),
-  provider: text('provider').notNull(),
-  status: text('status').notNull(), // sent | failed
-  providerMessage: text('provider_message'),
-  createdAt: createdAt(),
-});
+export const emailLogs = pgTable(
+  'email_logs',
+  {
+    id: uuidPk(),
+    event: text('event').notNull(), // verification | password_reset | security | welcome | admin_test
+    recipientHash: text('recipient_hash').notNull(),
+    maskedRecipient: text('masked_recipient').notNull(),
+    provider: text('provider').notNull(),
+    status: text('status').notNull(), // sent | failed
+    providerMessage: text('provider_message'),
+    createdAt: createdAt(),
+  },
+  (t) => [index('email_logs_created_idx').on(t.createdAt)],
+);
 
 // ---------------------------------------------------------------------------
 // Hardware profiles & optimization packages (file-based, manifest-driven)
