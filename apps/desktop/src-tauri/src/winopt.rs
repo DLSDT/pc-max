@@ -108,6 +108,8 @@ const ALLOWED_REG_KEYS: &[&str] = &[
     r"Software\Microsoft\GameBar",
     r"Software\Microsoft\GameDVR",
     r"Software\Microsoft\Windows\CurrentVersion\GameDVR",
+    r"System\GameConfigStore",
+    // HKLM only — this is the machine-wide GPU scheduler key.
     r"System\CurrentControlSet\Control\GraphicsDrivers",
     // Privacy / telemetry
     r"Software\Policies\Microsoft\Windows\DataCollection",
@@ -339,10 +341,16 @@ pub fn catalog() -> Vec<TweakDef> {
         requires_admin: false,
         requires_restart: false,
         profiles: 0b010,
+        // Windows exposes this per user as GameConfigStore's
+        // GameDVR_FSEBehaviorMode (2 = optimizations off). The previous target,
+        // "FullscreenOptimizations" under HKCU\System\CurrentControlSet, is not
+        // a setting Windows reads — HKCU has no CurrentControlSet subtree — so
+        // applying this tweak created a junk key, reported success and changed
+        // nothing.
         ops: vec![Op::RegWrite {
-            path: RegPath::new(Hive::Hkcu, r"System\CurrentControlSet\Control\GraphicsDrivers", "FullscreenOptimizations")
+            path: RegPath::new(Hive::Hkcu, r"System\GameConfigStore", "GameDVR_FSEBehaviorMode")
                 .expect("allowlisted path"),
-            target: Value::Dword(0),
+            target: Value::Dword(2),
         }],
     });
     v.push(TweakDef {
@@ -1155,7 +1163,7 @@ fn real_read(op: &Op) -> Result<BeforeValue, String> {
         Op::VfxMode { .. } => Ok(BeforeValue::Vfx { mode: read_dword(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", "VisualFXSetting")?)? }),
         Op::GameMode { .. } => Ok(BeforeValue::Reg(read_reg(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\GameBar", "AutoGameModeEnabled")?)?)),
         Op::GameDvr { .. } => Ok(BeforeValue::Reg(read_reg(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\GameDVR", "AppCaptureEnabled")?)?)),
-        Op::Hags { .. } => Ok(BeforeValue::Reg(read_reg(&RegPath::new(Hive::Hkcu, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?)?)),
+        Op::Hags { .. } => Ok(BeforeValue::Reg(read_reg(&RegPath::new(Hive::Hklm, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?)?)),
         Op::Telemetry { .. } => Ok(BeforeValue::Reg(read_reg(&RegPath::new(Hive::Hklm, r"Software\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry")?)?)),
         Op::CleanupDir { dir } => Ok(BeforeValue::Count { bytes: cleanup_dir_bytes(dir)? }),
     }
@@ -1172,7 +1180,7 @@ fn real_write(op: &Op) -> Result<(), String> {
         Op::VfxMode { mode } => write_reg(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", "VisualFXSetting")?, &Value::Dword(*mode)),
         Op::GameMode { enable } => write_reg(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\GameBar", "AutoGameModeEnabled")?, &Value::Dword(if *enable { 1 } else { 0 })),
         Op::GameDvr { enable } => write_reg(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\GameDVR", "AppCaptureEnabled")?, &Value::Dword(if *enable { 1 } else { 0 })),
-        Op::Hags { enable } => write_reg(&RegPath::new(Hive::Hkcu, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?, &Value::Dword(if *enable { 2 } else { 1 })),
+        Op::Hags { enable } => write_reg(&RegPath::new(Hive::Hklm, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?, &Value::Dword(if *enable { 2 } else { 1 })),
         Op::Telemetry { level } => write_reg(&RegPath::new(Hive::Hklm, r"Software\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry")?, &Value::Dword(*level)),
         Op::CleanupDir { dir } => cleanup_dir(dir),
     }
@@ -1210,7 +1218,7 @@ fn real_restore(op: &Op, before: &BeforeValue) -> Result<(), String> {
         },
         (Op::Hags { .. }, BeforeValue::Reg(v)) => match v {
             Some(val) => real_write(&Op::Hags { enable: matches!(val, Value::Dword(2)) }),
-            None => delete_reg(&RegPath::new(Hive::Hkcu, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?),
+            None => delete_reg(&RegPath::new(Hive::Hklm, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?),
         },
         (Op::Telemetry { .. }, BeforeValue::Reg(v)) => match v {
             Some(val) => real_write(&Op::Telemetry { level: dword_of(val) }),
@@ -1232,7 +1240,7 @@ fn real_is_applied(op: &Op) -> Result<bool, String> {
         Op::VfxMode { mode } => Ok(&read_dword(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects", "VisualFXSetting")?)? == mode),
         Op::GameMode { enable } => Ok(read_dword(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\GameBar", "AutoGameModeEnabled")?)? == if *enable { 1 } else { 0 }),
         Op::GameDvr { enable } => Ok(read_dword(&RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\GameDVR", "AppCaptureEnabled")?)? == if *enable { 1 } else { 0 }),
-        Op::Hags { enable } => Ok(read_dword(&RegPath::new(Hive::Hkcu, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?)? == if *enable { 2 } else { 1 }),
+        Op::Hags { enable } => Ok(read_dword(&RegPath::new(Hive::Hklm, r"System\CurrentControlSet\Control\GraphicsDrivers", "HwSchMode")?)? == if *enable { 2 } else { 1 }),
         Op::Telemetry { level } => Ok(read_dword(&RegPath::new(Hive::Hklm, r"Software\Policies\Microsoft\Windows\DataCollection", "AllowTelemetry")?)? == *level),
         Op::CleanupDir { dir } => Ok(cleanup_dir_bytes(dir)? == 0),
     }
@@ -1540,6 +1548,50 @@ mod tests {
         assert!(RegPath::new(Hive::Hkcu, "", "x").is_err());
         assert!(RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\Run", "").is_err());
         assert!(RegPath::new(Hive::Hkcu, r"Software\Microsoft\Windows\CurrentVersion\Run\..\..\Evil", "x").is_err());
+    }
+
+    /// A tweak written to the wrong hive fails silently and *looks* like it
+    /// worked: the write succeeds into a key Windows never reads, and verify()
+    /// reads the same junk key straight back. Both GraphicsDrivers tweaks
+    /// shipped that way — HKCU has no CurrentControlSet subtree at all.
+    #[test]
+    fn machine_wide_keys_are_never_written_under_hkcu() {
+        const MACHINE_ONLY: &[&str] = &[
+            r"System\CurrentControlSet\Control\GraphicsDrivers",
+            r"SYSTEM\CurrentControlSet\Control\Power",
+        ];
+
+        for op in catalog().iter().flat_map(|t| t.ops.iter()) {
+            if let Op::RegWrite { path, .. } = op {
+                let key = path.key.to_lowercase();
+                for machine in MACHINE_ONLY {
+                    assert!(
+                        !(key == machine.to_lowercase() && path.hive == Hive::Hkcu),
+                        "{} is machine-wide but the catalog writes it under HKCU",
+                        path.display(),
+                    );
+                }
+            }
+        }
+    }
+
+    /// Every tweak that needs admin must actually touch something that needs
+    /// admin. The HAGS tweak declared requires_admin while writing to HKCU,
+    /// which was the visible symptom of it targeting the wrong hive.
+    #[test]
+    fn hkcu_only_tweaks_do_not_claim_to_need_admin() {
+        for t in catalog() {
+            if !t.requires_admin {
+                continue;
+            }
+            let touches_only_hkcu_reg = !t.ops.is_empty()
+                && t.ops.iter().all(|op| matches!(op, Op::RegWrite { path, .. } if path.hive == Hive::Hkcu));
+            assert!(
+                !touches_only_hkcu_reg,
+                "tweak {} claims requires_admin but only writes HKCU registry values",
+                t.id,
+            );
+        }
     }
 
     #[test]
