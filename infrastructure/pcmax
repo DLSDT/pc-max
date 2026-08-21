@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# PC MAX — one command for the whole stack.
+#
+# The deployment needs two compose files (the base plus the host-network
+# override), which is easy to forget and silently gives you the wrong topology.
+# This wraps them so day-to-day operation is `pcmax up`, `pcmax logs`, etc.
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMPOSE=(docker compose -f "$DIR/docker-compose.yml" -f "$DIR/docker-compose.hostnet.yml")
+
+case "${1:-help}" in
+  up)       "${COMPOSE[@]}" up -d "${@:2}" ;;
+  down)     "${COMPOSE[@]}" down "${@:2}" ;;
+  restart)  "${COMPOSE[@]}" restart "${@:2}" ;;
+  ps)       "${COMPOSE[@]}" ps ;;
+  logs)     "${COMPOSE[@]}" logs --tail="${2:-60}" api ;;
+
+  # Rebuild from the current checkout. Uses `docker build` directly because
+  # compose refuses a host-network build without an extra privilege flag.
+  deploy)
+    cd "$DIR/.."
+    git pull
+    docker build --network=host -f apps/api/Dockerfile -t infrastructure-api:latest .
+    "${COMPOSE[@]}" up -d --force-recreate api
+    sleep 8
+    curl -fsS localhost:4000/api/v1/health && echo " ✅ deployed"
+    ;;
+
+  backup)
+    OUT="${2:-/www/pcmax-backups/db-$(date +%F-%H%M).json}"
+    mkdir -p "$(dirname "$OUT")"
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/backup-db.js /tmp/b.json
+    docker cp goh-api:/tmp/b.json "$OUT"
+    echo "✅ $OUT"
+    ;;
+
+  restore)
+    [ -n "${2:-}" ] || { echo "usage: pcmax restore <file.json>"; exit 1; }
+    docker cp "$2" goh-api:/tmp/r.json
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/restore-db.js /tmp/r.json --force
+    ;;
+
+  health)
+    echo -n "local:  "; curl -fsS localhost:4000/api/v1/health || echo "DOWN"
+    echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
+    ;;
+
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|backup|restore <f>|health}" ;;
+esac

@@ -1,0 +1,29 @@
+# Brings the stack up on boot.
+#
+# The containers already carry restart: unless-stopped, so Docker restores them
+# by itself after a reboot. This unit is the belt to that braces: it also covers
+# the cases the restart policy does not — a container removed by hand, a failed
+# `down`, or a compose file changed while the machine was off — and it uses the
+# same two -f files, so a boot can never bring the stack up with the wrong
+# network topology.
+#
+# Install:
+#   cp infrastructure/pcmax.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now pcmax
+[Unit]
+Description=PC MAX API stack
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/www/pcmax/infrastructure
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.hostnet.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.hostnet.yml stop
+# A slow first pull on boot must not trip the default timeout.
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

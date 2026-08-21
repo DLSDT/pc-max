@@ -1,0 +1,3 @@
+# Nightly database backup, keeping 30 days.
+# Install:  crontab -l 2>/dev/null | cat - infrastructure/backup.cron | crontab -
+0 3 * * * /www/pcmax/infrastructure/pcmax backup >/var/log/pcmax-backup.log 2>&1 && find /www/pcmax-backups -name 'db-*.json' -mtime +30 -delete
