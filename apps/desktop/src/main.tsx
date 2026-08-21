@@ -15,6 +15,13 @@ installGlobalCrashHandlers();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      // This app is offline-first: every read falls back to the local cache,
+      // either through placeholderData or a catch inside the queryFn. React
+      // Query's default networkMode ('online') PAUSES queries while
+      // navigator.onLine is false, so the queryFn never runs and those
+      // fallbacks are dead exactly when they are needed. Always run them and
+      // let the cache answer.
+      networkMode: 'always',
       retry: 1,
       refetchOnWindowFocus: false,
     },
