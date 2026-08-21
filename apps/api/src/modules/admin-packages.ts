@@ -23,22 +23,16 @@ import { badRequest, notFound , forbidden } from '../lib/errors';
 import { requirePermission } from '../lib/auth-middleware';
 import { recordAudit } from '../lib/audit';
 import { resolveLocalPath, storage , verifySignedUpload } from '../lib/storage';
-import { assertSafeDestination, assertSafeFilename, findPackageById, listPackageFiles, publishPackage, toPackagePublic } from '../services/packages';
+import { assertSafeDestination, assertSafeFilename, findPackageById, PACKAGE_EXT, listPackageFiles, publishPackage, toPackagePublic } from '../services/packages';
 
 const MAX_PACKAGE_FILE = 500 * 1024 * 1024; // 500 MB
-const PACKAGE_EXT = new Set([
-  'cfg', 'ini', 'txt', 'json', 'xml', 'toml', 'preset', 'pak', 'bin', 'dat', 'dll', 'fx',
-  'nvpreset', 'sig', 'profile', 'settings', 'upd', 'blend', 'lut', 'csv', 'yml', 'yaml', 'log',
-]);
-const BLOCKED_EXT = new Set([
-  'exe', 'bat', 'cmd', 'com', 'scr', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse', 'wsf',
-  'sh', 'bash', 'zsh', 'csh', 'reg', 'msi', 'sys', 'drv',
-]);
-
+/**
+ * The upload gate. Shares PACKAGE_EXT with the service rather than keeping a
+ * second copy — the two had already drifted (one listed `dll64`, the other did
+ * not), which is exactly how a security list stops meaning anything.
+ */
 function isValidPackageExt(filename: string): boolean {
-  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
-  if (BLOCKED_EXT.has(ext)) return false;
-  return PACKAGE_EXT.has(ext);
+  return PACKAGE_EXT.has(filename.split('.').pop()?.toLowerCase() ?? '');
 }
 
 /** SHA-256 of a file on disk (authoritative — the server computes it). */

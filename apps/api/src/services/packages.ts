@@ -3,6 +3,41 @@ import { db } from '../db';
 import { optimizationPackageVersions, optimizationPackages, packageFiles } from '../db/schema';
 import { badRequest, notFound } from '../lib/errors';
 
+/**
+ * Extensions a package file may have — the single source of truth for both the
+ * upload gate and the destination gate.
+ *
+ * Must stay in step with ALLOWED_EXT in apps/desktop/src-tauri/src/lib.rs,
+ * which is what actually decides whether a client will write the file. An
+ * extension the server accepts but the client does not means a package that
+ * publishes cleanly and then silently fails to install on every machine;
+ * `packageExtensions.test.ts` asserts the two lists match.
+ */
+export const PACKAGE_EXT = new Set([
+  'cfg', 'ini', 'txt', 'json', 'xml', 'toml', 'preset', 'pak', 'bin', 'dat', 'dll', 'fx',
+  'nvpreset', 'sig', 'profile', 'settings', 'upd', 'blend', 'lut', 'csv', 'yml', 'yaml', 'log',
+]);
+
+/**
+ * Explicitly refused extensions, checked before the allowlist purely so the
+ * error names the problem ("`.exe` is not allowed") instead of the generic
+ * "unsupported file type".
+ */
+const BLOCKED_EXT = new Set([
+  'exe', 'bat', 'cmd', 'com', 'scr', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse', 'wsf',
+  'sh', 'bash', 'zsh', 'csh', 'reg', 'msi', 'dll64', 'sys', 'drv',
+]);
+
+function assertAllowedExtension(name: string, label: string): void {
+  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  if (BLOCKED_EXT.has(ext)) {
+    throw badRequest(`File type .${ext} is not allowed in optimization packages`);
+  }
+  if (!PACKAGE_EXT.has(ext)) {
+    throw badRequest(`${label} has an unsupported file type (.${ext})`);
+  }
+}
+
 /** Validate a destination path: relative, inside the game directory only. */
 export function assertSafeDestination(destination: string): void {
   if (destination.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(destination)) {
@@ -15,22 +50,19 @@ export function assertSafeDestination(destination: string): void {
   if (destination.includes('\\')) {
     throw badRequest('Use forward slashes in destination paths');
   }
+  // The destination is what the desktop actually writes, and it was never
+  // extension-checked here — so a package could be published with
+  // destination "payload.exe" and then be refused by every client at install
+  // time, with the failure surfacing on users' machines instead of at
+  // authoring time.
+  assertAllowedExtension(destination, 'Destination');
 }
-
-/** Safe extension allowlist — packages can never contain executables/scripts. */
-const BLOCKED_EXT = new Set([
-  'exe', 'bat', 'cmd', 'com', 'scr', 'ps1', 'psm1', 'vbs', 'vbe', 'js', 'jse', 'wsf',
-  'sh', 'bash', 'zsh', 'csh', 'reg', 'msi', 'dll64', 'sys', 'drv',
-]);
 
 export function assertSafeFilename(filename: string): void {
   if (filename.includes('\\') || filename.startsWith('/') || filename.includes('..')) {
     throw badRequest('Invalid filename');
   }
-  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
-  if (BLOCKED_EXT.has(ext)) {
-    throw badRequest(`File type .${ext} is not allowed in optimization packages`);
-  }
+  assertAllowedExtension(filename, 'Filename');
 }
 
 /** Load a package by slug within a game (soft-delete aware). */
