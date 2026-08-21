@@ -105,30 +105,37 @@ async function clearAttempts(identifier: string) {
   await db.delete(loginAttempts).where(and(eq(loginAttempts.email, identifier), eq(loginAttempts.success, false)));
 }
 
-/** Deliver a code over the right channel with the proper branded template. */
-async function deliverOtp(identifier: string, code: string, purpose: OtpPurpose, resetLink?: string) {
+/**
+ * Deliver a code over the right channel with the proper branded template.
+ *
+ * Returns whether it actually went out. A rejected SMTP handshake is not a
+ * detail to swallow: the user is staring at a "code sent" message waiting for
+ * mail that will never arrive, and the only trace is a row in email_logs.
+ */
+async function deliverOtp(identifier: string, code: string, purpose: OtpPurpose, resetLink?: string): Promise<boolean> {
   if (isEmail(identifier)) {
     const expiresMinutes = Math.round(config.OTP_TTL_SECONDS / 60);
     if (purpose === 'reset' && resetLink) {
-      await deliverEmail(
+      const res = await deliverEmail(
         identifier,
         'Reset your PC MAX password',
         renderPasswordResetEmail(identifier, resetLink, code, expiresMinutes),
         'password_reset',
         mail,
       );
-    } else {
-      await deliverEmail(
-        identifier,
-        'Verify your PC MAX email',
-        renderVerificationEmail(identifier, code, expiresMinutes),
-        'verification',
-        mail,
-      );
+      return res.ok;
     }
-  } else {
-    await sms.send(identifier, `PC MAX verification code: ${code}`);
+    const res = await deliverEmail(
+      identifier,
+      'Verify your PC MAX email',
+      renderVerificationEmail(identifier, code, expiresMinutes),
+      'verification',
+      mail,
+    );
+    return res.ok;
   }
+  await sms.send(identifier, `PC MAX verification code: ${code}`);
+  return true;
 }
 
 /**
@@ -137,7 +144,15 @@ async function deliverOtp(identifier: string, code: string, purpose: OtpPurpose,
  */
 async function sendOtp(identifier: string, purpose: OtpPurpose, resetLink?: string) {
   const { devCode } = await issueOtp(identifier, purpose);
-  if (devCode) await deliverOtp(identifier, devCode, purpose, resetLink);
+  if (devCode) {
+    const delivered = await deliverOtp(identifier, devCode, purpose, resetLink);
+    // Surfacing this leaks nothing: a transport failure is the same whether or
+    // not an account exists, so the decoy path fails identically. Reporting
+    // success when the mail bounced just strands the user.
+    if (!delivered) {
+      throw new AppError(502, 'DELIVERY_FAILED', 'Could not send the verification code right now. Please try again in a moment.');
+    }
+  }
   return { ok: true, ...(config.OTP_EXPOSE && devCode ? { devCode } : {}) };
 }
 

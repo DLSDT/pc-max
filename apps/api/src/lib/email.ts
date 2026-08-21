@@ -96,34 +96,38 @@ export async function deliverEmail(
   event: EmailEvent,
   provider: MailProvider,
 ): Promise<{ ok: boolean; error?: string }> {
-  try {
-    await provider.send(to, subject, html);
-    await db.insert(emailLogs).values({
-      event,
-      recipientHash: sha256(to),
-      maskedRecipient: maskRecipient(to),
-      provider: provider.name,
-      status: 'sent',
-    });
-    return { ok: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message.slice(0, 300) : 'unknown error';
-    // Server-side log only — never returned to the user, never a stack trace.
-    console.error(`[email] ${event} delivery failed for ${maskRecipient(to)}: ${message}`);
+  // The audit row is best effort in BOTH directions. It used to be inside the
+  // success path's try, so a hiccup writing the log turned a message that had
+  // already left the server into a reported failure — and the caller then
+  // retries, sending the user a second code while the first one is in flight.
+  async function record(status: 'sent' | 'failed', providerMessage?: string) {
     try {
       await db.insert(emailLogs).values({
         event,
         recipientHash: sha256(to),
         maskedRecipient: maskRecipient(to),
         provider: provider.name,
-        status: 'failed',
-        providerMessage: message,
+        status,
+        ...(providerMessage ? { providerMessage } : {}),
       });
-    } catch {
-      // Logging must never break the request.
+    } catch (logErr) {
+      // Logging must never change the outcome of the send.
+      console.error(`[email] could not record ${event} ${status} log: ${String(logErr).slice(0, 200)}`);
     }
+  }
+
+  try {
+    await provider.send(to, subject, html);
+  } catch (err) {
+    const message = err instanceof Error ? err.message.slice(0, 300) : 'unknown error';
+    // Server-side log only — never returned to the user, never a stack trace.
+    console.error(`[email] ${event} delivery failed for ${maskRecipient(to)}: ${message}`);
+    await record('failed', message);
     return { ok: false, error: message };
   }
+
+  await record('sent');
+  return { ok: true };
 }
 
 // ---------------------------------------------------------------------------
