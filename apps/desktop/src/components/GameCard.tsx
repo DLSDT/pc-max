@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { genreName } from '@/i18n';
 import { Gamepad2, Heart, Sparkles } from 'lucide-react';
 import type { GameSummary } from '@goh/types';
 import { cache } from '@/lib/cache';
@@ -59,7 +60,7 @@ function Cover({ game }: { game: GameSummary }) {
 }
 
 export default function GameCard({ game }: { game: GameSummary }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isFavorite = useIsFavorite(game.id);
   const profile = game.defaultProfile;
   const cachedVersions = cache.getProfileVersions(game.slug);
@@ -108,7 +109,7 @@ export default function GameCard({ game }: { game: GameSummary }) {
           {game.name}
         </h3>
         <p className="line-clamp-1 text-xs text-muted-foreground">
-          {game.genres.map((g) => g.name).join(' · ') || '—'}
+          {game.genres.map((g) => genreName(g.slug, g.name, i18n.language)).join(' · ') || '—'}
           {game.releaseYear ? ` · ${game.releaseYear}` : ''}
         </p>
 

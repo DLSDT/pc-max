@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { genreName } from '@/i18n';
 import { ChevronLeft, ChevronRight, CloudOff, FilterX, SearchX, WifiOff } from 'lucide-react';
 import { useGames, useHome } from '@/hooks/useLibrary';
 import { useUi } from '@/store/ui';
@@ -21,7 +22,7 @@ const FILTER_TECHS: { flag: TechFlag; label: string }[] = [
 ];
 
 export default function GamesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const filters = useUi((s) => s.filters);
   const setFilters = useUi((s) => s.setFilters);
@@ -118,7 +119,7 @@ export default function GamesPage() {
           <option value="">{t('games.allGenres')}</option>
           {(home?.categories ?? []).map((c) => (
             <option key={c.slug} value={c.slug}>
-              {c.name}
+              {genreName(c.slug, c.name, i18n.language)}
             </option>
           ))}
         </select>

@@ -1,6 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
+export { genreDescription, genreName } from './lib/genreLabels';
+
 /**
  * Read the persisted language choice (store/ui.ts, zustand `persist` under
  * `goh_ui`) synchronously, before i18next initializes and before React ever
@@ -1323,9 +1325,17 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-/** Set the document direction for RTL languages. */
+/**
+ * Set the document direction and language for the active locale.
+ *
+ * `lang` matters as much as `dir`: it drives screen-reader pronunciation,
+ * hyphenation and `:lang()` selectors, and it was left at the index.html
+ * default of "en" — so an entirely Persian, right-to-left UI still announced
+ * itself as English.
+ */
 export function applyDirection(lng: string) {
   document.documentElement.dir = lng === 'fa' ? 'rtl' : 'ltr';
+  document.documentElement.lang = lng;
 }
 
 // Paint the correct direction before the first React render — AppLayout's

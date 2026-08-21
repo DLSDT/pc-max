@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { genreDescription, genreName } from '@/i18n';
 import { ChevronRight, LayoutGrid } from 'lucide-react';
 import { useHome } from '@/hooks/useLibrary';
 import { EmptyState, Skeleton } from '@/components/ui';
 
 export default function CategoriesPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, isLoading } = useHome();
   const categories = data?.categories ?? [];
 
@@ -30,8 +31,14 @@ export default function CategoriesPage() {
               className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow-sm"
             >
               <div className="min-w-0">
-                <h2 className="truncate text-sm font-semibold transition-colors group-hover:text-primary">{c.name}</h2>
-                {c.description && <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{c.description}</p>}
+                <h2 className="truncate text-sm font-semibold transition-colors group-hover:text-primary">
+                  {genreName(c.slug, c.name, i18n.language)}
+                </h2>
+                {genreDescription(c.slug, c.description, i18n.language) && (
+                  <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                    {genreDescription(c.slug, c.description, i18n.language)}
+                  </p>
+                )}
                 <p className="mt-1 text-[11px] text-muted-foreground">{t('categories.games', { count: c.gameCount })}</p>
               </div>
               <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground rtl:rotate-180" />
