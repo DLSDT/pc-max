@@ -43,10 +43,26 @@ case "${1:-help}" in
     "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/restore-db.js /tmp/r.json --force
     ;;
 
+  # Re-apply the curated genre/featured metadata after a deploy that changed
+  # it. Idempotent, so running it on every deploy is harmless.
+  metadata)
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/apply-catalog-metadata.js "${@:2}"
+    ;;
+
+  # Create or rotate a super-admin login. Prompts for the password rather than
+  # taking it as an argument, so it never lands in shell history.
+  set-admin)
+    [ -n "${2:-}" ] || { echo "usage: pcmax set-admin <email>"; exit 1; }
+    read -rsp "New password for $2: " PW; echo
+    [ -n "$PW" ] || { echo "aborted: empty password"; exit 1; }
+    printf '%s' "$PW" | "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/set-admin-credentials.js "$2" --password-stdin
+    unset PW
+    ;;
+
   health)
     echo -n "local:  "; curl -fsS localhost:4000/api/v1/health || echo "DOWN"
     echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
     ;;
 
-  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|backup|restore <f>|health}" ;;
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|set-admin <email>|backup|restore <f>|health}" ;;
 esac
