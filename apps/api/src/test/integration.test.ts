@@ -353,6 +353,86 @@ describe('updater feed', () => {
     expect(res.status).toBe(204);
   });
 
+  it('pins an older build when an admin marks it latest', async () => {
+    // The rollback path: 9.1.0 turned out bad, so the admin clicks "mark
+    // latest" on 9.0.5 and every client must be offered 9.0.5 from then on.
+    // This used to recompute "highest semver wins" and silently keep 9.1.0.
+    const listed = await inject('GET', '/api/v1/admin/app-versions', { token: adminToken });
+    const rows = (listed.json.data ?? listed.json ?? []) as { id: string; version: string }[];
+    const older = rows.find((v) => v.version === '9.0.5');
+    expect(older, 'expected the 9.0.5 row').toBeDefined();
+
+    const res = await inject('PATCH', `/api/v1/admin/app-versions/${older!.id}/state`, { token: adminToken });
+    expect(res.status).toBe(200);
+
+    const feed = await inject('GET', '/api/v1/updates/windows/x86_64/8.0.0');
+    expect(feed.status).toBe(200);
+    expect((feed.json as { version: string }).version).toBe('9.0.5');
+
+    // A client already on the pinned build has nothing to install.
+    expect((await inject('GET', '/api/v1/updates/windows/x86_64/9.0.5')).status).toBe(204);
+
+    // Put 9.1.0 back so the following test sees the state it expects.
+    const top = rows.find((v) => v.version === '9.1.0');
+    await inject('PATCH', `/api/v1/admin/app-versions/${top!.id}/state`, { token: adminToken });
+  });
+
+  it('refuses to pin a build the updater could never serve', async () => {
+    // An unsigned release makes the feed return 204 to everyone, so pinning
+    // one would stop updates entirely with no visible cause.
+    const res = await inject('POST', '/api/v1/admin/app-versions', {
+      token: adminToken,
+      body: {
+        version: '9.2.0',
+        platform: 'windows',
+        channel: 'stable',
+        downloadUrl: 'https://example.test/PCMAX-9.2.0.exe',
+      },
+    });
+    expect(res.status).toBe(201);
+    created.push('9.2.0');
+
+    const listed = await inject('GET', '/api/v1/admin/app-versions', { token: adminToken });
+    const unsigned = ((listed.json.data ?? listed.json ?? []) as { id: string; version: string }[]).find(
+      (v) => v.version === '9.2.0',
+    );
+    const pin = await inject('PATCH', `/api/v1/admin/app-versions/${unsigned!.id}/state`, { token: adminToken });
+    expect(pin.status).toBe(400);
+  });
+
+  it('does not let an unsigned release take the latest flag', async () => {
+    // Publishing an unsigned build (a CI run where signing failed) used to win
+    // "latest" on semver alone. The feed skips unsigned releases, so every user
+    // on that platform silently stopped being offered updates — including the
+    // signed release that was working a minute earlier.
+    const before = await inject('GET', '/api/v1/updates/windows/x86_64/8.0.0');
+    expect(before.status, 'a signed release should be on offer to start with').toBe(200);
+    const offered = (before.json as { version: string }).version;
+
+    const res = await inject('POST', '/api/v1/admin/app-versions', {
+      token: adminToken,
+      body: {
+        version: '9.9.0',
+        platform: 'windows',
+        channel: 'stable',
+        downloadUrl: 'https://example.test/PCMAX-9.9.0.exe',
+      },
+    });
+    expect(res.status).toBe(201);
+    created.push('9.9.0');
+
+    const after = await inject('GET', '/api/v1/updates/windows/x86_64/8.0.0');
+    expect(after.status, 'updates must not go silent').toBe(200);
+    expect((after.json as { version: string }).version).toBe(offered);
+  });
+
+  it('404s on an id that does not exist', async () => {
+    const res = await inject('PATCH', '/api/v1/admin/app-versions/00000000-0000-4000-8000-000000000000/state', {
+      token: adminToken,
+    });
+    expect(res.status).toBe(404);
+  });
+
   it('stops offering a release once it is deleted', async () => {
     // Deleting the latest row must re-reconcile; otherwise no row is flagged
     // and the feed goes silent for everyone, or keeps naming a row that is gone.

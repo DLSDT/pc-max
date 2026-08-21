@@ -1,10 +1,10 @@
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AppVersionCreateInput, AppVersionUpdateInput } from '@goh/validation';
 import { db } from '../db';
 import { appVersions } from '../db/schema';
-import { notFound } from '../lib/errors';
+import { badRequest, notFound } from '../lib/errors';
 import { recordAudit } from '../lib/audit';
 import { requirePermission } from '../lib/auth-middleware';
 import { idParams } from '../lib/params';
@@ -92,23 +92,57 @@ export async function adminReleasesModule(app: FastifyInstance) {
       preHandler: [requirePermission('releases.write')],
       schema: { params: idParams, response: { 200: okSchema } },
     },
-    async () => {
-      await reconcileLatest();
+    // The admin panel's "mark latest" button sends the row's id here. This
+    // used to ignore it and just re-run reconcileLatest(), which recomputes
+    // "highest semver wins" — so the one case the button exists for, pinning
+    // an OLDER build after a bad release, reported success and changed
+    // nothing. Set the requested version instead.
+    async (request) => {
+      const target = await db.query.appVersions.findFirst({ where: eq(appVersions.id, request.params.id) });
+      if (!target) throw notFound('App version');
+
+      // The updater feed skips a release with no signature, so pinning one
+      // would silently stop updates for every user on that platform.
+      if (!target.signature) {
+        throw badRequest('This build has no updater signature, so clients would never be offered it.');
+      }
+
+      await db
+        .update(appVersions)
+        .set({ isLatest: false, updatedAt: new Date() })
+        .where(and(eq(appVersions.platform, target.platform), eq(appVersions.channel, target.channel)));
+      await db.update(appVersions).set({ isLatest: true, updatedAt: new Date() }).where(eq(appVersions.id, target.id));
+
+      await recordAudit(request, {
+        action: 'release.set_latest',
+        entityType: 'app_version',
+        entityId: target.id,
+        after: { version: target.version, platform: target.platform, channel: target.channel },
+      });
       return { ok: true };
     },
   );
 
-  /** Keep `isLatest` consistent per platform+channel (highest semver wins). */
+  /**
+   * Keep `isLatest` consistent per platform+channel: the highest semver the
+   * updater can actually serve.
+   *
+   * Signature matters here, not just version order. The feed returns 204 for a
+   * release with no signature, so letting an unsigned build take the flag —
+   * a CI run where signing failed, say — would silently stop updates for every
+   * user on that platform with nothing to show why.
+   */
   async function reconcileLatest() {
     const all = await db.select().from(appVersions).orderBy(asc(appVersions.releasedAt));
     const latest = new Map<string, string>();
     for (const v of all) {
+      if (!v.signature) continue;
       const key = `${v.platform}:${v.channel}`;
       const cur = latest.get(key);
       if (!cur || compareSemver(v.version, cur) > 0) latest.set(key, v.version);
     }
     for (const v of all) {
-      const shouldBe = latest.get(`${v.platform}:${v.channel}`) === v.version;
+      const shouldBe = Boolean(v.signature) && latest.get(`${v.platform}:${v.channel}`) === v.version;
       if (v.isLatest !== shouldBe) {
         await db.update(appVersions).set({ isLatest: shouldBe }).where(eq(appVersions.id, v.id));
       }
