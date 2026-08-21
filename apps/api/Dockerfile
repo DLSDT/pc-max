@@ -18,6 +18,12 @@ COPY packages/types/package.json packages/types/package.json
 # but their source isn't copied in yet at this point — it's built explicitly
 # below once it is.
 RUN npm ci --ignore-scripts
+# Put the hoisted workspace binaries on PATH explicitly. Whether `tsc` is
+# reachable from a workspace script depends on how npm hoists and links bins,
+# and that differs between npm versions — npm 9 resolved it, the npm 10 in the
+# current node:20-alpine did not, so a from-scratch build failed with
+# "sh: tsc: not found" while a cached local layer kept working.
+ENV PATH=/app/node_modules/.bin:$PATH
 # Compile the shared packages, then the API itself.
 COPY packages packages
 COPY apps/api apps/api
