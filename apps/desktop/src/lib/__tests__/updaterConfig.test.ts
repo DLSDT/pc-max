@@ -39,4 +39,25 @@ describe('tauri updater config', () => {
     const pkg = JSON.parse(readFileSync(path.resolve(__dirname, '../../../package.json'), 'utf-8')) as { version: string };
     expect(conf.version, 'tauri.conf.json vs package.json').toBe(pkg.version);
   });
+
+  it('polls the same host the app calls for everything else', () => {
+    // Three places name the backend: this endpoint, the production fallback in
+    // config.ts, and VITE_API_URL's default in the build workflow. Move one and
+    // leave the others, and the app keeps working while auto-update quietly
+    // stops — the client just never sees a new version.
+    const endpointHost = new URL(conf.plugins.updater.endpoints[0]!).host;
+
+    const configSrc = readFileSync(path.resolve(__dirname, '../config.ts'), 'utf-8');
+    const prodFallback = configSrc.match(/return '(https:\/\/[^']+)'/)?.[1];
+    expect(prodFallback, 'production API fallback in config.ts').toBeTruthy();
+    expect(new URL(prodFallback!).host, 'config.ts fallback vs updater endpoint').toBe(endpointHost);
+
+    const workflow = readFileSync(
+      path.resolve(__dirname, '../../../../../.github/workflows/build-windows.yml'),
+      'utf-8',
+    );
+    const ciDefault = workflow.match(/VITE_API_URL:.*?'(https:\/\/[^']+)'/)?.[1];
+    expect(ciDefault, "VITE_API_URL default in build-windows.yml").toBeTruthy();
+    expect(new URL(ciDefault!).host, 'CI default vs updater endpoint').toBe(endpointHost);
+  });
 });
