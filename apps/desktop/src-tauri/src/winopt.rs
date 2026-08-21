@@ -668,13 +668,33 @@ impl SnapshotStore {
     }
 
     pub fn load(&self, id: &str) -> Result<Snapshot, String> {
-        let path = self.dir.join(format!("{id}.json"));
+        let path = self.snapshot_path(id)?;
         let raw = std::fs::read_to_string(&path).map_err(|_| "snapshot not found".to_string())?;
         serde_json::from_str(&raw).map_err(|e| e.to_string())
     }
 
     pub fn delete(&self, id: &str) {
-        let _ = std::fs::remove_file(self.dir.join(format!("{id}.json")));
+        if let Ok(path) = self.snapshot_path(id) {
+            let _ = std::fs::remove_file(path);
+        }
+    }
+
+    /// Resolve a snapshot id to its file, rejecting anything that is not a
+    /// plain identifier.
+    ///
+    /// The id reaches this from the `windows_restore` command, i.e. from the
+    /// webview. Interpolating it straight into a path made "../../x" read and
+    /// then DELETE a file anywhere on disk — and whatever that file described
+    /// would have been rolled back onto the system first. Ids are generated as
+    /// hex UUIDs, so this rejects nothing legitimate.
+    fn snapshot_path(&self, id: &str) -> Result<PathBuf, String> {
+        let valid = !id.is_empty()
+            && id.len() <= 64
+            && id.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-');
+        if !valid {
+            return Err("snapshot not found".into());
+        }
+        Ok(self.dir.join(format!("{id}.json")))
     }
 }
 
@@ -1554,6 +1574,53 @@ mod tests {
     /// worked: the write succeeds into a key Windows never reads, and verify()
     /// reads the same junk key straight back. Both GraphicsDrivers tweaks
     /// shipped that way — HKCU has no CurrentControlSet subtree at all.
+    /// `windows_restore` hands the webview's string straight to the store, so
+    /// a traversing id would read a file anywhere on disk, roll back whatever
+    /// it described, and then delete it.
+    #[test]
+    fn snapshot_ids_cannot_escape_the_snapshot_directory() {
+        let tmp = std::env::temp_dir().join(format!("pcmax-snapshot-escape-{}", new_id()));
+        let store_dir = tmp.join("winopt");
+        std::fs::create_dir_all(&store_dir).unwrap();
+
+        // A file the app has no business touching, one level up from the store.
+        let outsider = tmp.join("precious.json");
+        std::fs::write(
+            &outsider,
+            r#"{"id":"x","created_at":"1970-01-01T00:00:00Z","profile":"p","tweaks":[],"changes":[]}"#,
+        )
+        .unwrap();
+
+        let store = SnapshotStore::new(store_dir);
+        for id in [
+            "../precious",
+            "../../precious",
+            r"..\precious",
+            "/etc/passwd",
+            "sub/../../precious",
+            "",
+        ] {
+            assert!(store.load(id).is_err(), "load must reject {id:?}");
+            store.delete(id);
+            assert!(outsider.is_file(), "delete({id:?}) removed a file outside the store");
+        }
+
+        // A real id still round-trips.
+        let snap = Snapshot {
+            id: new_id(),
+            created_at: "1970-01-01T00:00:00Z".into(),
+            profile: "balanced".into(),
+            tweaks: vec![],
+            changes: vec![],
+        };
+        store.save(&snap).unwrap();
+        assert!(store.load(&snap.id).is_ok(), "a generated id must still load");
+        store.delete(&snap.id);
+        assert!(store.load(&snap.id).is_err(), "delete must remove the real snapshot");
+
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
     #[test]
     fn machine_wide_keys_are_never_written_under_hkcu() {
         const MACHINE_ONLY: &[&str] = &[
