@@ -156,6 +156,25 @@ if (parsed.data.NODE_ENV === 'production' && parsed.data.JWT_ACCESS_SECRET === '
   process.exit(1);
 }
 
+// The CORS default is deliberately dev-friendly (Vite on :1420, the admin app
+// on :3001). Shipping it unchanged would let a page served from localhost on a
+// user's machine call the production API with their cookies attached, so a
+// deployment that forgot to set CORS_ORIGINS must not start.
+if (parsed.data.NODE_ENV === 'production') {
+  const devOrigins = parsed.data.CORS_ORIGINS.split(',')
+    .map((o) => o.trim())
+    .filter((o) => /^https?:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(o));
+  if (devOrigins.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `❌ CORS_ORIGINS still allows development origins in production: ${devOrigins.join(', ')}\n` +
+        '   Set CORS_ORIGINS to the app origins only (tauri://localhost, http(s)://tauri.localhost\n' +
+        '   and your admin domain). Note tauri.localhost is the packaged app, not a dev server.',
+    );
+    process.exit(1);
+  }
+}
+
 if (parsed.data.NODE_ENV === 'production' && parsed.data.DOWNLOAD_SIGNING_SECRET === 'dev-only-download-secret-change-me-in-production') {
   // eslint-disable-next-line no-console
   console.error('❌ DOWNLOAD_SIGNING_SECRET must be overridden in production.');
