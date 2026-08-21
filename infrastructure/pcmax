@@ -6,7 +6,9 @@
 # This wraps them so day-to-day operation is `pcmax up`, `pcmax logs`, etc.
 set -euo pipefail
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# readlink -f resolves the symlink: this is installed as /usr/local/bin/pcmax,
+# and without it DIR becomes /usr/local/bin, where the compose files are not.
+DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 COMPOSE=(docker compose -f "$DIR/docker-compose.yml" -f "$DIR/docker-compose.hostnet.yml")
 
 case "${1:-help}" in
