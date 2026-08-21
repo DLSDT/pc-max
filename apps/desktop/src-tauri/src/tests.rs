@@ -134,6 +134,12 @@ fn rejects_path_traversal_and_absolute_payloads() {
         "evil.ps1",
         "shell.sh",
         "a\\b.cfg", // backslash anywhere is rejected (Windows separator)
+        // NTFS alternate data streams: Windows creates a file named for the
+        // part BEFORE the colon, so the allowlist would see ".dll" while an
+        // ".exe" appeared in the game directory.
+        "foo.exe:payload.dll",
+        "a.bat:x.cfg",
+        "settings.cfg:extra.cfg",
     ] {
         assert!(
             safe_destination(&game, dest).is_none(),

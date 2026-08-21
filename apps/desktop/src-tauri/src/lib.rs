@@ -309,9 +309,15 @@ fn safe_destination(game_dir: &Path, destination: &str) -> Option<PathBuf> {
     if destination.starts_with('/') || destination.contains("..") || destination.contains('\\') {
         return None;
     }
-    // Reject Windows drive-letter prefixes ("C:/...") on every platform — on
-    // Unix `C:` is just a normal component, so is_absolute() would not catch it.
-    if destination.len() > 1 && destination.as_bytes()[1] == b':' {
+    // A colon anywhere is rejected, which covers two Windows-only tricks that
+    // both slip past the checks above on a Unix build:
+    //   - a drive-letter prefix ("C:/..."), which is_absolute() does not catch
+    //     because on Unix "C:" is an ordinary component;
+    //   - an NTFS alternate data stream ("foo.exe:payload.dll"), where the
+    //     extension allowlist sees the harmless ".dll" after the colon while
+    //     Windows creates a file literally named foo.exe.
+    // Nothing legitimate in a relative destination contains one.
+    if destination.contains(':') {
         return None;
     }
     let path = Path::new(destination);
