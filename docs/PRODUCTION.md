@@ -71,15 +71,42 @@ Output: `apps/desktop/src-tauri/target/release/bundle/nsis/*.exe` (plus MSI if c
 
 ## 7. Auto-update
 
-Two mechanisms, both already in the codebase:
+Both mechanisms are wired and shipping. Neither needs enabling.
 
-1. **In-app update banner (shipped):** the desktop app calls `GET /api/v1/app/version?current=…&platform=windows` on boot. Admins publish new releases via the panel (**App Versions** section → `app_versions` table). When `updateAvailable` is true the app shows an **"Update available"** pill.
+1. **Update banner** — the app calls `GET /api/v1/app/version?current=…&platform=windows`
+   on boot and shows an "Update available" pill when `updateAvailable` is true.
 
-2. **Tauri updater (wire when signing keys exist):** the updater plugin is pinned in `apps/desktop/package.json` and documented in `src-tauri/Cargo.toml` (commented out — it requires a minisign keypair). To enable:
-   - Generate a keypair with `tauri signer generate`, keep the private key in CI secrets.
-   - Add `tauri-plugin-updater` to `Cargo.toml` and register it in `src/lib.rs`.
-   - Set `bundle.updater.endpoints` in `tauri.conf.json` to your update manifest URL.
-   - CI publishes: installer artifact + `latest.json` (signed) + `checksum_sha256` into the `app_versions` row.
+2. **Tauri updater** — `tauri-plugin-updater` is in `src-tauri/Cargo.toml`, registered
+   in `src/lib.rs`, `createUpdaterArtifacts` is on, the minisign public key and the
+   endpoint (`/api/v1/updates/{{target}}/{{arch}}/{{current_version}}`) are set in
+   `tauri.conf.json`, and `TAURI_SIGNING_PRIVATE_KEY` / `_PASSWORD` are configured as
+   GitHub secrets. `.github/workflows/build-windows.yml` produces the installer and its
+   detached `.sig`.
+
+### Publishing a release
+
+Building an installer does **not** make it an update. The feed serves nothing until a
+row exists in `app_versions`, which is why a fresh deployment answers `204` to every
+client. After a green `build-windows-installer` run:
+
+1. Download the workflow artifact — it holds `PC MAX_<version>_x64-setup.exe` and the
+   matching `.sig`.
+2. Host the `.exe` somewhere clients can reach and note the URL.
+3. Admin panel → **Releases** → create a version with that URL, and paste the **entire
+   contents of the `.sig` file** into the signature field.
+4. Confirm it: `curl -i https://<api>/api/v1/updates/windows/x86_64/<older-version>`
+   must return `200` with that version, and the same call with the new version must
+   return `204`.
+
+Rules the API enforces, so you cannot half-publish:
+
+- A release with no signature is never offered and can never be marked latest — the
+  Releases table shows it as **Not signed** and disables the pin button. Clients would
+  silently stop receiving updates otherwise.
+- "Latest" is the highest semver **among signed releases**, recomputed on every create,
+  edit and delete.
+- To roll back, mark the older release latest from the Releases tab. That pins it until
+  the next release mutation, and the change is recorded in the audit log.
 
 ## 8. Security checklist (what is already enforced)
 
