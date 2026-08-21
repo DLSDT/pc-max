@@ -51,7 +51,7 @@ jobs:
 
       - name: Build Windows Installer (Tauri)
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pcmax-api.rixy.ir/api/v1' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pc-maxapp.rixy.ir/api/v1' }}
           # Signing keys enable the auto-updater. Without them the build still
           # succeeds (unsigned) — it just cannot be served as an update.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

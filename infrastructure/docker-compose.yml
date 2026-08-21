@@ -73,7 +73,7 @@ services:
       # Only forwarded when set — an empty value fails validation, and the
       # schema's own default is used otherwise.
       ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-sandbox-test-merchant}
-      ZARINPAL_CALLBACK_BASE_URL: ${ZARINPAL_CALLBACK_BASE_URL:-https://pcmax-api.rixy.ir}
+      ZARINPAL_CALLBACK_BASE_URL: ${ZARINPAL_CALLBACK_BASE_URL:-https://pc-maxapp.rixy.ir}
       # 300 (the app default) was sized before the catalog grew to 280+ games —
       # a single client's offline-first sync alone fires 2 requests per changed
       # game, so a full sync trips the default limit on its own.

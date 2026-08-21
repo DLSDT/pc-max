@@ -45,7 +45,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhCQzc2OTkwN0Q2NkY0MkQKUldRdDlHWjlrR25IaTdoQmhFam4vanhVODF3aGNRQm5TM1Z2MG5rODJXYUhUbGhXb0FGMklCRloK",
       "endpoints": [
-        "https://pcmax-api.rixy.ir/api/v1/updates/{{target}}/{{arch}}/{{current_version}}"
+        "https://pc-maxapp.rixy.ir/api/v1/updates/{{target}}/{{arch}}/{{current_version}}"
       ],
       "windows": {
         "installMode": "passive"
