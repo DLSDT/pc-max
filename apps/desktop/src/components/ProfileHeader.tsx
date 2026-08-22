@@ -105,6 +105,14 @@ export default function ProfileHeader() {
                         .join(' · ') || '—'}
                     </p>
                   </>
+                ) : hardwareSource === 'browser' ? (
+                  // Detection already ran and produced only browser data. Offering
+                  // "Detect my PC" here is a button that visibly does nothing —
+                  // say why instead.
+                  <>
+                    <p className="text-sm font-semibold">{t('profile.noHardware')}</p>
+                    <p className="text-xs text-muted-foreground">{t('hardware.previewHint')}</p>
+                  </>
                 ) : (
                   <>
                     <p className="text-sm font-semibold">{t('profile.noHardware')}</p>
