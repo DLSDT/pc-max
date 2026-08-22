@@ -43,14 +43,33 @@ function emptyShape(): BackupShape {
   return { applied: {}, backups: [] };
 }
 
+/**
+ * Read the stored shape, tolerating anything that is not exactly what we wrote.
+ *
+ * Spreading the parsed JSON over the defaults is not enough: a stored
+ * `{"applied": null}` parses fine and then overwrites the default `{}` with
+ * null, so `Object.values(applied)` throws — and getApplied() runs on the
+ * dashboard, so a single corrupt entry took the whole home screen down. Check
+ * the shape of each field instead of trusting it.
+ */
 function load(): BackupShape {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...emptyShape(), ...(JSON.parse(raw) as BackupShape) };
+    if (!raw) return emptyShape();
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return emptyShape();
+
+    const candidate = parsed as Partial<BackupShape>;
+    const applied =
+      typeof candidate.applied === 'object' && candidate.applied !== null && !Array.isArray(candidate.applied)
+        ? candidate.applied
+        : {};
+    const backups = Array.isArray(candidate.backups) ? candidate.backups.filter((b) => b && typeof b === 'object') : [];
+    return { applied, backups };
   } catch {
     // Corrupt storage — start clean.
+    return emptyShape();
   }
-  return emptyShape();
 }
 
 function save(shape: BackupShape): void {
