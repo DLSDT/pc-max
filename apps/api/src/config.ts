@@ -86,6 +86,10 @@ const envSchema = z.object({
   SMTP_SECURE: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
+  /** Per-stage SMTP timeout. Without one, nodemailer waits indefinitely and the
+   *  user's registration request hangs with it — a mistyped domain took two
+   *  minutes to fail on the live server. */
+  SMTP_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(15_000),
   /** Public base URL used for password-reset links inside emails. */
   RESET_LINK_BASE_URL: z.string().default('https://pcmax.rixy.ir'),
 

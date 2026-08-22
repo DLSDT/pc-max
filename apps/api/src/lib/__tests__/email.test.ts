@@ -45,3 +45,28 @@ describe('deliverEmail', () => {
     expect(masked).toContain('*');
   });
 });
+
+/**
+ * nodemailer waits indefinitely unless told otherwise, and the OTP send sits in
+ * the request path — so a slow relay or an address whose domain does not
+ * resolve holds the user's registration open. Measured at two minutes against
+ * the live server before these were added.
+ */
+describe('SmtpMailProvider', () => {
+  it('bounds every connection stage', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const src = readFileSync(join(__dirname, '../email.ts'), 'utf-8');
+    for (const opt of ['connectionTimeout', 'greetingTimeout', 'socketTimeout']) {
+      expect(src, `${opt} must be set`).toMatch(new RegExp(`${opt}:\\s*config\\.SMTP_TIMEOUT_MS`));
+    }
+  });
+
+  it('keeps the timeout configurable with a sane default', async () => {
+    const { config } = await import('../../config');
+    expect(config.SMTP_TIMEOUT_MS).toBeGreaterThan(0);
+    // Long enough for a real handshake, short enough that a user is not left
+    // staring at a spinner.
+    expect(config.SMTP_TIMEOUT_MS).toBeLessThanOrEqual(30_000);
+  });
+});

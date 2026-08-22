@@ -40,6 +40,13 @@ export class SmtpMailProvider implements MailProvider {
       port: config.SMTP_PORT,
       secure: config.SMTP_SECURE,
       auth: config.SMTP_USER ? { user: config.SMTP_USER, pass: config.SMTP_PASSWORD } : undefined,
+      // Bound every stage. With no timeouts nodemailer waits forever, so a
+      // slow relay or an address whose domain does not resolve holds the
+      // user's request open until their client gives up — measured at two
+      // minutes against the live server for a mistyped domain.
+      connectionTimeout: config.SMTP_TIMEOUT_MS,
+      greetingTimeout: config.SMTP_TIMEOUT_MS,
+      socketTimeout: config.SMTP_TIMEOUT_MS,
     });
   }
 
