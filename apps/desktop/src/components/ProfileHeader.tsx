@@ -33,6 +33,7 @@ export default function ProfileHeader() {
   const { t } = useTranslation();
   const user = useAuth((s) => s.user);
   const hardware = useHardware((s) => s.profile);
+  const hardwareSource = useHardware((s) => s.source);
   const detect = useHardware((s) => s.detect);
   const [sub, setSub] = useState<MySubscription | null>(null);
   const [detecting, setDetecting] = useState(false);
@@ -88,7 +89,10 @@ export default function ProfileHeader() {
                 <Cpu aria-hidden className="size-6 text-muted-foreground" />
               </div>
               <div className="min-w-0 space-y-0.5">
-                {hardware ? (
+                {/* A browser-preview reading has no GPU or CPU in it, so the
+                    "graphics card not identified" line reads as a failed
+                    detection rather than one that never ran natively. */}
+                {hardware && hardwareSource === 'native' ? (
                   <>
                     <p className="truncate text-sm font-semibold">{hardware.gpuModel ?? t('profile.unknownGpu')}</p>
                     <p className="truncate text-xs text-muted-foreground">{hardware.cpu ?? '—'}</p>

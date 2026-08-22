@@ -512,6 +512,7 @@ void i18n.use(initReactI18next).init({
           empty: 'No categories yet — check back soon.',
         },
         admin: {
+          anonymousDevice: 'Anonymous (device)',
           title: 'Admin Panel',
           subtitle: 'Manage games, optimizations, packages, users and releases.',
           accessDenied: 'Access denied',
@@ -1198,6 +1199,7 @@ void i18n.use(initReactI18next).init({
           empty: 'هنوز دسته‌بندی‌ای ثبت نشده — بعداً دوباره سر بزنید.',
         },
         admin: {
+          anonymousDevice: 'ناشناس (دستگاه)',
           title: 'پنل مدیریت',
           subtitle: 'مدیریت بازی‌ها، بهینه‌سازی‌ها، پکیج‌ها، کاربران و نسخه‌ها.',
           accessDenied: 'دسترسی مجاز نیست',

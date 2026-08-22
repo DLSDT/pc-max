@@ -78,7 +78,22 @@ export default function UsersTab() {
                     : t('admin.activate');
                 return (
                   <tr key={id} className="border-b border-border/50 last:border-0">
-                    <td className="whitespace-nowrap px-4 py-3 font-medium" dir="ltr">{String(u.email ?? u.phone ?? '—')}</td>
+                    <td className="whitespace-nowrap px-4 py-3 font-medium" dir="ltr">
+                      {/* Device-only rows have no email or phone at all — every
+                          desktop install creates one. Rendering a bare dash for
+                          them makes a legitimate anonymous account look like a
+                          broken record. */}
+                      {u.email ? (
+                        String(u.email)
+                      ) : u.phone ? (
+                        String(u.phone)
+                      ) : (
+                        <span className="text-xs font-normal text-muted-foreground" dir="auto">
+                          {t('admin.anonymousDevice')}
+                          {u.deviceId ? ` · ${String(u.deviceId).slice(0, 8)}` : ''}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{String(u.username ?? '—')}</td>
                     <td className="px-4 py-3 text-muted-foreground">{String(u.role ?? 'user')}</td>
                     <td className="px-4 py-3">
