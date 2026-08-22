@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { useUi } from '@/store/ui';
+import { useAuth } from '@/store/auth';
 import { useInitialSync, useRefetchOnReconnect } from '@/hooks/useLibrary';
 import { useAppVersionCheck } from '@/hooks/useAppVersion';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -22,6 +23,8 @@ export default function AppLayout() {
   const { t, i18n } = useTranslation();
   const sidebarCollapsed = useUi((s) => s.sidebarCollapsed);
   const updateRequired = useUi((s) => s.updateRequired);
+  const offlineSession = useAuth((s) => s.offline);
+  const reconnect = useAuth((s) => s.restore);
   const { pathname } = useLocation();
 
   useInitialSync();
@@ -47,6 +50,22 @@ export default function AppLayout() {
                 {t('updater.updateNow')}
               </Button>
             )}
+          </div>
+        )}
+        {/* The session was restored from disk because the server was
+            unreachable. Cached content works; anything that needs the API will
+            not, so say so rather than letting requests fail unexplained. */}
+        {offlineSession && (
+          <div className="flex flex-wrap items-center justify-center gap-2 border-b border-border bg-secondary/60 px-6 py-2 text-xs text-muted-foreground">
+            <WifiOff aria-hidden className="size-3.5 shrink-0" />
+            <span>{t('auth.offlineSession')}</span>
+            <button
+              type="button"
+              onClick={() => void reconnect()}
+              className="rounded font-medium text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {t('common.retry')}
+            </button>
           </div>
         )}
         <Header />

@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { AdminLoginInput, AdminMe, AuthResponse } from '@goh/validation';
 import { config } from '../config';
+import { clearRefreshCookieOptions, refreshCookieOptions } from '../lib/refresh-cookie';
 import { db } from '../db';
 import { admins, sessions } from '../db/schema';
 import { AppError, unauthorized } from '../lib/errors';
@@ -20,17 +21,12 @@ function refreshTokenTtlMs() {
 }
 
 function setRefreshCookie(reply: import('fastify').FastifyReply, token: string) {
-  void reply.setCookie(REFRESH_COOKIE, token, {
-    httpOnly: true,
-    sameSite: 'strict',
-    secure: config.NODE_ENV === 'production',
-    path: '/',
-    maxAge: config.REFRESH_TTL_DAYS * 24 * 60 * 60,
-  });
+  void reply.setCookie(REFRESH_COOKIE, token, refreshCookieOptions());
 }
 
 function clearRefreshCookie(reply: import('fastify').FastifyReply) {
-  void reply.clearCookie(REFRESH_COOKIE, { path: '/' });
+  // Same attributes as when it was set, or the browser keeps the old cookie.
+  void reply.clearCookie(REFRESH_COOKIE, clearRefreshCookieOptions());
 }
 
 async function createSession(adminId: string, ip: string, userAgent: string | undefined) {

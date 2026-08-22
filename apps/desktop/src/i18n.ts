@@ -415,6 +415,7 @@ void i18n.use(initReactI18next).init({
           recheck: 'I just subscribed — check again',
         },
         auth: {
+          offlineSession: "You're offline — cached content works, but anything that needs the server will not until you reconnect.",
           email: 'Email',
           signInTitle: 'Welcome back',
           createAccountTitle: 'Create your account',
@@ -1100,6 +1101,7 @@ void i18n.use(initReactI18next).init({
           recheck: 'همین الان اشتراک گرفتم — دوباره بررسی کن',
         },
         auth: {
+          offlineSession: 'آفلاین هستید — محتوای ذخیره‌شده در دسترس است، ولی بخش‌هایی که به سرور نیاز دارند تا وصل شدن دوباره کار نمی‌کنند.',
           email: 'ایمیل',
           signInTitle: 'خوش آمدید',
           createAccountTitle: 'ساخت حساب کاربری',
