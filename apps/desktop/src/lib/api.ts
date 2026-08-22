@@ -63,6 +63,23 @@ interface RequestOptions {
 }
 
 /** In-memory user access token — never persisted to disk. */
+/**
+ * Called when the server has definitively rejected the session — the access
+ * token is gone AND the refresh cookie could not renew it.
+ *
+ * Without this the UI stayed in its signed-in state while every request came
+ * back 401: the user sees their account, their library and their subscription,
+ * and nothing works. The auth store registers a handler that clears the session
+ * so the app reacts once instead of failing repeatedly.
+ *
+ * Lives here rather than importing the store, which would make api.ts depend on
+ * something that depends on it.
+ */
+let onSessionExpired: (() => void) | null = null;
+export function setSessionExpiredHandler(fn: (() => void) | null) {
+  onSessionExpired = fn;
+}
+
 let authToken: string | null = null;
 export function setAuthToken(token: string | null) {
   authToken = token;
@@ -138,6 +155,9 @@ async function request<T>(path: string, options: RequestOptions = {}, retried = 
     // Access token expired — refresh via the httpOnly cookie and retry once.
     const refreshed = options.authedAdmin ? await refreshAdminSession() : await refreshSession();
     if (refreshed) return request<T>(path, options, true);
+    // Only the end-user session has a store to clear; the admin panel handles
+    // its own re-login.
+    if (options.authed) onSessionExpired?.();
     throw new ApiError('Session expired — please sign in again', 401, null);
   }
 

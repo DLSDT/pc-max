@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { UserPublic } from '@goh/types';
-import { api, isNetworkError, setAuthToken } from '@/lib/api';
+import { api, isNetworkError, setAuthToken, setSessionExpiredHandler } from '@/lib/api';
 import { syncFavoritesFromServer } from '@/lib/favorites';
 
 interface AuthState {
@@ -23,6 +23,22 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 
+/**
+ * When the API gives up on the session — token expired and the refresh cookie
+ * could not renew it — drop it here too, so the guard sends the user to sign in
+ * instead of leaving them in a signed-in shell where nothing loads.
+ */
+export function handleSessionExpired(): void {
+  const { user, offline } = useAuth.getState();
+  // An offline session has no token by design; a failed request there means the
+  // server is unreachable, not that the session is dead.
+  if (!user || offline) return;
+  setAuthToken(null);
+  useAuth.setState({ user: null, offline: false, ready: true });
+}
+
+setSessionExpiredHandler(handleSessionExpired);
+
 export const useAuth = create<AuthState>()(
   persist(
     (set) => ({
@@ -37,7 +53,11 @@ export const useAuth = create<AuthState>()(
         // mount — so without waiting, the catch below can look at a `user` that
         // simply has not loaded yet and conclude the session is gone. That put
         // an offline user on the login screen even with a valid saved session.
-        if (!useAuth.persist.hasHydrated()) {
+        //
+        // `persist` is undefined where there is no storage to rehydrate from
+        // (SSR, tests); optional access keeps restore() working there instead
+        // of throwing before it starts.
+        if (useAuth.persist && !useAuth.persist.hasHydrated()) {
           await useAuth.persist.rehydrate();
         }
         set({ restoring: true });
