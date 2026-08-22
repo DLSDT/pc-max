@@ -43,6 +43,13 @@ case "${1:-help}" in
     "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/restore-db.js /tmp/r.json --force
     ;;
 
+  # Re-point serial id sequences at their table's max. A restore inserts rows
+  # with their original ids without advancing the sequences, so the next
+  # ordinary insert fails on the primary key — this repairs that. Idempotent.
+  fix-sequences)
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/fix-sequences.js
+    ;;
+
   # Re-apply the curated genre/featured metadata after a deploy that changed
   # it. Idempotent, so running it on every deploy is harmless.
   metadata)
@@ -64,5 +71,5 @@ case "${1:-help}" in
     echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
     ;;
 
-  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|set-admin <email>|backup|restore <f>|health}" ;;
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|set-admin <email>|fix-sequences|backup|restore <f>|health}" ;;
 esac

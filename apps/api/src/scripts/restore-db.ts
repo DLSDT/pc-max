@@ -94,9 +94,36 @@ async function main() {
       process.stdout.write(`  ${table}: ${records.length}\n`);
     }
 
+    // Rows were inserted with their original ids, which bypasses every serial
+    // sequence — those still point at 1 while the table holds ids 1..N, so the
+    // NEXT insert collides on the primary key. That is not a restore-time
+    // error: it surfaces later as a 500 the first time a user does something
+    // ordinary. It took down /auth/login and /views on the production server.
+    const { rows: sequences } = await client.query<{ table_name: string; column_name: string; seq: string }>(
+      `SELECT c.relname AS table_name, a.attname AS column_name,
+              pg_get_serial_sequence(quote_ident(c.relname), a.attname) AS seq
+         FROM pg_class c
+         JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0
+         JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relkind = 'r'
+          AND pg_get_serial_sequence(quote_ident(c.relname), a.attname) IS NOT NULL`,
+    );
+    for (const { table_name, column_name, seq } of sequences) {
+      // setval(..., false) when the table is empty so the sequence starts at 1
+      // rather than handing out 0.
+      await client.query(
+        `SELECT setval('${seq}',
+                       COALESCE((SELECT max("${column_name}") FROM "${table_name}"), 1),
+                       (SELECT max("${column_name}") FROM "${table_name}") IS NOT NULL)`,
+      );
+    }
+
     await client.query(`SET session_replication_role = 'origin'`);
     await client.query('COMMIT');
     process.stdout.write(`\n✅ Restored ${total} rows.\n`);
+    if (sequences.length > 0) {
+      process.stdout.write(`   Reset ${sequences.length} id sequence(s): ${sequences.map((s) => s.table_name).join(', ')}\n`);
+    }
   } catch (err) {
     await client.query('ROLLBACK').catch(() => undefined);
     throw err;
