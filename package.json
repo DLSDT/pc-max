@@ -10,7 +10,6 @@
   "scripts": {
     "prepare": "npm run build -w @goh/validation && npm run build -w @goh/types",
     "dev:api": "npm run dev -w @goh/api",
-    "dev:admin": "npm run dev -w @goh/admin",
     "dev:desktop": "npm run dev -w @goh/desktop",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
