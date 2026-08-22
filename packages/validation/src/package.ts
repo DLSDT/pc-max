@@ -86,6 +86,9 @@ export const PackageFileCompleteInput = z.object({
   destination: z.string().trim().min(1).max(500),
   operation: FileOperation.default('replace'),
   role: PackageFileRole.default('relative'),
+  /** Omit for a base file. Set to install this file only when the user picks
+   *  that profile — see `PackageFilePublic.variant`. */
+  variant: z.string().trim().min(1).max(60).optional(),
 });
 export type PackageFileCompleteInput = z.infer<typeof PackageFileCompleteInput>;
 
@@ -122,6 +125,9 @@ export const PackageFilePublic = z.object({
   destination: z.string(),
   operation: FileOperation,
   role: PackageFileRole,
+  /** Null for a base file that every install gets. Otherwise the profile this
+   *  file belongs to; exactly one profile is installed at a time. */
+  variant: z.string().nullable(),
   sortOrder: z.number().int(),
 });
 export type PackageFilePublic = z.infer<typeof PackageFilePublic>;
@@ -137,6 +143,7 @@ export const PackageDownloadResponse = z.object({
       destination: z.string(),
       operation: FileOperation,
       role: PackageFileRole,
+      variant: z.string().nullable(),
       url: z.string(),
       /** URL validity window in seconds — the client should fetch promptly. */
       expiresIn: z.number().int(),
@@ -163,6 +170,7 @@ export const MfgToolPackageResponse = z.object({
       destination: z.string(),
       operation: FileOperation,
       role: PackageFileRole,
+      variant: z.string().nullable(),
       url: z.string(),
       expiresIn: z.number().int(),
     }),
@@ -178,5 +186,8 @@ export const MfgToolStatusResponse = z.object({
   package: PackagePublic.nullable(),
   /** Manifest without URLs, so the page can list what it is about to touch. */
   manifest: z.array(PackageFilePublic),
+  /** Selectable profiles, in upload order. Empty when the package has no
+   *  variants — then there is nothing to choose and the base is the install. */
+  variants: z.array(z.string()),
 });
 export type MfgToolStatusResponse = z.infer<typeof MfgToolStatusResponse>;

@@ -294,8 +294,11 @@ export const api = {
    *  uploaded yet" must not be shown to the user as a subscription problem. */
   mfgToolStatus: (tool: MfgTool) => request<MfgToolStatusResponse>(`/mfg/tools/${tool}`),
   /** Entitlement-gated manifest with signed per-file URLs. */
-  mfgToolDownload: (tool: MfgTool) =>
-    request<MfgToolPackageResponse>(`/mfg/tools/${tool}/download`, { method: 'POST', authed: true }),
+  mfgToolDownload: (tool: MfgTool, variant?: string | null) =>
+    request<MfgToolPackageResponse>(
+      `/mfg/tools/${tool}/download${variant ? `?variant=${encodeURIComponent(variant)}` : ''}`,
+      { method: 'POST', authed: true },
+    ),
   updateMe: (body: { username?: string }) => request<UserPublic>('/me', { method: 'PATCH', body, authed: true }),
   getFavorites: () => request<GameListResponse>('/favorites', { authed: true }),
   addFavorite: (gameId: string) =>

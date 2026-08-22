@@ -149,10 +149,47 @@ export async function listPackageFiles(packageId: string) {
     .orderBy(desc(packageFiles.sortOrder), desc(packageFiles.createdAt));
   const seen = new Set<string>();
   return rows.filter((r) => {
-    if (seen.has(r.destination)) return false;
-    seen.add(r.destination);
+    // Keyed by variant AND destination. Deduping on destination alone would
+    // silently discard five of OptiScaler's six profiles, since every one of
+    // them supplies its own OptiScaler.ini — the newest upload would win and
+    // the rest would vanish from the manifest.
+    const key = `${r.variant ?? ''}\u0000${r.destination}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
+}
+
+/**
+ * The selectable profiles in a package, in upload order.
+ *
+ * Order matters to the UI (the first is preselected), and `sortOrder`/createdAt
+ * both descend in `listPackageFiles`, so this re-sorts ascending rather than
+ * showing the newest upload first.
+ */
+export function packageVariants(files: { variant: string | null; sortOrder: number; createdAt: Date }[]): string[] {
+  const seen = new Map<string, { sortOrder: number; createdAt: Date }>();
+  for (const f of files) {
+    if (!f.variant) continue;
+    const prev = seen.get(f.variant);
+    if (!prev || f.createdAt < prev.createdAt) seen.set(f.variant, { sortOrder: f.sortOrder, createdAt: f.createdAt });
+  }
+  return [...seen.entries()]
+    .sort((a, b) => a[1].sortOrder - b[1].sortOrder || a[1].createdAt.getTime() - b[1].createdAt.getTime())
+    .map(([name]) => name);
+}
+
+/**
+ * The files one install actually writes: every base file, plus the selected
+ * profile's files.
+ *
+ * A package with profiles and no selection resolves to the base alone, which
+ * for OptiScaler means the drop-in without a config — so callers ask for a
+ * variant explicitly and the route rejects an unknown one rather than quietly
+ * installing a half-package.
+ */
+export function resolveVariantFiles<T extends { variant: string | null }>(files: T[], variant: string | null): T[] {
+  return files.filter((f) => f.variant === null || f.variant === variant);
 }
 
 function bumpPatch(version: string): string {
@@ -176,6 +213,7 @@ export async function publishPackage(packageId: string, changeNote: string | und
     destination: f.destination,
     operation: f.operation,
     role: f.role,
+    variant: f.variant,
     sortOrder: f.sortOrder,
   }));
 

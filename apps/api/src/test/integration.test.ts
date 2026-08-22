@@ -2393,6 +2393,97 @@ describe('multi-frame generation tools (OptiFlow / OptiScaler)', () => {
   it('a tool with nothing published still 404s the download rather than returning an empty install', async () => {
     expect((await inject('POST', '/api/v1/mfg/tools/optiscaler/download', { token: premiumToken })).status).toBe(404);
   });
+
+  /**
+   * OptiScaler's per-vendor "order" profiles. One package, one base drop-in,
+   * six mutually-exclusive OptiScaler.ini files that all land at the same
+   * destination — so this is where a destination-keyed manifest would collapse
+   * six profiles into one.
+   */
+  describe('profile selection', () => {
+    const PROFILES = ['NVIDIA P1-6X', 'NVIDIA P2-6X', 'AMD P1-6X', 'AMD P2-6X', 'XESS P1-2X', 'XESS P2-2X'];
+    let scalerId: string;
+
+    it('accepts a base file plus six profiles that share a destination', async () => {
+      const create = await inject('POST', '/api/v1/admin/packages', {
+        token: adminToken,
+        body: { name: 'OptiScaler', slug: 'optiscaler-core', kind: 'optiscaler' },
+      });
+      expect(create.status).toBe(201);
+      scalerId = (create.json as { id: string }).id;
+
+      expect((await uploadFile(scalerId, 'OptiScaler.dll', { destination: 'OptiScaler.dll', role: 'launcher', operation: 'add' })).status).toBe(200);
+      for (const variant of PROFILES) {
+        const res = await uploadFile(
+          scalerId,
+          'OptiScaler.ini',
+          { destination: 'OptiScaler.ini', role: 'launcher', operation: 'replace', variant },
+          Buffer.from(`; profile ${variant}\nDx12Upscaler=${variant.split(' ')[0]!.toLowerCase()}\n`),
+        );
+        expect(res.status, variant).toBe(200);
+      }
+
+      const files = (await inject('GET', `/api/v1/admin/packages/${scalerId}/files`, { token: adminToken })).json as {
+        data: { destination: string; variant: string | null }[];
+      };
+      // Seven rows: one base + six profiles. Six of them share a destination.
+      expect(files.data).toHaveLength(7);
+      expect(files.data.filter((f) => f.destination === 'OptiScaler.ini')).toHaveLength(6);
+    });
+
+    it('publishes and offers every profile, in upload order', async () => {
+      expect((await inject('POST', `/api/v1/admin/packages/${scalerId}/publish`, { token: adminToken, body: {} })).status).toBe(200);
+
+      const status = (await inject('GET', '/api/v1/mfg/tools/optiscaler')).json as {
+        available: boolean;
+        variants: string[];
+        manifest: { destination: string; variant: string | null }[];
+      };
+      expect(status.available).toBe(true);
+      expect(status.variants).toEqual(PROFILES);
+      expect(status.manifest).toHaveLength(7);
+    });
+
+    it('refuses a download that does not name a profile', async () => {
+      // Resolving to the base alone would install OptiScaler with no config and
+      // report success — the user would get none of what they chose.
+      const res = await inject('POST', '/api/v1/mfg/tools/optiscaler/download', { token: premiumToken });
+      expect(res.status).toBe(400);
+      expect(JSON.stringify(res.json)).toContain('NVIDIA P1-6X');
+    });
+
+    it('refuses a profile that does not exist', async () => {
+      const res = await inject('POST', '/api/v1/mfg/tools/optiscaler/download?variant=NVIDIA%20P9-99X', { token: premiumToken });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns the base plus exactly the chosen profile, never another', async () => {
+      for (const variant of PROFILES) {
+        const res = await inject('POST', `/api/v1/mfg/tools/optiscaler/download?variant=${encodeURIComponent(variant)}`, {
+          token: premiumToken,
+        });
+        expect(res.status, variant).toBe(200);
+        const { files } = res.json as { files: { destination: string; variant: string | null; url: string }[] };
+
+        // Array.sort() stringifies, so a null sorts as "null" — compare as a set.
+        expect(new Set(files.map((f) => f.variant)), variant).toEqual(new Set([null, variant]));
+        expect(files, variant).toHaveLength(2);
+        // A duplicate destination is what the native installer rejects outright.
+        expect(new Set(files.map((f) => f.destination)).size, variant).toBe(files.length);
+
+        // And the bytes really are that profile's, not another's.
+        const ini = files.find((f) => f.destination === 'OptiScaler.ini')!;
+        const url = new URL(ini.url);
+        const body = await app.inject({ method: 'GET', url: url.pathname + url.search });
+        expect(body.body, variant).toContain(`; profile ${variant}`);
+      }
+    });
+
+    it('still gates the profiles behind a subscription', async () => {
+      expect((await inject('POST', '/api/v1/mfg/tools/optiscaler/download?variant=AMD%20P1-6X')).status).toBe(401);
+      expect((await inject('POST', '/api/v1/mfg/tools/optiscaler/download?variant=AMD%20P1-6X', { token: freeToken })).status).toBe(403);
+    });
+  });
 });
 
 function awaitImportFs() {

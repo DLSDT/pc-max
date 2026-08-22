@@ -3,11 +3,11 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { MfgTool, MfgToolPackageResponse, MfgToolStatusResponse } from '@goh/validation';
 import { authenticateUser } from '../lib/auth-middleware';
-import { notFound } from '../lib/errors';
+import { badRequest, notFound } from '../lib/errors';
 import { requireFeature } from '../lib/feature-gate';
 import { storage } from '../lib/storage';
 import { config } from '../config';
-import { findPublishedToolPackage, listPackageFiles, toPackagePublic } from '../services/packages';
+import { findPublishedToolPackage, listPackageFiles, packageVariants, resolveVariantFiles, toPackagePublic } from '../services/packages';
 
 /**
  * The two Multi-Frame Generation tools — OptiFlow and OptiScaler.
@@ -33,7 +33,7 @@ export async function mfgToolsModule(app: FastifyInstance) {
     async (request) => {
       const { tool } = request.params;
       const pkg = await findPublishedToolPackage(tool);
-      if (!pkg) return { tool, available: false, package: null, manifest: [] };
+      if (!pkg) return { tool, available: false, package: null, manifest: [], variants: [] };
 
       const files = await listPackageFiles(pkg.id);
       return {
@@ -49,8 +49,10 @@ export async function mfgToolsModule(app: FastifyInstance) {
           destination: f.destination,
           operation: f.operation,
           role: f.role,
+          variant: f.variant,
           sortOrder: f.sortOrder,
         })),
+        variants: packageVariants(files),
       };
     },
   );
@@ -61,15 +63,33 @@ export async function mfgToolsModule(app: FastifyInstance) {
     '/mfg/tools/:tool/download',
     {
       preHandler: [authenticateUser, requireFeature('multi_frame_generation')],
-      schema: { params: z.object({ tool: MfgTool }), response: { 200: MfgToolPackageResponse } },
+      schema: {
+        params: z.object({ tool: MfgTool }),
+        // Which profile to install. Optional because OptiFlow has none.
+        querystring: z.object({ variant: z.string().trim().min(1).max(60).optional() }),
+        response: { 200: MfgToolPackageResponse },
+      },
     },
     async (request) => {
       const { tool } = request.params;
       const pkg = await findPublishedToolPackage(tool);
       if (!pkg) throw notFound(tool === 'optiflow' ? 'OptiFlow package' : 'OptiScaler package');
 
-      const files = await listPackageFiles(pkg.id);
-      if (files.length === 0) throw notFound('Package manifest');
+      const all = await listPackageFiles(pkg.id);
+      if (all.length === 0) throw notFound('Package manifest');
+
+      const variants = packageVariants(all);
+      const requested = request.query.variant ?? null;
+      if (requested !== null && !variants.includes(requested)) {
+        // Naming a profile that does not exist would otherwise resolve to the
+        // base files alone — an install that looks like it worked and left the
+        // user without the config they chose.
+        throw badRequest(`Unknown profile "${requested}"`);
+      }
+      if (requested === null && variants.length > 0) {
+        throw badRequest(`This package requires a profile. Choose one of: ${variants.join(', ')}`);
+      }
+      const files = resolveVariantFiles(all, requested);
 
       const signed = await Promise.all(files.map((f) => storage.signDownload(f.storageKey, config.DOWNLOAD_URL_TTL)));
       return {
@@ -82,6 +102,7 @@ export async function mfgToolsModule(app: FastifyInstance) {
           destination: f.destination,
           operation: f.operation,
           role: f.role,
+          variant: f.variant,
           url: signed[i]!,
           expiresIn: config.DOWNLOAD_URL_TTL,
         })),

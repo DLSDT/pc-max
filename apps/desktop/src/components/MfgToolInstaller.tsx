@@ -49,6 +49,7 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
   const [stage, setStage] = useState<Stage>('idle');
   const [exePath, setExePath] = useState<string | null>(null);
   const [scan, setScan] = useState<ScanReport | null>(null);
+  const [variant, setVariant] = useState<string | null>(null);
   const [progress, setProgress] = useState<FetchProgress | null>(null);
   const [result, setResult] = useState<InstallReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +60,13 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
     let alive = true;
     api
       .mfgToolStatus(tool)
-      .then((res) => alive && setStatus(res))
+      .then((res) => {
+        if (!alive) return;
+        setStatus(res);
+        // Preselect rather than leaving it blank: the server refuses a download
+        // with no profile chosen, and an empty select would read as "optional".
+        setVariant(res.variants[0] ?? null);
+      })
       .catch((err) => alive && setStatusError(err instanceof ApiError ? err.message : 'Could not reach the server.'));
     return () => {
       alive = false;
@@ -90,7 +97,7 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
     setError(null);
     setStage('installing');
     try {
-      const report = await installTool({ tool, exePath, onProgress: setProgress });
+      const report = await installTool({ tool, exePath, variant, onProgress: setProgress });
       setResult(report);
       setStage('done');
     } catch (err) {
@@ -99,7 +106,7 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
     } finally {
       setProgress(null);
     }
-  }, [exePath, tool]);
+  }, [exePath, tool, variant]);
 
   if (!access.allowed) {
     return (
@@ -116,7 +123,10 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
   // A manifest of only `launcher`/`relative` files (OptiScaler's shape) finds
   // nothing to replace and still installs perfectly well — gating the button on
   // `found.length` would leave that tool permanently disabled.
-  const manifest = status?.manifest ?? [];
+  // Only the files this install would actually write: the base plus the one
+  // selected profile. Counting the whole manifest would promise the user six
+  // OptiScaler.ini files when they are getting one.
+  const manifest = (status?.manifest ?? []).filter((f) => f.variant === null || f.variant === variant);
   const wantsComponents = manifest.some((f) => f.role === 'streamline');
   const unconditionalFiles = manifest.filter((f) => f.role !== 'streamline').length;
   const canInstall = replaceCount > 0 || unconditionalFiles > 0;
@@ -156,6 +166,38 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
         {exePath && <p className="mt-3 break-all font-mono text-xs text-muted-foreground">{exePath}</p>}
       </section>
 
+      {/* Profile selection — only for a package that offers profiles */}
+      {(status?.variants.length ?? 0) > 0 && (
+        <section className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-semibold text-foreground">{t('mfg.profileTitle')}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t('mfg.profileHint')}</p>
+          <div role="radiogroup" aria-label={t('mfg.profileTitle')} className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {status!.variants.map((name) => {
+              const selected = variant === name;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  disabled={busy}
+                  onClick={() => setVariant(name)}
+                  className={`rounded-lg border px-3 py-2.5 text-start text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                    selected
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border text-muted-foreground hover:border-primary/40 hover:bg-accent/40'
+                  }`}
+                >
+                  <span className="block font-mono" dir="ltr">
+                    {name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Step 2 — what would change */}
       {scan && (
         <section className="space-y-4 rounded-xl border border-border bg-card p-5">
@@ -190,6 +232,12 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
           ) : wantsComponents ? (
             <Notice tone="warn" icon={AlertTriangle}>{t(k('noComponents'))}</Notice>
           ) : null}
+
+          {variant && (
+            <p className="text-sm text-foreground">
+              {t('mfg.profileSelected')} <span className="font-mono" dir="ltr">{variant}</span>
+            </p>
+          )}
 
           {unconditionalFiles > 0 && (
             <p className="text-sm text-foreground">

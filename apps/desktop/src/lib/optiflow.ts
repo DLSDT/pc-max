@@ -136,6 +136,8 @@ export function componentNames(files: { destination: string; role: PackageFileRo
 export interface InstallOptions {
   tool: MfgTool;
   exePath: string;
+  /** Which profile to install, for a package that offers them. */
+  variant?: string | null;
   onProgress?: (p: FetchProgress) => void;
 }
 
@@ -149,10 +151,12 @@ export interface InstallOptions {
  * this call exists so a lapsed user gets a clear message instead of a 403 in
  * the middle of fetching files.
  */
-export async function installTool({ tool, exePath, onProgress }: InstallOptions): Promise<InstallReport> {
+export async function installTool({ tool, exePath, variant, onProgress }: InstallOptions): Promise<InstallReport> {
   requireShell();
   await authorizeFeature('multi_frame_generation');
-  const pkg = await api.mfgToolDownload(tool);
+  // The server resolves base + selected profile and rejects an unknown name,
+  // so the client never has to work out which files a profile implies.
+  const pkg = await api.mfgToolDownload(tool, variant ?? null);
   if (pkg.files.length === 0) throw new OptiFlowError('This package has no files yet.');
 
   const files = await fetchManifest(pkg, onProgress);

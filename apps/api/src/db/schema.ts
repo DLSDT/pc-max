@@ -768,11 +768,15 @@ export const packageFiles = pgTable(
     destination: text('destination').notNull(),
     operation: fileOperationEnum('operation').notNull().default('replace'),
     role: packageFileRoleEnum('role').notNull().default('relative'),
+    /** Null = part of the base install. Otherwise the name of the one
+     *  mutually-exclusive profile this file belongs to (OptiScaler's per-vendor
+     *  "order" profiles), installed only when the user picks it. */
+    variant: text('variant'),
     storageKey: text('storage_key').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: createdAt(),
   },
-  (t) => [index('package_files_package_idx').on(t.packageId)],
+  (t) => [index('package_files_package_idx').on(t.packageId), index('package_files_package_variant_idx').on(t.packageId, t.variant)],
 );
 
 /** Immutable snapshots of a package at each released version (manifest). */

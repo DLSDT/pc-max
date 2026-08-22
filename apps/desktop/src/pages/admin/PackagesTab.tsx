@@ -274,6 +274,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const [destination, setDestination] = useState('');
   const [operation, setOperation] = useState<(typeof OPERATIONS)[number]>('replace');
   const [role, setRole] = useState<(typeof ROLES)[number]>('relative');
+  const [variant, setVariant] = useState('');
 
   const [form, setForm] = useState<Record<string, unknown>>({});
 
@@ -369,6 +370,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
         destination: destination.trim(),
         operation,
         role,
+        variant: variant.trim() || undefined,
       });
       setDestination('');
       load();
@@ -459,6 +461,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
       <div className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h3 className="text-sm font-semibold">{t('admin.packageFiles')}</h3>
         <p className="text-xs text-muted-foreground">{t(`admin.roleHint_${role}`)}</p>
+        <p className="text-xs text-muted-foreground">{t('admin.variantHint')}</p>
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={destination}
@@ -477,6 +480,14 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
           <select value={operation} onChange={(e) => setOperation(e.target.value as (typeof OPERATIONS)[number])} className={inputClass}>
             {OPERATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
+          <input
+            value={variant}
+            onChange={(e) => setVariant(e.target.value)}
+            placeholder={t('admin.variantPlaceholder')}
+            dir="ltr"
+            className={`${inputClass} max-w-44`}
+            title={t('admin.variantHint')}
+          />
           <label className={`${primaryBtnClass} cursor-pointer ${!destination.trim() || uploading ? 'pointer-events-none opacity-50' : ''}`}>
             {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
             {t('admin.upload')}
@@ -493,6 +504,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
                   <th className="px-4 py-2.5">{t('admin.name')}</th>
                   <th className="px-4 py-2.5">{t('admin.destination')}</th>
                   <th className="px-4 py-2.5">{t('admin.fileRole')}</th>
+                  <th className="px-4 py-2.5">{t('admin.variant')}</th>
                   <th className="px-4 py-2.5">{t('admin.operation')}</th>
                   <th className="px-4 py-2.5 text-right">{t('admin.actions')}</th>
                 </tr>
@@ -503,6 +515,9 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
                     <td className="px-4 py-2.5 font-medium" dir="ltr">{String(f.filename)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">{String(f.destination)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{t(`admin.role_${String(f.role ?? 'relative')}`)}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
+                      {f.variant ? String(f.variant) : <span className="italic">{t('admin.variantBase')}</span>}
+                    </td>
                     <td className="px-4 py-2.5 text-muted-foreground">{String(f.operation)}</td>
                     <td className="px-4 py-2.5 text-right">
                       <button type="button" onClick={() => void handleDeleteFile(String(f.id))} className={dangerIconBtnClass}>
