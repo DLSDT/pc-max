@@ -1093,6 +1093,55 @@ describe('favorites (persistent, user-specific)', () => {
  * payload. These assert the server says no on its own, without the client
  * having to ask nicely.
  */
+/**
+ * Every desktop launch registers an anonymous device row, so the users table
+ * holds one per install on top of the real accounts. Counting rows reported
+ * roughly double the real figure on the admin dashboard — and now that
+ * sign-in is required, a device row on its own is not a user anyone can reach.
+ */
+describe('admin user metrics', () => {
+  let adminToken: string;
+
+  beforeAll(async () => {
+    const login = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (login.json as { accessToken: string }).accessToken;
+  });
+
+  it('counts accounts, not anonymous device registrations', async () => {
+    const before = ((await inject('GET', '/api/v1/admin/dashboard', { token: adminToken })).json as {
+      stats: { totalUsers: number };
+    }).stats.totalUsers;
+
+    // A device registration creates a users row with no email.
+    const res = await inject('POST', '/api/v1/users/device', {
+      body: { deviceId: 'metrics-probe-device-01', platform: 'windows' },
+    });
+    expect(res.status).toBe(200);
+
+    const after = ((await inject('GET', '/api/v1/admin/dashboard', { token: adminToken })).json as {
+      stats: { totalUsers: number };
+    }).stats.totalUsers;
+
+    expect(after, 'an install is not a user').toBe(before);
+  });
+
+  it('still counts a real registration', async () => {
+    const before = ((await inject('GET', '/api/v1/admin/dashboard', { token: adminToken })).json as {
+      stats: { totalUsers: number };
+    }).stats.totalUsers;
+
+    await registerUser('metrics-probe@example.test', 'MetricsPass123!', 'metricsprobe');
+
+    const after = ((await inject('GET', '/api/v1/admin/dashboard', { token: adminToken })).json as {
+      stats: { totalUsers: number };
+    }).stats.totalUsers;
+
+    expect(after, 'a real account must be counted').toBe(before + 1);
+  });
+});
+
 describe('subscription gate (Multi-Frame Generation & Windows Optimizer)', () => {
   let userToken: string;
   let userId: string;

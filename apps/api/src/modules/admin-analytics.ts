@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { DashboardResponse } from '@goh/validation';
@@ -22,8 +22,15 @@ export async function adminAnalyticsModule(app: FastifyInstance) {
 
       const [totalUsers, activeUsers, totalGames, publishedGames, totalProfiles, totalViews, versionCount] =
         await Promise.all([
-          db.select({ n: count() }).from(users),
-          db.select({ n: count() }).from(users).where(gte(users.lastSeenAt, weekAgo)),
+          // Accounts, not installs. Every desktop launch registers an anonymous
+          // device row, so counting rows reported roughly double the real
+          // figure — and since sign-in is now required, a device row on its own
+          // is not a user anyone can reach.
+          db.select({ n: count() }).from(users).where(isNotNull(users.email)),
+          db
+            .select({ n: count() })
+            .from(users)
+            .where(and(isNotNull(users.email), gte(users.lastSeenAt, weekAgo))),
           db.select({ n: count() }).from(games).where(isNull(games.deletedAt)),
           db.select({ n: count() }).from(games).where(and(eq(games.status, 'published'), isNull(games.deletedAt))),
           db.select({ n: count() }).from(optimizationProfiles).where(isNull(optimizationProfiles.deletedAt)),
