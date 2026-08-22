@@ -5,6 +5,9 @@ import { AlertTriangle, ArrowLeft, CheckCircle2, FileSearch, FolderOpen, Loader2
 import type { MfgTool, MfgToolStatusResponse } from '@goh/validation';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
+import { useHardware } from '@/store/hardware';
+import { gpuLabel } from '@/lib/hardware';
+import { isVendorMismatch, normalizeVendor, recommendProfile, supportsOpticalFlow } from '@/lib/gpuProfile';
 import { api, ApiError } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
 import {
@@ -50,9 +53,22 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
   const [exePath, setExePath] = useState<string | null>(null);
   const [scan, setScan] = useState<ScanReport | null>(null);
   const [variant, setVariant] = useState<string | null>(null);
+  /** True once the user has picked a profile themselves — after that, a later
+   *  detection must not silently move their choice. */
+  const [variantTouched, setVariantTouched] = useState(false);
+  const hardware = useHardware((s) => s.profile);
+  const ensureHardware = useHardware((s) => s.ensure);
+  const gpuVendor = normalizeVendor(hardware);
   const [progress, setProgress] = useState<FetchProgress | null>(null);
   const [result, setResult] = useState<InstallReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Detection is cached and only re-runs when stale, so calling it on mount is
+  // cheap. Without it a user who never opened the dashboard has no GPU on
+  // record and would get no recommendation at all.
+  useEffect(() => {
+    void ensureHardware();
+  }, [ensureHardware]);
 
   // Availability is a public check on purpose: an admin who has not uploaded
   // the package yet should read "not published", not "buy a subscription".
@@ -65,13 +81,27 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
         setStatus(res);
         // Preselect rather than leaving it blank: the server refuses a download
         // with no profile chosen, and an empty select would read as "optional".
-        setVariant(res.variants[0] ?? null);
+        // Prefer the profile built for this machine's GPU; fall back to the
+        // first only when detection found nothing to match.
+        setVariant(recommendProfile(res.variants, gpuVendor) ?? res.variants[0] ?? null);
       })
       .catch((err) => alive && setStatusError(err instanceof ApiError ? err.message : 'Could not reach the server.'));
     return () => {
       alive = false;
     };
+    // gpuVendor is deliberately not a dependency: re-running this on a late
+    // detection would refetch the package. The effect below moves the
+    // selection instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tool]);
+
+  // Detection often lands after the package does. Move the preselection once,
+  // and never over a choice the user has already made.
+  useEffect(() => {
+    if (variantTouched || !status || status.variants.length === 0) return;
+    const better = recommendProfile(status.variants, gpuVendor);
+    if (better && better !== variant) setVariant(better);
+  }, [gpuVendor, status, variant, variantTouched]);
 
   const choose = useCallback(async () => {
     setError(null);
@@ -130,6 +160,10 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
   const wantsComponents = manifest.some((f) => f.role === 'streamline');
   const unconditionalFiles = manifest.filter((f) => f.role !== 'streamline').length;
   const canInstall = replaceCount > 0 || unconditionalFiles > 0;
+  const recommended = recommendProfile(status?.variants ?? [], gpuVendor);
+  const mismatch = isVendorMismatch(variant, gpuVendor);
+  // null = unknown; only `false` is a positive "this card cannot run it".
+  const opticalFlowOk = tool === 'optiflow' ? supportsOpticalFlow(hardware) : null;
 
   return (
     <div className="space-y-6">
@@ -143,6 +177,14 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
       {!isTauriShell() && <Notice tone="warn" icon={AlertTriangle}>{t('mfg.desktopOnly')}</Notice>}
       {statusError && <Notice tone="warn" icon={AlertTriangle}>{statusError}</Notice>}
       {status && !status.available && <Notice tone="warn" icon={AlertTriangle}>{t(k('notPublished'))}</Notice>}
+      {/* Only shown on a definite "no" — an undetected GPU must not be told
+          its card is unsupported. */}
+      {opticalFlowOk === false && (
+        <Notice tone="warn" icon={AlertTriangle}>
+          {t('mfg.optiflow.unsupportedGpu', { gpu: gpuLabel(hardware ?? {}) ?? '' })}
+        </Notice>
+      )}
+      <p className="text-xs text-muted-foreground">{t(k('gpuSupport'))}</p>
 
       {status?.available && (
         <p className="text-xs text-muted-foreground">
@@ -171,6 +213,15 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="text-sm font-semibold text-foreground">{t('mfg.profileTitle')}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('mfg.profileHint')}</p>
+          {gpuVendor ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t('mfg.gpuDetected', { gpu: gpuLabel(hardware ?? {}) ?? gpuVendor })}
+            </p>
+          ) : (
+            // Never silently pick a vendor: say detection did not resolve and
+            // leave the choice with the user.
+            <p className="mt-2 text-xs text-muted-foreground">{t('mfg.gpuUnknown')}</p>
+          )}
           <div role="radiogroup" aria-label={t('mfg.profileTitle')} className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {status!.variants.map((name) => {
               const selected = variant === name;
@@ -181,7 +232,10 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
                   role="radio"
                   aria-checked={selected}
                   disabled={busy}
-                  onClick={() => setVariant(name)}
+                  onClick={() => {
+                    setVariant(name);
+                    setVariantTouched(true);
+                  }}
                   className={`rounded-lg border px-3 py-2.5 text-start text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     selected
                       ? 'border-primary bg-primary/10 text-primary'
@@ -191,10 +245,22 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
                   <span className="block font-mono" dir="ltr">
                     {name}
                   </span>
+                  {recommended === name && (
+                    <span className="mt-1 block text-[11px] font-normal text-primary">{t('mfg.recommendedForYourGpu')}</span>
+                  )}
                 </button>
               );
             })}
           </div>
+          {mismatch && (
+            // A warning, not a block: detection can be wrong on laptops with
+            // switchable graphics, and the user may know better than we do.
+            <div className="mt-3">
+              <Notice tone="warn" icon={AlertTriangle}>
+                {t('mfg.profileMismatch', { gpu: gpuLabel(hardware ?? {}) ?? gpuVendor ?? '' })}
+              </Notice>
+            </div>
+          )}
         </section>
       )}
 

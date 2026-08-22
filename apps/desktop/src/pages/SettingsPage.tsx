@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { CreditCard, Gamepad2, Globe, Heart, History, Info, KeyRound, Loader2, LogOut, Moon, RefreshCw, Sun, UserRound } from 'lucide-react';
+import { Archive, CreditCard, Gamepad2, Globe, Heart, History, Info, KeyRound, Loader2, LogOut, Moon, RefreshCw, Sun, UserRound } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { api } from '@/lib/api';
 import { config, getRuntimeAppVersion } from '@/lib/config';
 import { applyTheme } from '@/lib/theme';
+import RestorePanel from '@/components/RestorePanel';
 import { checkNativeUpdate, installNativeUpdate, isTauriShell } from '@/lib/updater';
 import { getSubscription } from '@/lib/subscription';
 import { useAuth } from '@/store/auth';
@@ -208,6 +209,17 @@ export default function SettingsPage() {
       </div>
 
       {/* Updates */}
+      <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <Archive aria-hidden className="size-4 text-primary" />
+          {t('settings.backupSection')}
+        </h2>
+        <p className="text-xs text-muted-foreground">{t('settings.backupHint')}</p>
+        {/* Same store, same Rust commands as Windows Optimizer — this is a
+            second entry point, not a second backup system. */}
+        <RestorePanel compact />
+      </section>
+
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           <RefreshCw aria-hidden className="size-4 text-primary" />

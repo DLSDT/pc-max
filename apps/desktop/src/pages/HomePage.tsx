@@ -100,7 +100,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-crimson-hero" />
         <div className="relative flex flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
           <div className="flex items-center gap-5">
-            <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-primary/20 bg-white shadow-sm">
+            <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-primary/20 bg-card shadow-sm">
               {score ? (
                 <>
                   <span className="text-3xl font-bold text-primary">{score.score}</span>

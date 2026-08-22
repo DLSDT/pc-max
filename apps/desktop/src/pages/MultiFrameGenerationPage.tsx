@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Layers, Wand2 } from 'lucide-react';
+import { ArrowRight, Cpu, Layers, Wand2 } from 'lucide-react';
 import HardwarePanel from '@/components/HardwarePanel';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
@@ -23,12 +23,14 @@ const TOOLS = [
     icon: Wand2,
     titleKey: 'mfg.optiscaler.title',
     descKey: 'mfg.optiscaler.cardDescription',
+    gpuKey: 'mfg.optiscaler.gpuSupport',
   },
   {
     to: '/multi-frame-generation/optiflow',
     icon: Layers,
     titleKey: 'mfg.optiflow.title',
     descKey: 'mfg.optiflow.cardDescription',
+    gpuKey: 'mfg.optiflow.gpuSupport',
   },
 ] as const;
 
@@ -46,7 +48,7 @@ export default function MultiFrameGenerationPage() {
       {access.allowed ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            {TOOLS.map(({ to, icon: Icon, titleKey, descKey }) => (
+            {TOOLS.map(({ to, icon: Icon, titleKey, descKey, gpuKey }) => (
               <Link
                 key={to}
                 to={to}
@@ -57,6 +59,12 @@ export default function MultiFrameGenerationPage() {
                 </span>
                 <span className="text-base font-semibold text-foreground">{t(titleKey)}</span>
                 <span className="text-sm leading-relaxed text-muted-foreground">{t(descKey)}</span>
+                {/* Which cards the method needs — the difference between the
+                    two tools that matters most before the user picks one. */}
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-2 py-1 text-xs text-muted-foreground">
+                  <Cpu aria-hidden className="size-3.5 shrink-0" />
+                  {t(gpuKey)}
+                </span>
                 <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-medium text-primary">
                   {t('mfg.open')}
                   <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />

@@ -21,6 +21,7 @@ import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { authorizeFeature, useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { PROFILES, type Category, type Risk } from '@/lib/winopt';
 import { Button, Badge, Spinner } from '@/components/ui';
+import RestorePanel from '@/components/RestorePanel';
 import { Section } from '@/components/Section';
 import { cn } from '@/lib/utils';
 
@@ -188,7 +189,7 @@ export default function WindowsOptimizerPage() {
             <div className="absolute inset-0 bg-crimson-hero" />
             <div className="relative flex flex-wrap items-center justify-between gap-6 p-6 sm:p-8">
               <div className="flex items-center gap-5">
-                <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-primary/20 bg-white shadow-sm">
+                <div className="flex size-24 flex-col items-center justify-center rounded-2xl border border-primary/20 bg-card shadow-sm">
                   <span className="text-3xl font-bold text-primary">{score?.score ?? '—'}</span>
                   <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{t('winopt.score')}</span>
                 </div>
@@ -312,29 +313,8 @@ export default function WindowsOptimizerPage() {
 
           {/* Snapshots / history */}
           <Section title={t('winopt.snapshots')}>
-            {snapshots.length === 0 ? (
-              <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-card/40 px-4 py-6 text-sm text-muted-foreground">
-                <FileClock aria-hidden className="size-5" />
-                {t('winopt.noSnapshots')}
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {snapshots.map((s) => (
-                  <div key={s.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold">{t(`winopt.profile.${s.profile}`)} · {t('winopt.changes', { count: s.changeCount })}</p>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {new Date(Number(s.createdAt)).toLocaleString()} — {s.tweaks.join(', ')}
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline" onClick={() => void restore(s.id)} className="gap-1.5">
-                      <RotateCcw aria-hidden className="size-3.5" />
-                      {t('winopt.restore')}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Shared with General Settings — one restore implementation. */}
+            <RestorePanel />
           </Section>
 
           {/* Last result */}
