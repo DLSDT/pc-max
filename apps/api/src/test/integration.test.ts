@@ -2213,6 +2213,188 @@ describe('game catalog importer (directory-driven)', () => {
   });
 });
 
+/**
+ * Multi-Frame Generation tools — OptiFlow and OptiScaler.
+ *
+ * These are global packages (no game), reached by kind rather than by slug.
+ * The properties that matter: an unpublished tool reads as "not available"
+ * without a subscription, the bytes are gated behind one, and a file whose
+ * destination is resolved on the client cannot smuggle a path through the
+ * manifest.
+ */
+describe('multi-frame generation tools (OptiFlow / OptiScaler)', () => {
+  let adminToken: string;
+  let premiumToken: string;
+  let freeToken: string;
+  let pkgId: string;
+
+  async function uploadFile(
+    id: string,
+    filename: string,
+    body: Record<string, unknown>,
+    content = Buffer.from(`bytes for ${filename}`),
+  ) {
+    const presign = (
+      await inject('POST', `/api/v1/admin/packages/${id}/files/presign`, {
+        token: adminToken,
+        body: { filename, size: content.length },
+      })
+    ).json as { uploadUrl: string; objectKey: string };
+    const key = presign.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+    await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(content.length) },
+      payload: content,
+    });
+    return inject('POST', `/api/v1/admin/packages/${id}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: presign.objectKey, filename, size: content.length, ...body },
+    });
+  }
+
+  beforeAll(async () => {
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+
+    const reg = await registerUser('user000042@example.test', 'MfgPass123!', 'mfgpremium');
+    premiumToken = (reg.json as { accessToken: string }).accessToken;
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: premiumToken,
+      body: { planId: plans.data[0]!.id, idempotencyKey: 'mfg-suite-0001' },
+    });
+    await inject('POST', '/api/v1/payments/mock/callback', {
+      body: { paymentId: (purchase.json as { paymentId: string }).paymentId },
+    });
+
+    const freeReg = await registerUser('user000043@example.test', 'MfgPass123!', 'mfgfree');
+    freeToken = (freeReg.json as { accessToken: string }).accessToken;
+  });
+
+  it('reports a tool as unavailable before anything is published — without asking for a subscription', async () => {
+    // An empty admin panel must not look like a paywall, so this route is
+    // public. A 401 here would tell the user to buy something that does not exist.
+    const res = await inject('GET', '/api/v1/mfg/tools/optiflow');
+    expect(res.status).toBe(200);
+    expect((res.json as { available: boolean }).available).toBe(false);
+    expect((res.json as { package: unknown }).package).toBeNull();
+  });
+
+  it('rejects a tool name that is not one of the two', async () => {
+    expect((await inject('GET', '/api/v1/mfg/tools/optiplease')).status).toBe(400);
+  });
+
+  it('creates a global package with no game attached', async () => {
+    const create = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'OptiFlow', slug: 'optiflow-core', kind: 'optiflow' },
+    });
+    expect(create.status).toBe(201);
+    expect((create.json as { gameId: string | null }).gameId).toBeNull();
+    pkgId = (create.json as { id: string }).id;
+  });
+
+  it('lists the global package in the admin panel', async () => {
+    // Regression: the list inner-joined `games`, so a package with no game
+    // vanished from the table while the count above it still said 1 — an
+    // uploaded OptiFlow payload was unreachable in the UI.
+    const list = (await inject('GET', '/api/v1/admin/packages?limit=100', { token: adminToken })).json as {
+      data: { id: string; gameId: string | null; gameName: string | null }[];
+      meta: { total: number };
+    };
+    const mine = list.data.find((p) => p.id === pkgId);
+    expect(mine, 'global package missing from the admin list').toBeDefined();
+    expect(mine!.gameId).toBeNull();
+    expect(list.data.length).toBe(Math.min(list.meta.total, 100));
+  });
+
+  it('refuses a second global package with the same slug', async () => {
+    // Postgres treats NULLs as distinct, so the (game_id, slug) unique index
+    // does not cover this on its own.
+    const dupe = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'OptiFlow again', slug: 'optiflow-core', kind: 'optiflow' },
+    });
+    expect(dupe.status).toBe(400);
+  });
+
+  it('refuses a path for a role whose folder the installer decides', async () => {
+    // Accepting this would publish a package whose path half is silently
+    // ignored on every machine that installs it.
+    for (const role of ['streamline', 'launcher']) {
+      const res = await uploadFile(pkgId, 'sl.dlss_g.dll', { destination: `bin/x64/sl.dlss_g.dll`, role, operation: 'replace' });
+      expect(res.status, role).toBe(400);
+    }
+  });
+
+  it('still refuses an executable destination whatever the role', async () => {
+    const res = await uploadFile(pkgId, 'version.dll', { destination: 'payload.exe', role: 'launcher', operation: 'add' });
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts a streamline component and a launcher unlocker, and keeps their roles', async () => {
+    expect((await uploadFile(pkgId, 'sl.dlss_g.dll', { destination: 'sl.dlss_g.dll', role: 'streamline', operation: 'replace' })).status).toBe(200);
+    expect((await uploadFile(pkgId, 'version.dll', { destination: 'version.dll', role: 'launcher', operation: 'add' })).status).toBe(200);
+
+    const files = (await inject('GET', `/api/v1/admin/packages/${pkgId}/files`, { token: adminToken })).json as {
+      data: { filename: string; role: string }[];
+    };
+    const byName = Object.fromEntries(files.data.map((f) => [f.filename, f.role]));
+    expect(byName['sl.dlss_g.dll']).toBe('streamline');
+    expect(byName['version.dll']).toBe('launcher');
+  });
+
+  it('publishes, and the public status route now reports the manifest with roles', async () => {
+    const publish = await inject('POST', `/api/v1/admin/packages/${pkgId}/publish`, { token: adminToken, body: {} });
+    expect(publish.status).toBe(200);
+
+    const res = await inject('GET', '/api/v1/mfg/tools/optiflow');
+    const body = res.json as { available: boolean; manifest: { destination: string; role: string }[]; package: { version: string } };
+    expect(body.available).toBe(true);
+    expect(body.manifest).toHaveLength(2);
+    expect(body.manifest.map((f) => f.role).sort()).toEqual(['launcher', 'streamline']);
+    // The status route never leaks download URLs.
+    expect(JSON.stringify(body)).not.toContain('uploads/packages');
+  });
+
+  it('gates the bytes behind a subscription', async () => {
+    expect((await inject('POST', '/api/v1/mfg/tools/optiflow/download')).status).toBe(401);
+    expect((await inject('POST', '/api/v1/mfg/tools/optiflow/download', { token: freeToken })).status).toBe(403);
+
+    const ok = await inject('POST', '/api/v1/mfg/tools/optiflow/download', { token: premiumToken });
+    expect(ok.status).toBe(200);
+    const body = ok.json as { tool: string; files: { filename: string; role: string; url: string; sha256: string }[] };
+    expect(body.tool).toBe('optiflow');
+    expect(body.files).toHaveLength(2);
+    for (const f of body.files) {
+      expect(f.url, f.filename).toMatch(/^https?:\/\//);
+      expect(f.sha256, f.filename).toMatch(/^[0-9a-f]{64}$/);
+    }
+  });
+
+  it('the published manifest hash matches the bytes actually stored', async () => {
+    // The whole install pipeline trusts this hash: the client refuses a
+    // download that does not match it, so a wrong hash here bricks the feature
+    // rather than merely weakening it.
+    const dl = (await inject('POST', '/api/v1/mfg/tools/optiflow/download', { token: premiumToken })).json as {
+      files: { filename: string; sha256: string; url: string }[];
+    };
+    const { createHash } = await import('node:crypto');
+    for (const f of dl.files) {
+      const res = await app.inject({ method: 'GET', url: new URL(f.url).pathname + new URL(f.url).search });
+      expect(res.statusCode, f.filename).toBe(200);
+      expect(createHash('sha256').update(res.rawPayload).digest('hex'), f.filename).toBe(f.sha256);
+    }
+  });
+
+  it('a tool with nothing published still 404s the download rather than returning an empty install', async () => {
+    expect((await inject('POST', '/api/v1/mfg/tools/optiscaler/download', { token: premiumToken })).status).toBe(404);
+  });
+});
+
 function awaitImportFs() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('node:fs') as typeof import('node:fs');

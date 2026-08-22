@@ -23,7 +23,7 @@ import { badRequest, notFound , forbidden } from '../lib/errors';
 import { requirePermission } from '../lib/auth-middleware';
 import { recordAudit } from '../lib/audit';
 import { resolveLocalPath, storage , verifySignedUpload } from '../lib/storage';
-import { assertSafeDestination, assertSafeFilename, findPackageById, PACKAGE_EXT, listPackageFiles, publishPackage, toPackagePublic } from '../services/packages';
+import { assertSafeFilename, assertSafeRoleDestination, findPackageById, PACKAGE_EXT, listPackageFiles, publishPackage, toPackagePublic } from '../services/packages';
 
 const MAX_PACKAGE_FILE = 500 * 1024 * 1024; // 500 MB
 /**
@@ -93,7 +93,11 @@ export async function adminPackagesModule(app: FastifyInstance) {
           gameName: games.name,
         })
         .from(optimizationPackages)
-        .innerJoin(games, eq(optimizationPackages.gameId, games.id))
+        // leftJoin, not innerJoin: a global package has no game, and an inner
+        // join silently drops it from the list while `count()` still includes
+        // it — so the panel showed "1 package" above an empty table and there
+        // was no way to reach an uploaded OptiFlow payload.
+        .leftJoin(games, eq(optimizationPackages.gameId, games.id))
         .where(where)
         .orderBy(desc(optimizationPackages.updatedAt), asc(optimizationPackages.id))
         .limit(limit)
@@ -137,17 +141,25 @@ export async function adminPackagesModule(app: FastifyInstance) {
     '/admin/packages',
     {
       preHandler: [requirePermission('packages.write')],
-      schema: { body: z.object({ gameId: z.string().uuid() }).merge(OptimizationPackageInput) },
+      // gameId is optional: OptiFlow and OptiScaler payloads are the same bytes
+      // for every game, so they are published once with no game attached.
+      schema: { body: z.object({ gameId: z.string().uuid().nullish() }).merge(OptimizationPackageInput) },
     },
     async (request, reply) => {
-      const { gameId, ...body } = request.body;
-      const game = await db.query.games.findFirst({ where: and(eq(games.id, gameId), isNull(games.deletedAt)) });
-      if (!game) throw notFound('Game');
+      const { gameId: rawGameId, ...body } = request.body;
+      const gameId = rawGameId ?? null;
+      if (gameId) {
+        const game = await db.query.games.findFirst({ where: and(eq(games.id, gameId), isNull(games.deletedAt)) });
+        if (!game) throw notFound('Game');
+      }
 
       const clash = await db.query.optimizationPackages.findFirst({
-        where: and(eq(optimizationPackages.gameId, gameId), eq(optimizationPackages.slug, body.slug)),
+        where: and(
+          gameId ? eq(optimizationPackages.gameId, gameId) : isNull(optimizationPackages.gameId),
+          eq(optimizationPackages.slug, body.slug),
+        ),
       });
-      if (clash) throw badRequest('A package with this slug already exists for this game');
+      if (clash) throw badRequest(gameId ? 'A package with this slug already exists for this game' : 'A global package with this slug already exists');
 
       const [row] = await db
         .insert(optimizationPackages)
@@ -194,9 +206,12 @@ export async function adminPackagesModule(app: FastifyInstance) {
 
       if (patch.slug && patch.slug !== pkg.slug) {
         const clash = await db.query.optimizationPackages.findFirst({
-          where: and(eq(optimizationPackages.gameId, pkg.gameId), eq(optimizationPackages.slug, patch.slug as string)),
+          where: and(
+            pkg.gameId ? eq(optimizationPackages.gameId, pkg.gameId) : isNull(optimizationPackages.gameId),
+            eq(optimizationPackages.slug, patch.slug as string),
+          ),
         });
-        if (clash) throw badRequest('A package with this slug already exists for this game');
+        if (clash) throw badRequest(pkg.gameId ? 'A package with this slug already exists for this game' : 'A global package with this slug already exists');
       }
 
       const [row] = await db.update(optimizationPackages).set(patch).where(eq(optimizationPackages.id, pkg.id)).returning();
@@ -353,10 +368,12 @@ export async function adminPackagesModule(app: FastifyInstance) {
     async (request) => {
       const pkg = await findPackageById(request.params.id);
       if (!pkg) throw notFound('Optimization package');
-      const { storageKey, filename, size, destination, operation } = request.body;
+      const { storageKey, filename, size, destination, operation, role } = request.body;
 
       assertSafeFilename(filename);
-      assertSafeDestination(destination);
+      // Role-aware: a streamline/launcher destination is a bare filename because
+      // the directory is only known once the user picks their game.
+      assertSafeRoleDestination(destination, role);
       if (size > MAX_PACKAGE_FILE) throw badRequest(`File too large (max ${MAX_PACKAGE_FILE / 1024 / 1024} MB)`);
 
       // Authoritative hash: local driver hashes the stored bytes; S3 hashes via GetObject.
@@ -381,7 +398,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
 
       const [row] = await db
         .insert(packageFiles)
-        .values({ packageId: pkg.id, filename, sha256, size, destination, operation, storageKey })
+        .values({ packageId: pkg.id, filename, sha256, size, destination, operation, role, storageKey })
         .returning();
       await recordAudit(request, { action: 'package.file_add', entityType: 'optimization_package', entityId: pkg.id, after: { filename, sha256, size } });
       return row;

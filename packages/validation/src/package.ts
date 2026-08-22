@@ -9,8 +9,32 @@ export type PackageArch = z.infer<typeof PackageArch>;
 
 /** Which product area a package belongs to — Optimized Setting (graphics
  *  config files) vs Multi-Frame Generation (upscaler/frame-gen components). */
-export const PackageKind = z.enum(['graphics', 'frame_generation', 'upscaler']);
+export const PackageKind = z.enum(['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler']);
 export type PackageKind = z.infer<typeof PackageKind>;
+
+/** The two tools the Multi-Frame Generation section splits into. Each is
+ *  backed by exactly one published global package of the matching kind. */
+export const MfgTool = z.enum(['optiflow', 'optiscaler']);
+export type MfgTool = z.infer<typeof MfgTool>;
+
+/**
+ * Where a package file ends up.
+ *
+ * `relative` is every package written before OptiFlow existed: the destination
+ * is a path under the game directory and that is the whole story. The other
+ * two exist because OptiFlow's destinations are not knowable until the user
+ * picks their game:
+ *
+ * - `streamline` — the file replaces the same-named file *wherever it already
+ *   is* in the install. It is never created; if the game does not ship that
+ *   component there is nothing to swap and the entry is reported as missing.
+ * - `launcher` — the file is dropped beside the executable the user selected.
+ *
+ * The client resolves these against a real directory, so the resolution is the
+ * security boundary — see `optiflow_scan` in the Tauri layer.
+ */
+export const PackageFileRole = z.enum(['relative', 'streamline', 'launcher']);
+export type PackageFileRole = z.infer<typeof PackageFileRole>;
 
 /** Allowed file operations — packages can only replace or add files, never
  *  execute anything. This is the allowlist that prevents arbitrary RCE. */
@@ -61,13 +85,15 @@ export const PackageFileCompleteInput = z.object({
   /** Relative destination inside the game directory. */
   destination: z.string().trim().min(1).max(500),
   operation: FileOperation.default('replace'),
+  role: PackageFileRole.default('relative'),
 });
 export type PackageFileCompleteInput = z.infer<typeof PackageFileCompleteInput>;
 
 /** Public package metadata shown in the desktop storefront. */
 export const PackagePublic = z.object({
   id: z.string().uuid(),
-  gameId: z.string().uuid(),
+  /** Null for a global package — one that is not tied to a single game. */
+  gameId: z.string().uuid().nullable(),
   name: z.string(),
   slug: z.string(),
   description: z.string().nullable(),
@@ -95,6 +121,7 @@ export const PackageFilePublic = z.object({
   size: z.number().int(),
   destination: z.string(),
   operation: FileOperation,
+  role: PackageFileRole,
   sortOrder: z.number().int(),
 });
 export type PackageFilePublic = z.infer<typeof PackageFilePublic>;
@@ -109,6 +136,7 @@ export const PackageDownloadResponse = z.object({
       size: z.number().int(),
       destination: z.string(),
       operation: FileOperation,
+      role: PackageFileRole,
       url: z.string(),
       /** URL validity window in seconds — the client should fetch promptly. */
       expiresIn: z.number().int(),
@@ -119,3 +147,36 @@ export type PackageDownloadResponse = z.infer<typeof PackageDownloadResponse>;
 
 export const PackageListResponse = z.object({ data: z.array(PackagePublic) });
 export type PackageListResponse = z.infer<typeof PackageListResponse>;
+
+/**
+ * The published package behind one Multi-Frame Generation tool, with signed
+ * per-file URLs. Same entitlement gate as the per-game download.
+ */
+export const MfgToolPackageResponse = z.object({
+  tool: MfgTool,
+  package: PackagePublic,
+  files: z.array(
+    z.object({
+      filename: z.string(),
+      sha256: z.string(),
+      size: z.number().int(),
+      destination: z.string(),
+      operation: FileOperation,
+      role: PackageFileRole,
+      url: z.string(),
+      expiresIn: z.number().int(),
+    }),
+  ),
+});
+export type MfgToolPackageResponse = z.infer<typeof MfgToolPackageResponse>;
+
+/** Availability probe — lets the page say "not published yet" without needing
+ *  a subscription first, so an empty admin panel does not look like a paywall. */
+export const MfgToolStatusResponse = z.object({
+  tool: MfgTool,
+  available: z.boolean(),
+  package: PackagePublic.nullable(),
+  /** Manifest without URLs, so the page can list what it is about to touch. */
+  manifest: z.array(PackageFilePublic),
+});
+export type MfgToolStatusResponse = z.infer<typeof MfgToolStatusResponse>;

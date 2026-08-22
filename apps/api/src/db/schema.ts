@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { sql } from 'drizzle-orm';
 import { bigint, boolean, index, integer, jsonb, pgEnum, pgTable, primaryKey, serial, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import type { Technologies } from '@goh/validation';
 
@@ -30,7 +31,12 @@ export const packageGpuVendorEnum = pgEnum('package_gpu_vendor', ['any', 'nvidia
 export const packageArchEnum = pgEnum('package_arch', ['any', 'x64', 'arm64']);
 /** What kind of optimization package this is — drives which product area
  * (Optimized Setting vs Multi-Frame Generation) surfaces it. */
-export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation', 'upscaler']);
+export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler']);
+/** Where a package file lands. `relative` resolves against the game directory
+ *  (every pre-OptiFlow package); `streamline` replaces the same-named file
+ *  wherever it already exists in the install; `launcher` drops next to the
+ *  executable the user picked. */
+export const packageFileRoleEnum = pgEnum('package_file_role', ['relative', 'streamline', 'launcher']);
 export const fileOperationEnum = pgEnum('file_operation', ['replace', 'add']);
 export const profileColorEnum = pgEnum('profile_color', ['yellow', 'green', 'multiplay', 'ray_tracing']);
 
@@ -714,9 +720,9 @@ export const optimizationPackages = pgTable(
   'optimization_packages',
   {
     id: uuidPk(),
-    gameId: uuid('game_id')
-      .notNull()
-      .references(() => games.id, { onDelete: 'cascade' }),
+    /** Null for a global package — OptiFlow/OptiScaler payloads are the same
+     *  bytes for every game, so they are not owned by one. */
+    gameId: uuid('game_id').references(() => games.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     description: text('description'),
@@ -738,7 +744,14 @@ export const optimizationPackages = pgTable(
     updatedAt: updatedAt(),
     deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
   },
-  (t) => [uniqueIndex('optimization_packages_game_slug_idx').on(t.gameId, t.slug), index('optimization_packages_game_status_idx').on(t.gameId, t.status)],
+  (t) => [
+    uniqueIndex('optimization_packages_game_slug_idx').on(t.gameId, t.slug),
+    // Postgres treats NULLs as distinct, so the index above does not stop two
+    // global packages sharing a slug. This partial one does.
+    uniqueIndex('optimization_packages_global_slug_idx').on(t.slug).where(sql`${t.gameId} is null`),
+    index('optimization_packages_game_status_idx').on(t.gameId, t.status),
+    index('optimization_packages_kind_status_idx').on(t.kind, t.status),
+  ],
 );
 
 /** Working-set files attached to a package before publication. */
@@ -754,6 +767,7 @@ export const packageFiles = pgTable(
     size: integer('size').notNull(),
     destination: text('destination').notNull(),
     operation: fileOperationEnum('operation').notNull().default('replace'),
+    role: packageFileRoleEnum('role').notNull().default('relative'),
     storageKey: text('storage_key').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: createdAt(),

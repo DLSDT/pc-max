@@ -4,16 +4,23 @@ import { ArrowLeft, Loader2, Plus, Rocket, Settings2, Trash2, Upload } from 'luc
 import { api } from '@/lib/api';
 import { errMessage, iconBtnClass, inputClass, LoadingState, ErrorState, EmptyState, primaryBtnClass, dangerIconBtnClass, TableWrap } from './shared';
 
-const KINDS = ['graphics', 'frame_generation', 'upscaler'] as const;
+const KINDS = ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler'] as const;
 const GPU_VENDORS = ['any', 'nvidia', 'amd', 'intel'] as const;
 const ARCHES = ['any', 'x64', 'arm64'] as const;
 const OPERATIONS = ['replace', 'add'] as const;
+const ROLES = ['relative', 'streamline', 'launcher'] as const;
+
+/** Kinds whose packages are global — the same bytes for every game, so the
+ *  game select is not just optional but wrong to fill in. */
+const GLOBAL_KINDS = new Set<string>(['optiflow', 'optiscaler']);
 
 /** i18n key + badge colour per package kind (single source for both selects). */
 const KIND_META: Record<(typeof KINDS)[number], { i18nKey: string; badge: string }> = {
   graphics: { i18nKey: 'admin.kindGraphics', badge: 'bg-secondary text-secondary-foreground' },
   frame_generation: { i18nKey: 'admin.kindFrameGeneration', badge: 'bg-primary/10 text-primary' },
   upscaler: { i18nKey: 'admin.kindUpscaler', badge: 'bg-emerald-500/10 text-emerald-400' },
+  optiflow: { i18nKey: 'admin.kindOptiFlow', badge: 'bg-sky-500/10 text-sky-400' },
+  optiscaler: { i18nKey: 'admin.kindOptiScaler', badge: 'bg-violet-500/10 text-violet-400' },
 };
 
 function kindMeta(kind: string) {
@@ -64,6 +71,7 @@ function PackagesList({ onManage }: { onManage: (id: string) => void }) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [kind, setKind] = useState<(typeof KINDS)[number]>('graphics');
+  const isGlobalKind = GLOBAL_KINDS.has(kind);
   const [creating, setCreating] = useState(false);
 
   function load() {
@@ -97,11 +105,17 @@ function PackagesList({ onManage }: { onManage: (id: string) => void }) {
   }
 
   async function handleCreate() {
-    if (!gameId || !name.trim() || !slug.trim()) return;
+    if (!name.trim() || !slug.trim()) return;
+    if (!isGlobalKind && !gameId) return;
     setCreating(true);
     setActionError(null);
     try {
-      const created = await api.adminCreatePackage({ gameId, name: name.trim(), slug: slug.trim(), kind });
+      const created = await api.adminCreatePackage({
+        gameId: isGlobalKind ? null : gameId,
+        name: name.trim(),
+        slug: slug.trim(),
+        kind,
+      });
       setName('');
       setSlug('');
       setKind('graphics');
@@ -124,8 +138,13 @@ function PackagesList({ onManage }: { onManage: (id: string) => void }) {
       <div className="flex flex-wrap items-end gap-2 rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-muted-foreground">{t('admin.game')}</label>
-          <select value={gameId} onChange={(e) => setGameId(e.target.value)} className={`${inputClass} max-w-56`}>
-            <option value="">{t('admin.selectGame')}</option>
+          <select
+            value={isGlobalKind ? '' : gameId}
+            disabled={isGlobalKind}
+            onChange={(e) => setGameId(e.target.value)}
+            className={`${inputClass} max-w-56 disabled:opacity-50`}
+          >
+            <option value="">{isGlobalKind ? t('admin.globalPackage') : t('admin.selectGame')}</option>
             {games.map((g) => (
               <option key={String(g.id)} value={String(g.id)}>
                 {String(g.name)}
@@ -147,7 +166,12 @@ function PackagesList({ onManage }: { onManage: (id: string) => void }) {
             <KindOptions />
           </select>
         </div>
-        <button type="button" onClick={() => void handleCreate()} disabled={creating || !gameId || !name.trim() || !slug.trim()} className={primaryBtnClass}>
+        <button
+          type="button"
+          onClick={() => void handleCreate()}
+          disabled={creating || (!isGlobalKind && !gameId) || !name.trim() || !slug.trim()}
+          className={primaryBtnClass}
+        >
           {creating ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
           {t('admin.createPackage')}
         </button>
@@ -180,7 +204,14 @@ function PackagesList({ onManage }: { onManage: (id: string) => void }) {
                         {String(p.name ?? '—')}
                       </button>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{String(p.gameName ?? p.gameSlug ?? '—')}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {/* A global package has no game; "—" would read as missing data. */}
+                      {p.gameId == null ? (
+                        <span className="italic">{t('admin.globalShort')}</span>
+                      ) : (
+                        String(p.gameName ?? p.gameSlug ?? '—')
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <KindBadge kind={String(p.kind ?? 'graphics')} />
                     </td>
@@ -242,6 +273,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const [uploading, setUploading] = useState(false);
   const [destination, setDestination] = useState('');
   const [operation, setOperation] = useState<(typeof OPERATIONS)[number]>('replace');
+  const [role, setRole] = useState<(typeof ROLES)[number]>('relative');
 
   const [form, setForm] = useState<Record<string, unknown>>({});
 
@@ -319,6 +351,12 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file || !destination.trim()) return;
+    // The server refuses a path for these roles; catching it here names the
+    // problem next to the field instead of as a generic 400.
+    if (role !== 'relative' && /[\\/]/.test(destination)) {
+      setMsg(t('admin.roleNeedsBareName'));
+      return;
+    }
     setUploading(true);
     setMsg(null);
     try {
@@ -330,6 +368,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
         size: file.size,
         destination: destination.trim(),
         operation,
+        role,
       });
       setDestination('');
       load();
@@ -419,8 +458,22 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
 
       <div className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h3 className="text-sm font-semibold">{t('admin.packageFiles')}</h3>
+        <p className="text-xs text-muted-foreground">{t(`admin.roleHint_${role}`)}</p>
         <div className="flex flex-wrap items-center gap-2">
-          <input value={destination} onChange={(e) => setDestination(e.target.value)} placeholder={t('admin.destinationPlaceholder')} dir="ltr" className={inputClass} />
+          <input
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            placeholder={role === 'relative' ? t('admin.destinationPlaceholder') : t('admin.destinationNamePlaceholder')}
+            dir="ltr"
+            className={inputClass}
+          />
+          <select value={role} onChange={(e) => setRole(e.target.value as (typeof ROLES)[number])} className={inputClass}>
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {t(`admin.role_${r}`)}
+              </option>
+            ))}
+          </select>
           <select value={operation} onChange={(e) => setOperation(e.target.value as (typeof OPERATIONS)[number])} className={inputClass}>
             {OPERATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
@@ -439,6 +492,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
                 <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   <th className="px-4 py-2.5">{t('admin.name')}</th>
                   <th className="px-4 py-2.5">{t('admin.destination')}</th>
+                  <th className="px-4 py-2.5">{t('admin.fileRole')}</th>
                   <th className="px-4 py-2.5">{t('admin.operation')}</th>
                   <th className="px-4 py-2.5 text-right">{t('admin.actions')}</th>
                 </tr>
@@ -448,6 +502,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
                   <tr key={String(f.id)} className="border-b border-border/50 last:border-0">
                     <td className="px-4 py-2.5 font-medium" dir="ltr">{String(f.filename)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">{String(f.destination)}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{t(`admin.role_${String(f.role ?? 'relative')}`)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{String(f.operation)}</td>
                     <td className="px-4 py-2.5 text-right">
                       <button type="button" onClick={() => void handleDeleteFile(String(f.id))} className={dangerIconBtnClass}>

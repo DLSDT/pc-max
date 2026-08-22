@@ -12,6 +12,8 @@ import GamesPage from './pages/GamesPage';
 import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import MultiFrameGenerationPage from './pages/MultiFrameGenerationPage';
+import OptiFlowPage from './pages/OptiFlowPage';
+import OptiScalerPage from './pages/OptiScalerPage';
 import OptimizedSettingPage from './pages/OptimizedSettingPage';
 import RecentlyViewedPage from './pages/RecentlyViewedPage';
 import RecommendedPage from './pages/RecommendedPage';
@@ -66,6 +68,8 @@ export default function App() {
           <Route path="library" element={<LibraryPage />} />
           <Route path="windows-optimizer" element={<WindowsOptimizerPage />} />
           <Route path="multi-frame-generation" element={<MultiFrameGenerationPage />} />
+          <Route path="multi-frame-generation/optiscaler" element={<OptiScalerPage />} />
+          <Route path="multi-frame-generation/optiflow" element={<OptiFlowPage />} />
           <Route path="optimized-setting" element={<OptimizedSettingPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="games" element={<GamesPage />} />

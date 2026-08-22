@@ -19,6 +19,7 @@ import { paymentsModule } from './modules/payments';
 import { adminUsersModule } from './modules/admin-users';
 import { adminSubscriptionsModule } from './modules/admin-subscriptions';
 import { packagesModule } from './modules/packages';
+import { mfgToolsModule } from './modules/mfg-tools';
 import { adminPackagesModule } from './modules/admin-packages';
 import { hardwareModule } from './modules/hardware';
 import { adminDevicesModule } from './modules/admin-devices';
@@ -173,6 +174,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await api.register(adminUsersModule, { prefix: '/api/v1' });
   await api.register(adminSubscriptionsModule, { prefix: '/api/v1' });
   await api.register(packagesModule, { prefix: '/api/v1' });
+  await api.register(mfgToolsModule, { prefix: '/api/v1' });
   await api.register(adminPackagesModule, { prefix: '/api/v1' });
   await api.register(hardwareModule, { prefix: '/api/v1' });
   await api.register(adminDevicesModule, { prefix: '/api/v1' });

@@ -10,6 +10,9 @@ import type {
   HardwareProfileInput,
   HardwareRecommendResponse,
   HomeResponse,
+  MfgTool,
+  MfgToolPackageResponse,
+  MfgToolStatusResponse,
   MySubscription,
   OptimizationProfile,
   OtpSendResponse,
@@ -287,6 +290,12 @@ export const api = {
   /** Server go-ahead for a gated feature. Throws 403 without a subscription. */
   authorizeFeature: (feature: string) =>
     request<{ ok: boolean; feature: string }>(`/me/features/${feature}/authorize`, { method: 'POST', authed: true }),
+  /** Is an OptiFlow/OptiScaler package published? Public on purpose — "nothing
+   *  uploaded yet" must not be shown to the user as a subscription problem. */
+  mfgToolStatus: (tool: MfgTool) => request<MfgToolStatusResponse>(`/mfg/tools/${tool}`),
+  /** Entitlement-gated manifest with signed per-file URLs. */
+  mfgToolDownload: (tool: MfgTool) =>
+    request<MfgToolPackageResponse>(`/mfg/tools/${tool}/download`, { method: 'POST', authed: true }),
   updateMe: (body: { username?: string }) => request<UserPublic>('/me', { method: 'PATCH', body, authed: true }),
   getFavorites: () => request<GameListResponse>('/favorites', { authed: true }),
   addFavorite: (gameId: string) =>

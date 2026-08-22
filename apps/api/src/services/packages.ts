@@ -1,4 +1,5 @@
 import { and, desc, eq, isNull } from 'drizzle-orm';
+import type { PackageFileRole } from '@goh/validation';
 import { db } from '../db';
 import { optimizationPackageVersions, optimizationPackages, packageFiles } from '../db/schema';
 import { badRequest, notFound } from '../lib/errors';
@@ -58,6 +59,32 @@ export function assertSafeDestination(destination: string): void {
   assertAllowedExtension(destination, 'Destination');
 }
 
+/**
+ * Validate a destination for a role whose directory is decided on the user's
+ * machine, not here.
+ *
+ * A `streamline` or `launcher` file has no path — the installer finds the
+ * directory (the existing component's location, or the launcher's folder) and
+ * the destination is only the name to write there. Accepting a path would mean
+ * publishing a package whose path half is silently ignored at install time, so
+ * anything with a separator is refused at authoring time instead.
+ */
+export function assertSafeRoleDestination(destination: string, role: PackageFileRole): void {
+  if (role === 'relative') {
+    assertSafeDestination(destination);
+    return;
+  }
+  if (/[\\/]/.test(destination)) {
+    throw badRequest(
+      `A ${role} file's destination is just a filename — the installer decides the directory`,
+    );
+  }
+  if (destination === '.' || destination === '..' || destination.startsWith('.')) {
+    throw badRequest('Invalid destination');
+  }
+  assertAllowedExtension(destination, 'Destination');
+}
+
 export function assertSafeFilename(filename: string): void {
   if (filename.includes('\\') || filename.startsWith('/') || filename.includes('..')) {
     throw badRequest('Invalid filename');
@@ -69,6 +96,32 @@ export function assertSafeFilename(filename: string): void {
 export async function findPackageBySlug(gameId: string, slug: string) {
   return db.query.optimizationPackages.findFirst({
     where: and(eq(optimizationPackages.gameId, gameId), eq(optimizationPackages.slug, slug), isNull(optimizationPackages.deletedAt)),
+  });
+}
+
+/** Load a global (game-less) package by slug. */
+export async function findGlobalPackageBySlug(slug: string) {
+  return db.query.optimizationPackages.findFirst({
+    where: and(isNull(optimizationPackages.gameId), eq(optimizationPackages.slug, slug), isNull(optimizationPackages.deletedAt)),
+  });
+}
+
+/**
+ * The published global package behind an MFG tool.
+ *
+ * A tool is backed by at most one — publishing a second is an admin mistake
+ * rather than a supported layout, so the newest published one wins and the
+ * choice is deterministic instead of whatever the planner returns first.
+ */
+export async function findPublishedToolPackage(kind: 'optiflow' | 'optiscaler') {
+  return db.query.optimizationPackages.findFirst({
+    where: and(
+      isNull(optimizationPackages.gameId),
+      eq(optimizationPackages.kind, kind),
+      eq(optimizationPackages.status, 'published'),
+      isNull(optimizationPackages.deletedAt),
+    ),
+    orderBy: [desc(optimizationPackages.publishedAt)],
   });
 }
 
@@ -122,6 +175,7 @@ export async function publishPackage(packageId: string, changeNote: string | und
     size: f.size,
     destination: f.destination,
     operation: f.operation,
+    role: f.role,
     sortOrder: f.sortOrder,
   }));
 

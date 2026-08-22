@@ -37,3 +37,11 @@ Thumbs.db
 
 # Coverage
 coverage/
+
+# Vendor payloads (OptiFlow / OptiScaler): NVIDIA, AMD and Intel redistributable
+# DLLs dropped here for upload through the admin panel. Hundreds of megabytes of
+# proprietary binaries — they belong in object storage behind the entitlement
+# gate, never in this repository, which is public.
+/Untitled Folder/
+/OPTI */
+/NVIDIA MFG */

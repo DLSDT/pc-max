@@ -1,0 +1,129 @@
+/**
+ * The client half of the OptiFlow pipeline.
+ *
+ * The property worth proving here is the integrity check. The manifest comes
+ * from our API but the bytes come from object storage over a signed URL —
+ * two different trust boundaries — so a file that does not match its published
+ * hash must never reach the native installer, even though the installer would
+ * also reject it. Failing here means nothing was ever staged toward a game
+ * folder.
+ */
+import { webcrypto } from 'node:crypto';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const invoke = vi.fn();
+const mfgToolDownload = vi.fn();
+const authorizeFeature = vi.fn();
+
+vi.mock('@tauri-apps/api/core', () => ({ invoke: (...a: unknown[]) => invoke(...a) }));
+vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }));
+vi.mock('@/lib/optimizer', () => ({ isTauriShell: () => true }));
+vi.mock('@/lib/api', () => ({
+  api: { mfgToolDownload: (...a: unknown[]) => mfgToolDownload(...a) },
+  ApiError: class ApiError extends Error {},
+}));
+vi.mock('@/hooks/useFeatureAccess', () => ({
+  authorizeFeature: (...a: unknown[]) => authorizeFeature(...a),
+}));
+
+import { componentNames, installTool, OptiFlowError } from '../optiflow';
+
+const BYTES = new TextEncoder().encode('the real dll bytes');
+/** sha256 of BYTES, computed the same way the browser will. */
+async function hashOf(bytes: Uint8Array): Promise<string> {
+  const buf = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const digest = await webcrypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function manifest(sha256: string) {
+  return {
+    tool: 'optiflow',
+    package: { id: 'p1', name: 'OptiFlow', version: '1.0.1' },
+    files: [
+      {
+        filename: 'sl.dlss_g.dll',
+        destination: 'sl.dlss_g.dll',
+        role: 'streamline',
+        sha256,
+        size: BYTES.length,
+        operation: 'replace',
+        url: 'https://storage.example/sl.dlss_g.dll',
+        expiresIn: 300,
+      },
+    ],
+  };
+}
+
+beforeEach(() => {
+  invoke.mockReset().mockResolvedValue({ gameDir: 'C:/g', launcherDir: 'C:/g/bin', backupDir: 'C:/g/.goh-backup/x', written: [], skipped: [] });
+  mfgToolDownload.mockReset();
+  authorizeFeature.mockReset().mockResolvedValue(undefined);
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(BYTES)));
+  // vitest's node environment does not expose WebCrypto as a bare global the
+  // way a webview does; the lib legitimately uses the browser API.
+  vi.stubGlobal('crypto', webcrypto);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('installTool', () => {
+  it('passes verified bytes to the native installer', async () => {
+    mfgToolDownload.mockResolvedValue(manifest(await hashOf(BYTES)));
+
+    await installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' });
+
+    expect(authorizeFeature).toHaveBeenCalledWith('multi_frame_generation');
+    expect(invoke).toHaveBeenCalledWith('optiflow_install', expect.objectContaining({ exePath: 'C:/g/bin/game.exe' }));
+    const [, args] = invoke.mock.calls[0]!;
+    const file = (args as { files: { contentBase64: string; role: string }[] }).files[0]!;
+    expect(atob(file.contentBase64)).toBe('the real dll bytes');
+    expect(file.role).toBe('streamline');
+  });
+
+  it('refuses a download that does not match the published hash', async () => {
+    // The API says one thing; storage returns another. This is the case the
+    // check exists for, and nothing may reach the installer.
+    mfgToolDownload.mockResolvedValue(manifest('0'.repeat(64)));
+
+    await expect(installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' })).rejects.toThrow(OptiFlowError);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed download instead of installing a partial set', async () => {
+    mfgToolDownload.mockResolvedValue(manifest(await hashOf(BYTES)));
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 403 })));
+
+    await expect(installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' })).rejects.toThrow(/403/);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('does not call the download endpoint when the entitlement check fails', async () => {
+    authorizeFeature.mockRejectedValue(new Error('Subscription required'));
+
+    await expect(installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' })).rejects.toThrow('Subscription required');
+    expect(mfgToolDownload).not.toHaveBeenCalled();
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('refuses an empty package rather than reporting a successful no-op', async () => {
+    mfgToolDownload.mockResolvedValue({ ...manifest('x'), files: [] });
+
+    await expect(installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' })).rejects.toThrow(/no files/);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+});
+
+describe('componentNames', () => {
+  it('asks the scanner only for files that replace something', () => {
+    expect(
+      componentNames([
+        { destination: 'sl.dlss_g.dll', role: 'streamline' },
+        { destination: 'version.dll', role: 'launcher' },
+        { destination: 'bin/x64/OptiScaler.ini', role: 'relative' },
+      ]),
+    ).toEqual(['sl.dlss_g.dll']);
+  });
+});

@@ -60,7 +60,11 @@ export type {
   PackageFileCompleteInput,
   PackagePublic,
   PackageFilePublic,
+  PackageFileRole,
   PackageDownloadResponse,
+  MfgTool,
+  MfgToolPackageResponse,
+  MfgToolStatusResponse,
   PackageListResponse,
 } from '@goh/validation';
 

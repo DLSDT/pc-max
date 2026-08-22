@@ -1,3 +1,4 @@
+mod optiflow;
 mod winopt;
 
 use base64::Engine;
@@ -41,6 +42,8 @@ pub fn run() {
             detect_hardware,
             detect_games,
             apply_game_files,
+            optiflow_scan,
+            optiflow_install,
             extract_game_icon,
             save_binary_file,
             windows_scan,
@@ -297,7 +300,7 @@ struct GameFilePayload {
 
 /// Extensions optimization packages may write. Mirrors the server allowlist —
 /// executables and scripts are NEVER allowed.
-const ALLOWED_EXT: &[&str] = &[
+pub(crate) const ALLOWED_EXT: &[&str] = &[
     "cfg", "ini", "txt", "json", "xml", "toml", "preset", "pak", "bin", "dat", "dll",
     "fx", "nvpreset", "sig", "profile", "settings", "upd", "blend", "lut", "csv", "yml",
     "yaml", "log",
@@ -305,7 +308,7 @@ const ALLOWED_EXT: &[&str] = &[
 
 /// Resolve `destination` relative to `game_dir`, rejecting any traversal or
 /// absolute path. Returns None when unsafe.
-fn safe_destination(game_dir: &Path, destination: &str) -> Option<PathBuf> {
+pub(crate) fn safe_destination(game_dir: &Path, destination: &str) -> Option<PathBuf> {
     if destination.starts_with('/') || destination.contains("..") || destination.contains('\\') {
         return None;
     }
@@ -621,3 +624,29 @@ fn detect_hardware() -> HardwareInfo {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod optiflow_tests;
+
+// ---------------------------------------------------------------------------
+// OptiFlow — Streamline component swap + launcher unlocker
+// ---------------------------------------------------------------------------
+
+/// Inspect a selected game executable: report the install root, the launcher
+/// folder, and which of the requested Streamline components the game ships.
+/// Read-only — nothing is written, so the UI can show the user exactly what an
+/// install would touch before they agree to it.
+#[tauri::command]
+fn optiflow_scan(exe_path: String, components: Vec<String>) -> Result<optiflow::ScanReport, String> {
+    optiflow::scan(Path::new(&exe_path), &components)
+}
+
+/// Install an OptiFlow payload against a selected executable. The manifest
+/// comes from the entitlement-gated server endpoint; every destination is
+/// resolved and bounds-checked here.
+#[tauri::command]
+fn optiflow_install(
+    exe_path: String,
+    files: Vec<optiflow::OptiFlowFile>,
+) -> Result<optiflow::InstallReport, String> {
+    optiflow::install(Path::new(&exe_path), &files)
+}
