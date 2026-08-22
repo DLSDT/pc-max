@@ -262,6 +262,11 @@ export const api = {
     request<{ ok: boolean }>('/auth/password/reset', { method: 'POST', body, authed: false }),
   logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'POST', authed: true, withCredentials: true }),
   me: () => request<UserPublic>('/auth/me', { authed: true }),
+  /** Which gated areas the signed-in user may use (server-decided). */
+  myFeatures: () => request<{ features: Record<string, boolean> }>('/me/features', { authed: true }),
+  /** Server go-ahead for a gated feature. Throws 403 without a subscription. */
+  authorizeFeature: (feature: string) =>
+    request<{ ok: boolean; feature: string }>(`/me/features/${feature}/authorize`, { method: 'POST', authed: true }),
   updateMe: (body: { username?: string }) => request<UserPublic>('/me', { method: 'PATCH', body, authed: true }),
   getFavorites: () => request<GameListResponse>('/favorites', { authed: true }),
   addFavorite: (gameId: string) =>

@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, isNull } from 'drizzle-orm';
+import { and, asc, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
@@ -41,7 +41,10 @@ export async function adminDevicesModule(app: FastifyInstance) {
           platform: devices.platform,
           lastSeenAt: devices.lastSeenAt,
           createdAt: devices.createdAt,
-          userEmail: users.phone,
+          // Accounts are email-only now and phone is null on every new row, so
+          // selecting it left this column blank. Fall back through the
+          // identifiers a row can actually have.
+          userEmail: sql<string>`coalesce(${users.email}, ${users.phone}, ${users.username}, '')`,
         })
         .from(devices)
         .innerJoin(users, eq(devices.userId, users.id))

@@ -14,7 +14,8 @@ import { db } from '../db';
 import { devices, users } from '../db/schema';
 import { conflict, notFound } from '../lib/errors';
 import { authenticateUser } from '../lib/auth-middleware';
-import { activeSubscriptionFor, entitlementFeaturesFor } from '../lib/entitlements';
+import { activeSubscriptionFor, entitlementFeaturesFor, hasEntitlement } from '../lib/entitlements';
+import { GATED_FEATURES, GATED_FEATURE_KEYS, requireFeature, type GatedFeature } from '../lib/feature-gate';
 import { deviceLimitFor } from '../services/subscriptions';
 
 const DevicePublicSchema = DevicePublic;
@@ -22,6 +23,63 @@ const MySubscriptionSchema = MySubscription;
 
 export async function usersModule(app: FastifyInstance) {
   const typed = app.withTypeProvider<ZodTypeProvider>();
+
+  /**
+   * Which gated areas this user may use. The desktop app renders its
+   * subscription-required states from this rather than deciding locally, so
+   * the UI and the server cannot disagree.
+   *
+   * Advisory only — every gated route re-checks. Faking this response gets a
+   * nicer-looking page and nothing else.
+   */
+  typed.get(
+    '/me/features',
+    {
+      preHandler: [authenticateUser],
+      schema: {
+        response: {
+          200: z.object({
+            features: z.record(z.boolean()),
+          }),
+        },
+      },
+    },
+    async (request) => {
+      const userId = request.user!.id;
+      const held = await entitlementFeaturesFor(userId);
+      const features: Record<string, boolean> = {};
+      for (const key of GATED_FEATURE_KEYS) {
+        features[key] = held.includes(GATED_FEATURES[key]);
+      }
+      return { features };
+    },
+  );
+
+  /**
+   * The go-ahead a gated feature must obtain before it does anything.
+   *
+   * Windows Optimizer applies its changes entirely on the machine, so there is
+   * no payload for the server to withhold — this is the authorisation step,
+   * and it 403s without an active subscription.
+   */
+  typed.post(
+    '/me/features/:feature/authorize',
+    {
+      preHandler: [authenticateUser],
+      schema: {
+        params: z.object({ feature: z.enum(GATED_FEATURE_KEYS as [GatedFeature, ...GatedFeature[]]) }),
+        response: { 200: z.object({ ok: z.boolean(), feature: z.string() }) },
+      },
+    },
+    async (request) => {
+      const userId = request.user!.id;
+      if (!(await hasEntitlement(userId, GATED_FEATURES[request.params.feature]))) {
+        const { forbidden } = await import('../lib/errors');
+        throw forbidden('An active subscription is required for this feature');
+      }
+      return { ok: true, feature: request.params.feature };
+    },
+  );
 
   typed.get(
     '/me',

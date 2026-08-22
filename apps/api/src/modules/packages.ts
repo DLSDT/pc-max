@@ -6,8 +6,8 @@ import { PackageDownloadResponse, PackageKind, PackageListResponse } from '@goh/
 import { db } from '../db';
 import { games, optimizationPackages } from '../db/schema';
 import { authenticateUser } from '../lib/auth-middleware';
-import { forbidden, notFound } from '../lib/errors';
-import { hasEntitlement } from '../lib/entitlements';
+import { notFound } from '../lib/errors';
+import { requireFeature } from '../lib/feature-gate';
 import { storage } from '../lib/storage';
 import { config } from '../config';
 import { findPackageBySlug, listPackageFiles, toPackagePublic } from '../services/packages';
@@ -82,7 +82,7 @@ export async function packagesModule(app: FastifyInstance) {
   typed.post(
     '/games/:slug/packages/:packageSlug/download',
     {
-      preHandler: [authenticateUser],
+      preHandler: [authenticateUser, requireFeature('multi_frame_generation')],
       schema: { params: z.object({ slug: z.string(), packageSlug: z.string() }), response: { 200: PackageDownloadResponse } },
     },
     async (request) => {
@@ -92,11 +92,6 @@ export async function packagesModule(app: FastifyInstance) {
       if (!game) throw notFound('Game');
       const pkg = await findPackageBySlug(game.id, request.params.packageSlug);
       if (!pkg || pkg.status !== 'published') throw notFound('Optimization package');
-
-      const userId = request.user!.id;
-      if (!(await hasEntitlement(userId, 'premium_optimization'))) {
-        throw forbidden('A premium subscription is required to download optimization packages');
-      }
 
       const files = await listPackageFiles(pkg.id);
       // Short-lived signed URLs (HMAC locally, presigned GET on S3) — the bare

@@ -1,16 +1,24 @@
 import type { HardwareProfileInput } from '@goh/types';
+import { isTauriShell } from './optimizer';
 
 /**
  * Hardware detection.
  *
  * In the packaged Windows app this calls the Rust `detect_hardware` command
- * (PowerShell/WMI). In the browser preview (Vite) the Rust side is absent, so
- * we fall back to whatever the platform exposes — usually just CPU cores, arch
- * and resolution.
+ * (PowerShell/WMI). Anywhere else — the browser preview — there is no native
+ * side, and what the page can see about the machine is not hardware: it is a
+ * user-agent string and a screen size. Those are reported separately rather
+ * than dressed up as a detection result, because a CPU field reading
+ * "16 logical processors" next to a blank GPU looks like detection worked
+ * badly, not like it never ran.
  */
 
-interface TauriBridge {
-  __TAURI__?: { core?: { invoke: (cmd: string) => Promise<unknown> } };
+export type HardwareSource = 'native' | 'browser';
+
+export interface DetectionResult {
+  profile: HardwareProfileInput;
+  /** Where the numbers came from. Only 'native' is real hardware detection. */
+  source: HardwareSource;
 }
 
 function detectVendorFromModel(model: string | null): HardwareProfileInput['gpuVendor'] | undefined {
@@ -30,39 +38,53 @@ function osFromUserAgent(ua: string): string {
   return 'Unknown';
 }
 
-export async function detectHardware(): Promise<HardwareProfileInput> {
-  const tauri = (window as unknown as TauriBridge).__TAURI__;
+/** Drop empty strings so a blank WMI field does not read as detected data. */
+function clean(v: string | null | undefined): string | undefined {
+  const s = typeof v === 'string' ? v.trim() : '';
+  return s.length > 0 ? s : undefined;
+}
 
-  if (tauri?.core?.invoke) {
-    try {
-      const raw = (await tauri.core.invoke('detect_hardware')) as HardwareProfileInput;
-      const gpuModel = raw.gpuModel ?? null;
-      return {
-        cpu: raw.cpu ?? undefined,
-        gpuVendor: raw.gpuVendor ?? detectVendorFromModel(gpuModel),
-        gpuModel: gpuModel ?? undefined,
-        vramMb: raw.vramMb ?? undefined,
-        ramGb: raw.ramGb ?? undefined,
-        windowsVersion: raw.windowsVersion ?? undefined,
-        arch: raw.arch ?? undefined,
-        resolution: raw.resolution ?? undefined,
-        driverVersion: raw.driverVersion ?? undefined,
-      };
-    } catch {
-      // Fall through to the browser path.
-    }
+function positive(v: number | null | undefined): number | undefined {
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : undefined;
+}
+
+export async function detectHardware(): Promise<DetectionResult> {
+  if (isTauriShell()) {
+    // Dynamic import, like every other native call in this app. The previous
+    // implementation reached for `window.__TAURI__`, which only exists when
+    // `withGlobalTauri` is enabled in tauri.conf.json — it is not, so the
+    // native branch never ran and the packaged app silently reported the
+    // browser fallback as its hardware.
+    const { invoke } = await import('@tauri-apps/api/core');
+    const raw = (await invoke('detect_hardware')) as Partial<HardwareProfileInput>;
+    const gpuModel = clean(raw.gpuModel);
+    return {
+      source: 'native',
+      profile: {
+        cpu: clean(raw.cpu),
+        gpuVendor: raw.gpuVendor ?? detectVendorFromModel(gpuModel ?? null),
+        gpuModel,
+        vramMb: positive(raw.vramMb),
+        ramGb: positive(raw.ramGb),
+        windowsVersion: clean(raw.windowsVersion),
+        arch: clean(raw.arch),
+        resolution: clean(raw.resolution),
+        driverVersion: clean(raw.driverVersion),
+      },
+    };
   }
 
-  // Browser preview fallback — partial but honest.
+  // Browser preview. Deliberately no `cpu` — logical-core count is not a CPU
+  // name, and presenting it as one is exactly the wrong kind of wrong.
   const ua = navigator.userAgent;
-  const cores = navigator.hardwareConcurrency;
-  const resolution = `${screen.width}x${screen.height}`;
   const archMatch = /(x86_64|arm64|amd64)/.exec(ua);
   return {
-    cpu: cores ? `${cores} logical processors` : undefined,
-    arch: archMatch?.[1] === 'amd64' ? 'x64' : (archMatch?.[1] ?? undefined),
-    resolution,
-    windowsVersion: osFromUserAgent(ua),
+    source: 'browser',
+    profile: {
+      arch: archMatch?.[1] === 'amd64' ? 'x64' : (archMatch?.[1] ?? undefined),
+      resolution: `${screen.width}x${screen.height}`,
+      windowsVersion: osFromUserAgent(ua),
+    },
   };
 }
 

@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import AuthLayout from './components/layout/AuthLayout';
+import RequireAuth from './components/RequireAuth';
 import AppLayout from './components/layout/AppLayout';
 import AboutPage from './pages/AboutPage';
 import AdminPage from './pages/AdminPage';
@@ -19,7 +21,6 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import SettingsPage from './pages/SettingsPage';
 import SubscriptionPage from './pages/SubscriptionPage';
-import { Spinner } from './components/ui';
 import { useAuth } from './store/auth';
 import { useAdminAuth } from './store/adminAuth';
 import { api } from './lib/api';
@@ -27,8 +28,6 @@ import { applyBranding, brandingFromConfig, loadCachedBranding } from './lib/bra
 
 export default function App() {
   const restore = useAuth((s) => s.restore);
-  const user = useAuth((s) => s.user);
-  const authReady = useAuth((s) => s.ready);
   const restoreAdmin = useAdminAuth((s) => s.restore);
 
   // Try to restore the session from the httpOnly refresh cookie on boot —
@@ -52,42 +51,34 @@ export default function App() {
 
   return (
     <Routes>
-      <Route element={<AppLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="library" element={<LibraryPage />} />
-        <Route path="windows-optimizer" element={<WindowsOptimizerPage />} />
-        <Route path="multi-frame-generation" element={<MultiFrameGenerationPage />} />
-        <Route path="optimized-setting" element={<OptimizedSettingPage />} />
-        <Route path="admin" element={<AdminPage />} />
-        <Route path="games" element={<GamesPage />} />
-        <Route path="games/:slug" element={<GameDetailPage />} />
-        <Route path="categories" element={<CategoriesPage />} />
-        <Route path="favorites" element={<FavoritesPage />} />
-        <Route path="recently-viewed" element={<RecentlyViewedPage />} />
-        <Route path="recommended" element={<RecommendedPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="about" element={<AboutPage />} />
+      {/* Public: the only screens reachable without a session. */}
+      <Route element={<AuthLayout />}>
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
-        <Route
-          path="subscription"
-          element={
-            !authReady ? (
-              // Session restore (httpOnly refresh cookie) hasn't resolved yet on
-              // this boot/reload — deciding "logged out" before it does would
-              // bounce an actually-signed-in user straight to /login.
-              <div className="flex items-center justify-center py-20">
-                <Spinner />
-              </div>
-            ) : user ? (
-              <SubscriptionPage />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+
+      {/* Everything else requires a session — enforced here rather than page
+          by page, so a new page cannot forget to opt in. */}
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="library" element={<LibraryPage />} />
+          <Route path="windows-optimizer" element={<WindowsOptimizerPage />} />
+          <Route path="multi-frame-generation" element={<MultiFrameGenerationPage />} />
+          <Route path="optimized-setting" element={<OptimizedSettingPage />} />
+          <Route path="admin" element={<AdminPage />} />
+          <Route path="games" element={<GamesPage />} />
+          <Route path="games/:slug" element={<GameDetailPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="favorites" element={<FavoritesPage />} />
+          <Route path="recently-viewed" element={<RecentlyViewedPage />} />
+          <Route path="recommended" element={<RecommendedPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="about" element={<AboutPage />} />
+          <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
       </Route>
     </Routes>
   );

@@ -35,3 +35,18 @@ export function usePasswordRules(): { rules: PasswordRule[]; labels: string[] } 
 
   return { rules, labels };
 }
+
+/**
+ * Client-side email check, deliberately matching the server's EMAIL_RE
+ * (apps/api/src/lib/identifier.ts). It exists to fail fast in the form, not to
+ * be the authority — the server re-validates and is the one that decides.
+ *
+ * Kept loose on purpose: rejecting an address the server would have accepted
+ * is a worse failure than letting one through to a clean 400.
+ */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+export function isValidEmail(value: string): boolean {
+  const email = value.trim();
+  return email.length > 0 && email.length <= 254 && EMAIL_RE.test(email);
+}

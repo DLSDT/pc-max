@@ -2,27 +2,21 @@ import { z } from 'zod';
 import { UserRole, UserStatus } from './enums';
 
 /**
- * Unified account identifier: either an email or a phone number. The server
- * classifies and normalizes it (the client never declares the account type).
+ * Account identifier. Phone authentication is disabled, so this is an email
+ * address; the server still normalizes it (trim + lowercase) rather than
+ * trusting the client's casing.
+ *
+ * The field is still called `identifier` because existing accounts, sessions
+ * and the reset flow all key on it — only the accepted format narrowed.
  */
 export const IdentifierString = z
   .string()
   .trim()
-  .min(6, 'Enter a valid email or phone number')
-  .max(254, 'Enter a valid email or phone number');
+  .toLowerCase()
+  .min(6, 'Enter a valid email address')
+  .max(254, 'Enter a valid email address')
+  .email('Enter a valid email address');
 export type IdentifierString = z.infer<typeof IdentifierString>;
-
-/**
- * Phone numbers are normalized server-side to international format; the client
- * just sends a plausible phone-shaped string.
- */
-export const PhoneString = z
-  .string()
-  .trim()
-  .min(8, 'Enter a valid phone number')
-  .max(20, 'Enter a valid phone number')
-  .regex(/^[0-9+\s-]+$/, 'Enter a valid phone number');
-export type PhoneString = z.infer<typeof PhoneString>;
 
 export const OtpCode = z
   .string()
@@ -30,7 +24,7 @@ export const OtpCode = z
   .regex(/^\d{6}$/, 'The verification code is 6 digits');
 export type OtpCode = z.infer<typeof OtpCode>;
 
-/** Send an OTP for registration or password reset (email or phone). */
+/** Send an OTP for registration or password reset. */
 export const OtpSendInput = z.object({
   identifier: IdentifierString,
   purpose: z.enum(['register', 'reset']),
@@ -44,7 +38,7 @@ export const OtpSendResponse = z.object({
 });
 export type OtpSendResponse = z.infer<typeof OtpSendResponse>;
 
-/** Register a new end-user account (email OR phone + verified OTP + password). */
+/** Register a new end-user account (email + verified OTP + password). */
 export const RegisterInput = z.object({
   identifier: IdentifierString,
   username: z
@@ -59,7 +53,7 @@ export const RegisterInput = z.object({
 });
 export type RegisterInput = z.infer<typeof RegisterInput>;
 
-/** End-user login (email OR phone + password). */
+/** End-user login (email + password). */
 export const UserLoginInput = z.object({
   identifier: IdentifierString,
   password: z.string().min(1).max(200),
@@ -69,7 +63,7 @@ export type UserLoginInput = z.infer<typeof UserLoginInput>;
 /** Public end-user profile (never exposes password hash or sessions). */
 export const UserPublic = z.object({
   id: z.string().uuid(),
-  /** Normalized international phone — set on phone-registered accounts. */
+  /** Legacy: phone auth is disabled, but existing rows may still carry one. */
   phone: z.string().nullable(),
   phoneVerified: z.boolean(),
   /** Normalized email — set on email-registered accounts. */

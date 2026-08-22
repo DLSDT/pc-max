@@ -1,56 +1,60 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LogIn } from 'lucide-react';
+import { KeyRound, LogIn, Mail } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { useAdminAuth } from '@/store/adminAuth';
-import { Button, Input } from '@/components/ui';
-
-/** Admin accounts are only ever identified by email (AdminLoginInput) — no point
- * attempting the admin login for an obvious phone-number identifier. */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { Button } from '@/components/ui';
+import { AuthAlert, AuthCard, AuthField, AuthFooter, AuthHeader } from '@/components/auth/AuthShell';
+import { isValidEmail } from '@/lib/passwordRules';
 
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const login = useAuth((s) => s.login);
   const adminLogin = useAdminAuth((s) => s.login);
-  const [identifier, setIdentifier] = useState('');
+
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  /** Where the auth guard bounced them from, if anywhere. */
+  const from = (location.state as { from?: string } | null)?.from;
+
+  function validate(): boolean {
+    const next: { email?: string; password?: string } = {};
+    if (!isValidEmail(email)) next.email = t('auth.invalidEmail');
+    if (password.length < 1) next.password = t('auth.passwordRequired');
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  }
+
   /**
-   * One login form for both audiences (spec: same auth system, same app —
-   * no separate admin sign-in). Whichever account the credentials actually
-   * belong to determines where the user lands: an admin match opens the
-   * admin panel, anything else falls through to the regular user session
-   * and their account page.
+   * One form for both audiences. Whichever kind of account the credentials
+   * belong to decides where the user lands; an admin match opens the panel,
+   * anything else falls through to the regular session. Falling through rather
+   * than surfacing the admin error avoids revealing which kind of account, if
+   * any, an address belongs to.
    */
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    const trimmed = identifier.trim();
-    if (trimmed.length < 6) {
-      setError(t('auth.invalidIdentifier'));
-      return;
-    }
+    if (!validate()) return;
+
     setBusy(true);
     try {
-      if (EMAIL_RE.test(trimmed)) {
-        try {
-          await adminLogin(trimmed, password);
-          navigate('/admin');
-          return;
-        } catch {
-          // Not an admin account (or wrong password for one) — try it as a
-          // regular user login instead. Falling through (rather than
-          // surfacing the admin error) avoids revealing which kind of
-          // account, if any, that identifier belongs to.
-        }
+      try {
+        await adminLogin(email.trim(), password);
+        navigate('/admin', { replace: true });
+        return;
+      } catch {
+        // Not an admin account — continue as a regular user.
       }
-      await login(trimmed, password);
-      navigate('/subscription');
+      await login(email.trim(), password);
+      navigate(from ?? '/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('auth.errorGeneric'));
     } finally {
@@ -59,72 +63,76 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto flex min-h-[60vh] w-full max-w-sm flex-col justify-center gap-6">
-      <div className="space-y-3 text-center">
-        <img
-          src="/icon.png"
-          alt={t('appName')}
-          className="mx-auto size-16 rounded-2xl object-contain shadow-sm"
-          draggable={false}
-        />
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">{t('appName')}</h1>
-          <p className="text-sm font-medium text-primary">{t('tagline')}</p>
-          <p className="text-sm text-muted-foreground">{t('auth.signInHint')}</p>
-        </div>
-      </div>
+    <>
+      <AuthHeader title={t('auth.signInTitle')} subtitle={t('auth.signInHint')} />
 
-      <form onSubmit={onSubmit} className="space-y-4 rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="space-y-1.5">
-          <label htmlFor="login-identifier" className="text-sm font-medium">
-            {t('auth.emailOrPhone')}
-          </label>
-          <Input
-            id="login-identifier"
-            type="text"
+      <AuthCard>
+        <form onSubmit={onSubmit} noValidate className="space-y-5">
+          <AuthField
+            label={t('auth.email')}
+            id="login-email"
+            type="email"
             inputMode="email"
             autoComplete="username"
-            required
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder={t('auth.emailOrPhonePlaceholder')}
+            autoFocus
             dir="ltr"
+            placeholder={t('auth.emailPlaceholder')}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: undefined }));
+            }}
+            error={fieldErrors.email}
+            icon={<Mail className="size-4" />}
+            disabled={busy}
           />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="login-password" className="text-sm font-medium">
-            {t('auth.password')}
-          </label>
-          <Input
+
+          <AuthField
+            label={t('auth.password')}
             id="login-password"
             type="password"
-            required
             autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
+            dir="ltr"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: undefined }));
+            }}
+            error={fieldErrors.password}
+            icon={<KeyRound className="size-4" />}
+            disabled={busy}
           />
-        </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <AuthAlert message={error} />}
 
-        <Button type="submit" className="w-full" disabled={busy}>
-          <LogIn aria-hidden />
-          {busy ? t('common.loading') : t('auth.signIn')}
-        </Button>
-      </form>
+          <Button type="submit" className="h-11 w-full text-sm font-semibold" disabled={busy}>
+            <LogIn aria-hidden className="size-4" />
+            {busy ? t('auth.signingIn') : t('auth.signIn')}
+          </Button>
 
-      <p className="text-center text-sm text-muted-foreground">
-        <Link to="/forgot-password" className="font-medium text-primary hover:underline">
-          {t('auth.forgotPassword')}
-        </Link>
-      </p>
-      <p className="text-center text-sm text-muted-foreground">
-        {t('auth.noAccount')}{' '}
-        <Link to="/register" className="font-medium text-primary hover:underline">
-          {t('auth.createAccount')}
-        </Link>
-      </p>
-    </div>
+          <p className="text-center">
+            <Link
+              to="/forgot-password"
+              className="rounded text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {t('auth.forgotPassword')}
+            </Link>
+          </p>
+        </form>
+      </AuthCard>
+
+      <AuthFooter>
+        <p>
+          {t('auth.noAccount')}{' '}
+          <Link
+            to="/register"
+            className="rounded font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t('auth.createAccount')}
+          </Link>
+        </p>
+      </AuthFooter>
+    </>
   );
 }

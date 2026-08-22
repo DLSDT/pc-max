@@ -48,8 +48,9 @@ export default function ProfileHeader() {
 
   if (!user) return null;
 
-  const displayName = user.username || user.phone || user.email || '';
-  const identifier = user.phone ?? user.email ?? '';
+  const displayName = user.username || user.email || user.phone || '';
+  // Email first: accounts are email-only now, and phone is null on all of them.
+  const identifier = user.email ?? user.phone ?? '';
   const active = sub?.isActive === true;
   const remaining = sub?.subscription ? daysLeft(sub.subscription.expirationDate) : null;
 

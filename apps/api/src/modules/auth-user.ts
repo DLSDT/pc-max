@@ -28,14 +28,12 @@ import {
   renderPasswordResetEmail,
   renderVerificationEmail,
 } from '../lib/email';
-import { isEmail, normalizeIdentifier } from '../lib/identifier';
+import { normalizeIdentifier } from '../lib/identifier';
 import { issueOtp, verifyOtp, type OtpPurpose } from '../lib/otp';
-import { createSmsProvider } from '../lib/sms';
 
 const REFRESH_COOKIE = 'goh_user_refresh';
 const sha256 = (v: string) => createHash('sha256').update(v).digest('hex');
 const ACCESS_TTL_SECONDS = 15 * 60;
-const sms = createSmsProvider();
 const mail = createMailProvider();
 
 function refreshTokenTtlMs() {
@@ -82,12 +80,12 @@ function toUserPublic(user: typeof users.$inferSelect): (typeof UserPublic)['_ty
   };
 }
 
-/** Match a user row by a normalized identifier (email OR phone). */
+/** Match a user row by a normalized identifier. Email-only: phone auth is off. */
 function userByIdentifier(identifier: string) {
-  return isEmail(identifier) ? eq(users.email, identifier) : eq(users.phone, identifier);
+  return eq(users.email, identifier);
 }
 
-/** Count failed attempts for an identifier (normalized phone) in the window. */
+/** Count failed attempts for an identifier (normalized email) in the window. */
 async function failedAttempts(identifier: string): Promise<number> {
   const cutoff = new Date(Date.now() - config.AUTH_LOCKOUT_MINUTES * 60 * 1000);
   const rows = await db
@@ -113,29 +111,25 @@ async function clearAttempts(identifier: string) {
  * mail that will never arrive, and the only trace is a row in email_logs.
  */
 async function deliverOtp(identifier: string, code: string, purpose: OtpPurpose, resetLink?: string): Promise<boolean> {
-  if (isEmail(identifier)) {
-    const expiresMinutes = Math.round(config.OTP_TTL_SECONDS / 60);
-    if (purpose === 'reset' && resetLink) {
-      const res = await deliverEmail(
-        identifier,
-        'Reset your PC MAX password',
-        renderPasswordResetEmail(identifier, resetLink, code, expiresMinutes),
-        'password_reset',
-        mail,
-      );
-      return res.ok;
-    }
+  const expiresMinutes = Math.round(config.OTP_TTL_SECONDS / 60);
+  if (purpose === 'reset' && resetLink) {
     const res = await deliverEmail(
       identifier,
-      'Verify your PC MAX email',
-      renderVerificationEmail(identifier, code, expiresMinutes),
-      'verification',
+      'Reset your PC MAX password',
+      renderPasswordResetEmail(identifier, resetLink, code, expiresMinutes),
+      'password_reset',
       mail,
     );
     return res.ok;
   }
-  await sms.send(identifier, `PC MAX verification code: ${code}`);
-  return true;
+  const res = await deliverEmail(
+    identifier,
+    'Verify your PC MAX email',
+    renderVerificationEmail(identifier, code, expiresMinutes),
+    'verification',
+    mail,
+  );
+  return res.ok;
 }
 
 /**
@@ -167,7 +161,7 @@ export async function authUserModule(app: FastifyInstance) {
     },
     async (request) => {
       const id = normalizeIdentifier(request.body.identifier);
-      if (!id) throw badRequest('Invalid email or phone number');
+      if (!id) throw badRequest('Enter a valid email address');
       return sendOtp(id.value, request.body.purpose);
     },
   );
@@ -181,12 +175,10 @@ export async function authUserModule(app: FastifyInstance) {
     async (request, reply) => {
       const { identifier, username, password, otp } = request.body;
       const id = normalizeIdentifier(identifier);
-      if (!id) throw badRequest('Invalid email or phone number');
-      const isEmailId = id.kind === 'email';
-
+      if (!id) throw badRequest('Enter a valid email address');
       const existing = await db.query.users.findFirst({ where: userByIdentifier(id.value) });
       if (existing) {
-        throw conflict(isEmailId ? 'An account with this email already exists' : 'An account with this phone number already exists');
+        throw conflict('An account with this email already exists');
       }
       if (username) {
         const taken = await db.query.users.findFirst({ where: eq(users.username, username) });
@@ -199,7 +191,8 @@ export async function authUserModule(app: FastifyInstance) {
       const [row] = await db
         .insert(users)
         .values({
-          ...(isEmailId ? { email: id.value, emailVerified: true } : { phone: id.value, phoneVerified: true }),
+          email: id.value,
+          emailVerified: true,
           username: username ?? null,
           passwordHash: await hashPassword(password),
           role: 'user',
@@ -229,7 +222,7 @@ export async function authUserModule(app: FastifyInstance) {
     async (request, reply) => {
       const { identifier, password } = request.body;
       const id = normalizeIdentifier(identifier);
-      if (!id) throw badRequest('Invalid email or phone number');
+      if (!id) throw badRequest('Enter a valid email address');
 
       const failures = await failedAttempts(id.value);
       if (failures >= config.AUTH_MAX_FAILED_ATTEMPTS) {
@@ -247,14 +240,12 @@ export async function authUserModule(app: FastifyInstance) {
       const ok = await verifyPasswordOrDecoy(password, user?.passwordHash);
       if (!user || !ok) {
         await recordFailedAttempt(id.value, request.ip);
-        throw unauthorized('Invalid email, phone number or password');
+        throw unauthorized('Invalid email or password');
       }
-      // Legacy email-era accounts (email set, no phone, no OTP back then) count
-      // as verified — blocking them would lock out pre-OTP users. New email
-      // registrations always pass an OTP and therefore have emailVerified=true.
-      const verified =
-        id.kind === 'email' ? user.emailVerified || user.phone === null : user.phoneVerified;
-      if (!verified) throw unauthorized('Account is not verified');
+      // Legacy email-era accounts (email set, no OTP back then) count as
+      // verified — blocking them would lock out pre-OTP users. New
+      // registrations always pass an OTP and so have emailVerified=true.
+      if (!user.emailVerified && user.phone !== null) throw unauthorized('Account is not verified');
 
       await clearAttempts(id.value);
       await db.update(users).set({ lastLoginAt: new Date(), lastSeenAt: new Date() }).where(eq(users.id, user.id));
@@ -317,7 +308,7 @@ export async function authUserModule(app: FastifyInstance) {
     },
     async (request) => {
       const id = normalizeIdentifier(request.body.identifier);
-      if (!id) throw badRequest('Invalid email or phone number');
+      if (!id) throw badRequest('Enter a valid email address');
       // Always succeeds (no user enumeration). A code is issued even when no
       // account exists (decoy); the reset step validates both together.
       let resetLink: string | undefined;
@@ -364,7 +355,7 @@ export async function authUserModule(app: FastifyInstance) {
     async (request) => {
       const { identifier, otp, newPassword } = request.body;
       const id = normalizeIdentifier(identifier);
-      if (!id) throw badRequest('Invalid email or phone number');
+      if (!id) throw badRequest('Enter a valid email address');
 
       const verified = await verifyOtp(id.value, 'reset', otp);
       if (!verified) throw badRequest('Invalid or expired verification code');
@@ -397,7 +388,7 @@ export async function authUserModule(app: FastifyInstance) {
       const user = await db.query.users.findFirst({ where: eq(users.id, row.userId) });
       if (!user) throw badRequest('Invalid or expired reset link');
 
-      await performReset(user.id, newPassword, user.phone ?? user.email ?? user.id);
+      await performReset(user.id, newPassword, user.email ?? user.id);
       await db.update(passwordResets).set({ usedAt: new Date() }).where(eq(passwordResets.id, row.id));
       return { ok: true };
     },

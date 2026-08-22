@@ -17,6 +17,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useWinOpt, computeScore, recommend, type Recommendation } from '@/store/winopt';
+import { SubscriptionGate } from '@/components/SubscriptionGate';
+import { authorizeFeature, useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { PROFILES, type Category, type Risk } from '@/lib/winopt';
 import { Button, Badge, Spinner } from '@/components/ui';
 import { Section } from '@/components/Section';
@@ -52,16 +54,21 @@ const IMPACT_STYLE: Record<Recommendation['impact'], string> = {
 export default function WindowsOptimizerPage() {
   const { t } = useTranslation();
   const { status, scan, snapshots, lastApply, recovery, error, scanSystem, apply, restore, recover } = useWinOpt();
+  const access = useFeatureAccess('windows_optimizer');
 
   const [profile, setProfile] = useState<string>('gaming');
   const [selected, setSelected] = useState<string[]>([]);
   const [running, setRunning] = useState<string | null>(null); // step label while applying
+  const [gateError, setGateError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Scanning only reads the system, so it is safe before the gate resolves —
+    // but do not touch anything until access is confirmed.
+    if (!access.allowed) return;
     void scanSystem();
     void recover();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [access.allowed]);
 
   const score = useMemo(() => computeScore(scan), [scan]);
   const recommendations = useMemo(() => recommend(scan), [scan]);
@@ -76,6 +83,20 @@ export default function WindowsOptimizerPage() {
   async function runOptimize() {
     const ids = selected.length ? selected : recommendedIds;
     if (!ids.length) return;
+    setGateError(null);
+
+    // Ask the server immediately before touching the system. Everything this
+    // feature does happens locally, so this call is the authorisation — it
+    // re-checks the entitlement rather than trusting what the page rendered,
+    // and a subscription that lapsed since load is refused here.
+    try {
+      await authorizeFeature('windows_optimizer');
+    } catch (err) {
+      setGateError(err instanceof Error ? err.message : t('subscriptionGate.denied'));
+      void access.refresh();
+      return;
+    }
+
     const steps = ['winopt.stepScan', 'winopt.stepAnalyze', 'winopt.stepBackup', 'winopt.stepApply', 'winopt.stepVerify'];
     setSelected(ids);
     for (const s of steps) {
@@ -93,6 +114,18 @@ export default function WindowsOptimizerPage() {
     },
     {} as Record<string, number>,
   );
+
+  if (!access.allowed) {
+    return (
+      <div className="space-y-8">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('winopt.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('winopt.subtitle')}</p>
+        </header>
+        <SubscriptionGate access={access} title={t('winopt.lockedTitle')} description={t('winopt.lockedHint')} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -118,6 +151,15 @@ export default function WindowsOptimizerPage() {
           <Button size="sm" variant="outline" onClick={() => void recover()}>
             {t('winopt.recoverNow')}
           </Button>
+        </div>
+      )}
+
+      {/* The server refused the go-ahead — most likely the subscription lapsed
+          while this page was open. Nothing was applied. */}
+      {gateError && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
+          <XCircle aria-hidden className="size-4 shrink-0" />
+          <span className="flex-1">{gateError}</span>
         </div>
       )}
 

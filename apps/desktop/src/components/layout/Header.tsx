@@ -102,11 +102,11 @@ export default function Header() {
         ) : user ? (
           <Link
             to="/subscription"
-            title={user.phone ?? user.email ?? ''}
+            title={user.email ?? user.phone ?? ''}
             className="flex h-9 items-center gap-2 rounded-lg border border-border bg-card/60 px-3 text-xs font-medium text-foreground transition-colors hover:bg-accent"
           >
             <UserRound aria-hidden className="size-4 text-primary" />
-            <span className="hidden max-w-32 truncate md:inline" dir="ltr">{user.phone ?? user.email}</span>
+            <span className="hidden max-w-32 truncate md:inline" dir="ltr">{user.email ?? user.phone}</span>
           </Link>
         ) : (
           <Link

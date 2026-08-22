@@ -84,7 +84,7 @@ async function requestOtp(identifier: string, purpose: 'register' | 'reset'): Pr
   return devCode;
 }
 
-/** Register a user via the unified email-or-phone + OTP flow. */
+/** Register a user via the email + OTP flow. */
 async function registerUser(identifier: string, password: string, username?: string) {
   const otp = await requestOtp(identifier, 'register');
   return inject('POST', '/api/v1/auth/register', {
@@ -768,58 +768,70 @@ describe('edge cases', () => {
   });
 });
 
-describe('user accounts & auth (phone + OTP)', () => {
+describe('user accounts & auth (email + OTP)', () => {
   let token: string;
   let userId: string;
-  const phone = '+989121112233';
+  const email = 'accounttest@example.test';
   const password = 'StrongPass123!';
 
   beforeAll(async () => {
-    const reg = await registerUser(phone, password, 'accounttest');
+    const reg = await registerUser(email, password, 'accounttest');
     expect(reg.status).toBe(201);
     token = (reg.json as { accessToken: string }).accessToken;
     userId = (reg.json as { user: { id: string } }).user.id;
   });
 
-  it('serves the profile from the access token (normalized phone)', async () => {
+  it('serves the profile from the access token', async () => {
     const me = await inject('GET', '/api/v1/auth/me', { token });
     expect(me.status).toBe(200);
-    expect((me.json as { phone: string }).phone).toBe(phone);
-    expect((me.json as { phoneVerified: boolean }).phoneVerified).toBe(true);
+    expect((me.json as { email: string }).email).toBe(email);
+    expect((me.json as { emailVerified: boolean }).emailVerified).toBe(true);
+    // Phone auth is disabled, so a fresh account never carries one.
+    expect((me.json as { phone: string | null }).phone).toBeNull();
   });
 
-  it('normalizes equivalent phone formats to the same account', async () => {
-    for (const variant of ['09121112233', '+989121112233', '989121112233']) {
+  it('normalizes case and surrounding whitespace to the same account', async () => {
+    for (const variant of ['  accounttest@example.test  ', 'AccountTest@Example.TEST', 'ACCOUNTTEST@EXAMPLE.TEST']) {
       const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: variant, password } });
-      expect(login.status).toBe(200);
+      expect(login.status, `variant ${JSON.stringify(variant)}`).toBe(200);
     }
   });
 
-  it('rejects duplicate registration (same phone, any format)', async () => {
+  it('refuses a phone number as an identifier', async () => {
+    // Phone authentication is disabled: these must not reach a lookup at all.
+    for (const phoneish of ['+989121112233', '09121112233', '989121112233']) {
+      const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: phoneish, password } });
+      expect(login.status, `login ${phoneish}`).toBe(400);
+      const otp = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: phoneish, purpose: 'register' } });
+      expect(otp.status, `otp ${phoneish}`).toBe(400);
+    }
+  });
+
+  it('rejects duplicate registration (same email, any casing)', async () => {
     // The duplicate check runs BEFORE OTP verification server-side, so no fresh
     // OTP is needed here (requesting one would also trip the resend cooldown).
     const dup = await inject('POST', '/api/v1/auth/register', {
-      body: { identifier: '09121112233', username: 'accounttest2', password, otp: '000000' },
+      body: { identifier: 'AccountTest@Example.TEST', username: 'accounttest2', password, otp: '000000' },
     });
     expect(dup.status).toBe(409);
   });
 
   it('rejects registration with a wrong OTP', async () => {
-    await requestOtp('+989129998877', 'register');
+    await requestOtp('badotp@example.test', 'register');
     const bad = await inject('POST', '/api/v1/auth/register', {
-      body: { identifier: '+989129998877', username: 'badotp', password, otp: '000000' },
+      body: { identifier: 'badotp@example.test', username: 'badotp', password, otp: '000000' },
     });
     expect(bad.status).toBe(400);
   });
 
   it('logs in and refreshes with rotation', async () => {
-    const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: phone, password } });
+    const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: email, password } });
     expect(login.status).toBe(200);
 
     const cookie = (await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
-      payload: JSON.stringify({ identifier: phone, password }),
+      payload: JSON.stringify({ identifier: email, password }),
       headers: { 'content-type': 'application/json' },
     })).cookies.find((c) => c.name === 'goh_user_refresh');
     expect(cookie).toBeTruthy();
@@ -843,31 +855,31 @@ describe('user accounts & auth (phone + OTP)', () => {
   it('locks the account after repeated failed logins', async () => {
     for (let i = 0; i < 5; i++) {
       const bad = await inject('POST', '/api/v1/auth/login', {
-        body: { identifier: phone, password: 'WrongPass!' },
+        body: { identifier: email, password: 'WrongPass!' },
       });
       expect(bad.status).toBe(401);
     }
     const locked = await inject('POST', '/api/v1/auth/login', {
-      body: { identifier: phone, password },
+      body: { identifier: email, password },
     });
     expect(locked.status).toBe(429);
     expect((locked.json.error as { code: string }).code).toBe('ACCOUNT_LOCKED');
   });
 
   it('resets the password via OTP and invalidates old sessions', async () => {
-    const forgot = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: phone } });
+    const forgot = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: email } });
     expect(forgot.status).toBe(200);
     const otp = (forgot.json as { devCode?: string }).devCode;
     expect(otp).toBeTruthy();
 
     // A token issued BEFORE the reset must die with it (token-version bump).
     const preResetLogin = await inject('POST', '/api/v1/auth/login', {
-      body: { identifier: phone, password: 'StrongPass123!' },
+      body: { identifier: email, password: 'StrongPass123!' },
     });
     const preResetToken = (preResetLogin.json as { accessToken: string }).accessToken;
 
     const reset = await inject('POST', '/api/v1/auth/password/reset', {
-      body: { identifier: phone, otp: otp!, newPassword: 'NewStrongPass456!' },
+      body: { identifier: email, otp: otp!, newPassword: 'NewStrongPass456!' },
     });
     expect(reset.status).toBe(200);
 
@@ -875,18 +887,18 @@ describe('user accounts & auth (phone + OTP)', () => {
     expect(meWithOldToken.status).toBe(401);
 
     const oldPass = await inject('POST', '/api/v1/auth/login', {
-      body: { identifier: phone, password: 'StrongPass123!' },
+      body: { identifier: email, password: 'StrongPass123!' },
     });
     expect(oldPass.status).toBe(401);
 
     const newPass = await inject('POST', '/api/v1/auth/login', {
-      body: { identifier: phone, password: 'NewStrongPass456!' },
+      body: { identifier: email, password: 'NewStrongPass456!' },
     });
     expect(newPass.status).toBe(200);
 
     // OTP reuse must fail.
     const reuse = await inject('POST', '/api/v1/auth/password/reset', {
-      body: { identifier: phone, otp: otp!, newPassword: 'AnotherPass789!' },
+      body: { identifier: email, otp: otp!, newPassword: 'AnotherPass789!' },
     });
     expect(reuse.status).toBe(400);
   });
@@ -963,15 +975,10 @@ describe('user accounts & auth (phone + OTP)', () => {
     expect(decoy.status).toBe(200);
   });
 
-  it('keeps existing phone-only accounts working via the unified identifier', async () => {
-    const login = await inject('POST', '/api/v1/auth/login', { body: { identifier: '+989121112233', password: 'NewStrongPass456!' } });
-    expect(login.status).toBe(200);
-  });
-
   it('suspends a user → login and existing tokens stop working', async () => {
     // Re-login first (previous test changed the password; lockout cleared on success).
     const login = await inject('POST', '/api/v1/auth/login', {
-      body: { identifier: phone, password: 'NewStrongPass456!' },
+      body: { identifier: email, password: 'NewStrongPass456!' },
     });
     const freshToken = (login.json as { accessToken: string }).accessToken;
 
@@ -990,7 +997,7 @@ describe('user accounts & auth (phone + OTP)', () => {
     expect(me.status).toBe(403);
 
     const loginSuspended = await inject('POST', '/api/v1/auth/login', {
-      body: { identifier: phone, password: 'NewStrongPass456!' },
+      body: { identifier: email, password: 'NewStrongPass456!' },
     });
     expect(loginSuspended.status).toBe(401);
 
@@ -1030,15 +1037,15 @@ describe('user accounts & auth (phone + OTP)', () => {
 });
 
 describe('favorites (persistent, user-specific)', () => {
-  const phone = '+989120000008';
+  const email = 'user000008@example.test';
   let token: string;
   let otherToken: string;
   let gameId: string;
 
   beforeAll(async () => {
-    const reg = await registerUser(phone, 'FavPass123!', 'favuser');
+    const reg = await registerUser(email, 'FavPass123!', 'favuser');
     token = (reg.json as { accessToken: string }).accessToken;
-    const other = await registerUser('+989120000009', 'FavPass123!', 'favother');
+    const other = await registerUser('user000009@example.test', 'FavPass123!', 'favother');
     otherToken = (other.json as { accessToken: string }).accessToken;
     const games = (await inject('GET', '/api/v1/games?q=dying-light')).json as { data: { id: string }[] };
     gameId = games.data[0]!.id;
@@ -1080,6 +1087,90 @@ describe('favorites (persistent, user-specific)', () => {
   });
 });
 
+/**
+ * Both gated areas do their work on the user's own machine, so the server
+ * cannot withhold the *execution* — what it withholds is authorisation and the
+ * payload. These assert the server says no on its own, without the client
+ * having to ask nicely.
+ */
+describe('subscription gate (Multi-Frame Generation & Windows Optimizer)', () => {
+  let userToken: string;
+  let userId: string;
+  let adminToken: string;
+
+  beforeAll(async () => {
+    const reg = await registerUser('gatetest@example.test', 'GatePass123!', 'gatetest');
+    userToken = (reg.json as { accessToken: string }).accessToken;
+    userId = (reg.json as { user: { id: string } }).user.id;
+    const adminLogin = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (adminLogin.json as { accessToken: string }).accessToken;
+  });
+
+  it('reports both features locked for a user with no subscription', async () => {
+    const res = await inject('GET', '/api/v1/me/features', { token: userToken });
+    expect(res.status).toBe(200);
+    const { features } = res.json as { features: Record<string, boolean> };
+    expect(features.multi_frame_generation).toBe(false);
+    expect(features.windows_optimizer).toBe(false);
+  });
+
+  it('refuses to authorize either feature without a subscription', async () => {
+    for (const feature of ['multi_frame_generation', 'windows_optimizer']) {
+      const res = await inject('POST', `/api/v1/me/features/${feature}/authorize`, { token: userToken });
+      expect(res.status, feature).toBe(403);
+    }
+  });
+
+  it('requires authentication, not just a subscription', async () => {
+    // No token at all must not fall through to the entitlement check.
+    expect((await inject('GET', '/api/v1/me/features')).status).toBe(401);
+    expect((await inject('POST', '/api/v1/me/features/windows_optimizer/authorize')).status).toBe(401);
+  });
+
+  it('rejects an unknown feature name rather than defaulting open', async () => {
+    const res = await inject('POST', '/api/v1/me/features/some_other_thing/authorize', { token: userToken });
+    expect(res.status).toBe(400);
+  });
+
+  it('unlocks both once an admin grants a subscription, and locks them again when it is revoked', async () => {
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    const grant = await inject('POST', '/api/v1/admin/payments/manual-grant', {
+      token: adminToken,
+      body: { userId, planId: plans.data[0]!.id },
+    });
+    expect(grant.status).toBe(200);
+    const subscriptionId = (grant.json as { subscriptionId: string }).subscriptionId;
+
+    const unlocked = (await inject('GET', '/api/v1/me/features', { token: userToken })).json as {
+      features: Record<string, boolean>;
+    };
+    expect(unlocked.features.multi_frame_generation).toBe(true);
+    expect(unlocked.features.windows_optimizer).toBe(true);
+
+    for (const feature of ['multi_frame_generation', 'windows_optimizer']) {
+      const res = await inject('POST', `/api/v1/me/features/${feature}/authorize`, { token: userToken });
+      expect(res.status, feature).toBe(200);
+    }
+
+    // Cancelling must take access away immediately — no grace window where the
+    // entitlement row outlives the subscription.
+    const cancel = await inject('PATCH', `/api/v1/admin/subscriptions/${subscriptionId}`, {
+      token: adminToken,
+      body: { status: 'cancelled' },
+    });
+    expect(cancel.status).toBe(200);
+
+    const relocked = (await inject('GET', '/api/v1/me/features', { token: userToken })).json as {
+      features: Record<string, boolean>;
+    };
+    expect(relocked.features.multi_frame_generation).toBe(false);
+    expect(relocked.features.windows_optimizer).toBe(false);
+    expect((await inject('POST', '/api/v1/me/features/windows_optimizer/authorize', { token: userToken })).status).toBe(403);
+  });
+});
+
 describe('subscriptions & payments (Phase 5-6)', () => {
   let adminToken: string;
   let userToken: string;
@@ -1093,7 +1184,7 @@ describe('subscriptions & payments (Phase 5-6)', () => {
     });
     adminToken = (adminLogin.json as { accessToken: string }).accessToken;
 
-    const reg = await registerUser('+989120000001', 'SubPass123!', 'substest');
+    const reg = await registerUser('user000001@example.test', 'SubPass123!', 'substest');
     userToken = (reg.json as { accessToken: string }).accessToken;
     userId = (reg.json as { user: { id: string } }).user.id;
   });
@@ -1228,7 +1319,7 @@ describe('subscriptions & payments (Phase 5-6)', () => {
     const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
       data: { id: string; expirationDate: string; userEmail: string }[];
     };
-    const anyActive = list.data.find((s) => s.userEmail === '+989120000001')!;
+    const anyActive = list.data.find((s) => s.userEmail === 'user000001@example.test')!;
     const before = new Date(anyActive.expirationDate).getTime();
 
     const extend = await inject('PATCH', `/api/v1/admin/subscriptions/${anyActive.id}`, {
@@ -1263,7 +1354,7 @@ describe('subscriptions & payments (Phase 5-6)', () => {
       data: { userEmail: string; status: string; planName: string }[];
     };
     expect(list.data.length).toBeGreaterThan(0);
-    const mine = list.data.find((p) => p.userEmail === '+989120000001');
+    const mine = list.data.find((p) => p.userEmail === 'user000001@example.test');
     expect(mine?.status).toBe('paid');
   });
 });
@@ -1282,7 +1373,7 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
     adminToken = (adminLogin.json as { accessToken: string }).accessToken;
 
     // Premium user (active subscription).
-    const reg = await registerUser('+989120000002', 'PkgPass123!', 'pkgpremium');
+    const reg = await registerUser('user000002@example.test', 'PkgPass123!', 'pkgpremium');
     premiumToken = (reg.json as { accessToken: string }).accessToken;
     const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
     const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
@@ -1293,7 +1384,7 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
     await inject('POST', '/api/v1/payments/mock/callback', { body: { paymentId: pid } });
 
     // Free user.
-    const freeReg = await registerUser('+989120000003', 'PkgPass123!', 'pkgfree');
+    const freeReg = await registerUser('user000003@example.test', 'PkgPass123!', 'pkgfree');
     freeToken = (freeReg.json as { accessToken: string }).accessToken;
 
     // A game to attach packages to.
@@ -1445,18 +1536,18 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
 
     // Backdate the subscription AND its entitlements — the paid window is over.
     await db.execute(sql`UPDATE subscriptions SET expiration_date = now() - interval '1 day'
-      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+      WHERE user_id = (SELECT id FROM users WHERE email = 'user000002@example.test')`);
     await db.execute(sql`UPDATE entitlements SET expires_at = now() - interval '1 day'
-      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+      WHERE user_id = (SELECT id FROM users WHERE email = 'user000002@example.test')`);
 
     const lapsed = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
     expect(lapsed.status, 'lapsed subscription must lose premium').toBe(403);
 
     // Renewing restores it — no re-login, the token is still the same one.
     await db.execute(sql`UPDATE subscriptions SET expiration_date = now() + interval '30 days'
-      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+      WHERE user_id = (SELECT id FROM users WHERE email = 'user000002@example.test')`);
     await db.execute(sql`UPDATE entitlements SET expires_at = now() + interval '30 days'
-      WHERE user_id = (SELECT id FROM users WHERE phone = '+989120000002')`);
+      WHERE user_id = (SELECT id FROM users WHERE email = 'user000002@example.test')`);
 
     const renewed = await inject('POST', '/api/v1/games/dying-light/packages/rtx30-high-fps/download', { token: premiumToken });
     expect(renewed.status, 'renewal restores access without re-login').toBe(200);
@@ -1466,7 +1557,7 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
     const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
       data: { id: string; userEmail: string; status: string }[];
     };
-    const sub = list.data.find((s) => s.userEmail === '+989120000002')!;
+    const sub = list.data.find((s) => s.userEmail === 'user000002@example.test')!;
 
     const suspend = await inject('PATCH', `/api/v1/admin/subscriptions/${sub.id}`, {
       token: adminToken,
@@ -1495,7 +1586,7 @@ describe('optimization packages & compatibility (Phase 9-11)', () => {
     const list = (await inject('GET', '/api/v1/admin/subscriptions', { token: adminToken })).json as {
       data: { id: string; userEmail: string; expirationDate: string }[];
     };
-    const sub = list.data.find((s) => s.userEmail === '+989120000002')!;
+    const sub = list.data.find((s) => s.userEmail === 'user000002@example.test')!;
 
     const extend = await inject('PATCH', `/api/v1/admin/subscriptions/${sub.id}`, {
       token: adminToken,
@@ -1663,7 +1754,7 @@ describe('multi-game isolation (universal catalog)', () => {
     });
     adminToken = (adminLogin.json as { accessToken: string }).accessToken;
 
-    const reg = await registerUser('+989120000099', 'IsoPass123!', 'isopremium');
+    const reg = await registerUser('user000099@example.test', 'IsoPass123!', 'isopremium');
     premiumToken = (reg.json as { accessToken: string }).accessToken;
     const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
     const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
@@ -1761,7 +1852,7 @@ describe('hardware, devices & settings (Phase 7 & 10)', () => {
     });
     adminToken = (adminLogin.json as { accessToken: string }).accessToken;
 
-    const reg = await registerUser('+989120000004', 'HwPass123!', 'hwtest');
+    const reg = await registerUser('user000004@example.test', 'HwPass123!', 'hwtest');
     userToken = (reg.json as { accessToken: string }).accessToken;
   });
 
@@ -1799,7 +1890,7 @@ describe('hardware, devices & settings (Phase 7 & 10)', () => {
     const list = (await inject('GET', '/api/v1/admin/devices', { token: adminToken })).json as {
       data: { id: string; userEmail: string | null }[];
     };
-    expect(list.data.some((d) => d.id === deviceId && d.userEmail === '+989120000004')).toBe(true);
+    expect(list.data.some((d) => d.id === deviceId && d.userEmail === 'user000004@example.test')).toBe(true);
 
     const revoke = await inject('POST', `/api/v1/admin/devices/${deviceId}/revoke`, { token: adminToken });
     expect(revoke.status).toBe(200);
@@ -1818,11 +1909,11 @@ describe('hardware, devices & settings (Phase 7 & 10)', () => {
   });
 
   it('exposes failed login attempts to the admin', async () => {
-    await inject('POST', '/api/v1/auth/login', { body: { identifier: '+989120000004', password: 'WrongPass!' } });
+    await inject('POST', '/api/v1/auth/login', { body: { identifier: 'user000004@example.test', password: 'WrongPass!' } });
     const attempts = (await inject('GET', '/api/v1/admin/security/login-attempts', { token: adminToken })).json as {
       data: { email: string; success: boolean }[];
     };
-    expect(attempts.data.some((a) => a.email === '+989120000004' && !a.success)).toBe(true);
+    expect(attempts.data.some((a) => a.email === 'user000004@example.test' && !a.success)).toBe(true);
   });
 });
 
@@ -1837,12 +1928,12 @@ describe('security audit (Phase 19)', () => {
   let planPrice: number;
   let planId: string;
 
-  async function registerUser(phone: string, username: string) {
-    const otpRes = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: phone, purpose: 'register' } });
+  async function registerUser(email: string, username: string) {
+    const otpRes = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: email, purpose: 'register' } });
     expect(otpRes.status).toBe(200);
     const otp = (otpRes.json as { devCode?: string }).devCode;
     const reg = await inject('POST', '/api/v1/auth/register', {
-      body: { identifier: phone, username, password: 'SecPass123!', otp },
+      body: { identifier: email, username, password: 'SecPass123!', otp },
     });
     expect(reg.status).toBe(201);
     return (reg.json as { accessToken: string }).accessToken;
@@ -1853,8 +1944,8 @@ describe('security audit (Phase 19)', () => {
       body: { email: 'admin@test.local', password: 'TestPass123!' },
     });
     adminToken = (adminLogin.json as { accessToken: string }).accessToken;
-    aliceToken = await registerUser('+989120000005', 'alicesec');
-    bobToken = await registerUser('+989120000006', 'bobsec');
+    aliceToken = await registerUser('user000005@example.test', 'alicesec');
+    bobToken = await registerUser('user000006@example.test', 'bobsec');
 
     const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string; price: number }[] };
     planId = plans.data[0]!.id;
@@ -1877,10 +1968,10 @@ describe('security audit (Phase 19)', () => {
     expect(bobDevices.data.some((d) => d.deviceId === 'alice-sec-device-00000001')).toBe(false);
 
     // Each /me returns only the caller's profile.
-    const aliceMe = (await inject('GET', '/api/v1/me', { token: aliceToken })).json as { phone: string };
-    const bobMe = (await inject('GET', '/api/v1/me', { token: bobToken })).json as { phone: string };
-    expect(aliceMe.phone).toBe('+989120000005');
-    expect(bobMe.phone).toBe('+989120000006');
+    const aliceMe = (await inject('GET', '/api/v1/me', { token: aliceToken })).json as { email: string };
+    const bobMe = (await inject('GET', '/api/v1/me', { token: bobToken })).json as { email: string };
+    expect(aliceMe.email).toBe('user000005@example.test');
+    expect(bobMe.email).toBe('user000006@example.test');
   });
 
   /**
@@ -1940,7 +2031,7 @@ describe('security audit (Phase 19)', () => {
     const payments = (await inject('GET', '/api/v1/admin/payments', { token: adminToken })).json as {
       data: { amount: number; userEmail: string }[];
     };
-    const row = payments.data.find((p) => p.userEmail === '+989120000006');
+    const row = payments.data.find((p) => p.userEmail === 'user000006@example.test');
     expect(row).toBeTruthy();
     expect(row!.amount).toBe(planPrice);
     expect(row!.amount).not.toBe(1);
@@ -1972,7 +2063,7 @@ describe('security audit (Phase 19)', () => {
     // consumed one; hammer the rest and verify rejection is a clean 429.
     const results = [];
     for (let i = 0; i < 11; i++) {
-      const res = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: '+989120000007' } });
+      const res = await inject('POST', '/api/v1/auth/password/forgot', { body: { identifier: 'user000007@example.test' } });
       results.push(res.status);
     }
     expect(results.some((s) => s === 429)).toBe(true);

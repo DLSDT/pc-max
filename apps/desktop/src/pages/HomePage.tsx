@@ -15,15 +15,28 @@ import { ApiError } from '@/lib/api';
 import { useWinOpt, computeScore as winScore } from '@/store/winopt';
 import { useLibrary } from '@/store/library';
 
-/** Real dashboard score from detected hardware + applied optimizations. */
-function dashboardScore(hw: { profile: { cpu?: string | null; ramGb?: number | null; vramMb?: number | null } | null }, gameApplied: number, windowsApplied: number) {
+/**
+ * Dashboard score from detected hardware + applied optimizations.
+ *
+ * Scored on RAM and VRAM because those are the two numeric values detection
+ * actually returns. It used to read a core count out of `cpu` with parseInt —
+ * but `cpu` holds a processor NAME ("Intel(R) Core(TM) i7-12700K"), so that
+ * term was only ever non-zero for the browser fallback's "16 logical
+ * processors" string, and would have silently scored 0 against real hardware.
+ */
+function dashboardScore(
+  hw: { profile: { ramGb?: number | null; vramMb?: number | null } | null },
+  gameApplied: number,
+  windowsApplied: number,
+) {
   const p = hw.profile;
   if (!p) return null;
-  const cores = parseInt(p.cpu ?? '', 10) || 0;
   const ram = p.ramGb ?? 0;
   const vram = p.vramMb ?? 0;
-  const base = 30 + Math.min(cores, 8) * 2 + Math.min(ram, 32) * (15 / 32) + Math.min(vram, 16384) * (15 / 16384);
-  const score = Math.round(Math.min(100, base + (gameApplied > 0 ? 5 : 0) + (windowsApplied > 0 ? 5 : 0)));
+  // Nothing measurable yet — a score built from two zeroes says nothing.
+  if (ram === 0 && vram === 0) return null;
+  const base = 30 + Math.min(ram, 32) * (30 / 32) + Math.min(vram, 16384) * (20 / 16384);
+  const score = Math.round(Math.min(100, base + (gameApplied > 0 ? 10 : 0) + (windowsApplied > 0 ? 10 : 0)));
   const label = score >= 85 ? 'excellent' : score >= 65 ? 'good' : score >= 45 ? 'fair' : 'attention';
   return { score, label };
 }
@@ -121,14 +134,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* System overview */}
+      {/* System overview. Only shown once there is something real to put in it —
+          four em-dashes read as "detection is broken" rather than "not run". */}
       <Section title={t('dashboard.systemOverview')}>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SystemTile icon={<Cpu aria-hidden className="size-5" />} label={t('hardware.cpu')} value={hw.profile?.cpu ?? '—'} />
-          <SystemTile icon={<MemoryStick aria-hidden className="size-5" />} label={t('hardware.gpu')} value={hw.profile ? (gpuLabel(hw.profile) ?? '—') : '—'} />
-          <SystemTile icon={<Gauge aria-hidden className="size-5" />} label={t('hardware.ram')} value={hw.profile?.ramGb != null ? `${hw.profile.ramGb} GB` : '—'} />
-          <SystemTile icon={<HardDrive aria-hidden className="size-5" />} label={t('hardware.vram')} value={hw.profile?.vramMb != null ? `${hw.profile.vramMb} MB` : '—'} />
-        </div>
+        {hw.profile?.cpu || hw.profile?.gpuModel || hw.profile?.ramGb != null || hw.profile?.vramMb != null ? (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <SystemTile icon={<Cpu aria-hidden className="size-5" />} label={t('hardware.cpu')} value={hw.profile?.cpu ?? '—'} />
+            <SystemTile icon={<MemoryStick aria-hidden className="size-5" />} label={t('hardware.gpu')} value={hw.profile ? (gpuLabel(hw.profile) ?? '—') : '—'} />
+            <SystemTile icon={<Gauge aria-hidden className="size-5" />} label={t('hardware.ram')} value={hw.profile?.ramGb != null ? `${hw.profile.ramGb} GB` : '—'} />
+            <SystemTile icon={<HardDrive aria-hidden className="size-5" />} label={t('hardware.vram')} value={hw.profile?.vramMb != null ? `${hw.profile.vramMb} MB` : '—'} />
+          </div>
+        ) : null}
         <HardwarePanel compact />
       </Section>
 

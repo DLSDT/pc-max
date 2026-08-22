@@ -1,14 +1,16 @@
 /**
- * Unified account identifiers.
+ * Account identifiers.
  *
- * Users authenticate with EITHER an email or a phone number. The server decides
- * which one the client sent — the client never declares the account type. Both
- * identifiers are normalized to one canonical form so the same value always
- * resolves to the same account (no duplicate accounts, no case/whitespace
- * drift). Phone normalization lives in `./phone` (E.164-ish international);
- * email normalization is trimmed + lowercased with format validation.
+ * Phone authentication is disabled: an identifier is an email address, trimmed
+ * and lowercased so the same address always resolves to the same account (no
+ * duplicates, no case drift). The `kind` discriminator is kept because callers
+ * branch on it and phone support is expected back later — it just never
+ * reports 'phone' today.
+ *
+ * Existing rows may still hold a phone number from before; those accounts can
+ * no longer authenticate by phone, which is deliberate. `./phone` is retained
+ * for that stored data, not for auth.
  */
-import { normalizePhone } from './phone';
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -28,18 +30,12 @@ export interface NormalizedIdentifier {
 }
 
 /**
- * Classify and normalize a raw identifier. Anything containing an `@` is
- * treated as an email; everything else must be a valid phone number.
+ * Normalize a raw identifier. Returns null for anything that is not a valid
+ * email — including phone-shaped input, which no longer authenticates.
  */
 export function normalizeIdentifier(input: string): NormalizedIdentifier | null {
-  const raw = input.trim();
-  if (!raw) return null;
-  if (raw.includes('@')) {
-    const email = normalizeEmail(raw);
-    return email ? { kind: 'email', value: email } : null;
-  }
-  const phone = normalizePhone(raw);
-  return phone ? { kind: 'phone', value: phone } : null;
+  const email = normalizeEmail(input);
+  return email ? { kind: 'email', value: email } : null;
 }
 
 /** True when the identifier is an email (used to pick delivery + DB column). */
