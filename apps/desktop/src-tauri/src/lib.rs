@@ -546,9 +546,15 @@ fn detect_hardware() -> HardwareInfo {
 
     #[cfg(target_os = "windows")]
     {
-        info.cpu = powershell("(Get-CimInstance Win32_Processor).Name");
+        // -First 1 for the same reason the video-controller query has it: a
+        // dual-socket machine returns one line per processor, and the joined
+        // result would render as two CPU names in a single field.
+        info.cpu = powershell("(Get-CimInstance Win32_Processor | Select-Object -First 1).Name");
+        // One WMI round trip instead of two — Get-CimInstance is slow enough
+        // that calling it twice for two properties of the same object is worth
+        // avoiding on a detection users wait for.
         info.windows_version = powershell(
-            "((Get-CimInstance Win32_OperatingSystem).Caption + ' ' + (Get-CimInstance Win32_OperatingSystem).Version)",
+            "$os = Get-CimInstance Win32_OperatingSystem; \"$($os.Caption) $($os.Version)\"",
         );
         info.arch = std::env::consts::ARCH
             .to_string()

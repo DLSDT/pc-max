@@ -529,3 +529,28 @@ fn vram_registry_reading_is_sanity_checked() {
     assert!(body.contains("bytes == 0"), "zero is not a VRAM size");
     assert!(body.contains("1024 * 1024 * 1024"), "an upper bound keeps a garbage value out");
 }
+
+/// Every WMI class that can legitimately have more than one instance must be
+/// bounded. Win32_Processor returns a row per socket and Win32_VideoController
+/// a row per adapter (integrated + discrete is the common laptop case), so an
+/// unbounded query puts two names in a field the UI renders as one value.
+#[test]
+fn multi_instance_wmi_queries_are_bounded() {
+    let src = include_str!("lib.rs");
+    for class in ["Win32_Processor", "Win32_VideoController"] {
+        for (idx, _) in src.match_indices(class) {
+            let line_start = src[..idx].rfind('\n').map(|i| i + 1).unwrap_or(0);
+            let line_end = src[idx..].find('\n').map(|i| idx + i).unwrap_or(src.len());
+            let line = &src[line_start..line_end];
+            // Only the query strings matter, not comments mentioning the class.
+            if !line.contains("Get-CimInstance") {
+                continue;
+            }
+            assert!(
+                line.contains("Select-Object -First 1"),
+                "{class} can return several rows; bound it:\n  {}",
+                line.trim()
+            );
+        }
+    }
+}
