@@ -510,6 +510,34 @@ fn extract_game_icon(exe_path: String) -> Result<String, String> {
     Ok(format!("data:image/png;base64,{b64}"))
 }
 
+/// Real VRAM in MB from the display driver's registry entry.
+///
+/// Win32_VideoController.AdapterRAM is a 32-bit byte count that saturates just
+/// below 4 GB, so it cannot describe an 8 GB card, let alone a 24 GB one.
+/// `HardwareInformation.qwMemorySize` under the display class key is 64-bit and
+/// carries the actual size. Returns None off Windows, or when no adapter
+/// publishes it (some virtual and integrated adapters do not).
+#[cfg(target_os = "windows")]
+fn registry_vram_mb() -> Option<u64> {
+    let out = powershell(
+        "$k = 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}'; \
+         Get-ChildItem $k -ErrorAction SilentlyContinue | \
+         ForEach-Object { (Get-ItemProperty $_.PSPath -Name 'HardwareInformation.qwMemorySize' -ErrorAction SilentlyContinue).'HardwareInformation.qwMemorySize' } | \
+         Where-Object { $_ } | Sort-Object -Descending | Select-Object -First 1",
+    )?;
+    let bytes = out.trim().parse::<u64>().ok()?;
+    // Guard against a bogus reading rather than reporting nonsense as detected.
+    if bytes == 0 || bytes > 256u64 * 1024 * 1024 * 1024 {
+        return None;
+    }
+    Some(bytes / 1024 / 1024)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn registry_vram_mb() -> Option<u64> {
+    None
+}
+
 /// Detect CPU / GPU / VRAM / RAM / Windows / resolution on Windows.
 /// On other platforms returns a mostly-empty snapshot (browser preview, CI).
 #[tauri::command]
@@ -552,17 +580,25 @@ fn detect_hardware() -> HardwareInfo {
             }
             info.gpu_model = name.clone();
             info.driver_version = driver;
-            // AdapterRAM is in bytes; Win32_VideoController caps at 4 GB, so for
-            // larger VRAM we fall back to the adapter's current mode depth.
-            info.vram_mb = vram_bytes.map(|b| b / 1024 / 1024);
+            // AdapterRAM is a uint32 of bytes, so it saturates a little under
+            // 4 GB and every modern card reports ~4095 MB. The comment here used
+            // to promise a fallback that was never written. The driver's own
+            // qwMemorySize is a 64-bit value and reports the real size, so
+            // prefer it and keep AdapterRAM only as a floor.
+            let adapter_mb = vram_bytes.map(|b| b / 1024 / 1024);
+            info.vram_mb = registry_vram_mb().or(adapter_mb);
             if let Some(model) = &info.gpu_model {
                 info.gpu_vendor = Some(infer_vendor(model).to_string());
             }
         }
 
-        // Current desktop resolution.
+        // Current desktop resolution. Bounds.ToString() renders the whole
+        // struct — "{X=0,Y=0,Width=1920,Height=1080}" — which is not a
+        // resolution and, at 32 characters, is also longer than the 30 the API
+        // schema accepts, so saving the profile failed validation and the
+        // hardware never reached the server.
         info.resolution = powershell(
-            "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.ToString()",
+            "Add-Type -AssemblyName System.Windows.Forms; $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds; \"$($b.Width)x$($b.Height)\"",
         );
     }
 

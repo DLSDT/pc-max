@@ -478,3 +478,54 @@ fn walk(root: &Path, pred: impl Fn(&Path) -> bool) -> Vec<PathBuf> {
     }
     hits
 }
+
+// ---------------------------------------------------------------------------
+// detect_hardware — the two things that only fail on a real Windows machine
+// ---------------------------------------------------------------------------
+
+/// The resolution query must produce "1920x1080", not the .NET struct dump
+/// `Bounds.ToString()` gives. That string is 32 characters for a 1080p screen,
+/// and HardwareProfileInput caps `resolution` at 30 — so saving the profile
+/// failed validation and the hardware never reached the server.
+#[test]
+fn resolution_query_formats_width_by_height() {
+    let src = include_str!("lib.rs");
+    let start = src.find("info.resolution = powershell(").expect("resolution query");
+    let query = &src[start..start + 400];
+    assert!(
+        query.contains("$($b.Width)x$($b.Height)"),
+        "resolution must be built as WIDTHxHEIGHT, not Bounds.ToString()"
+    );
+    assert!(
+        !query.contains("Bounds.ToString()"),
+        "Bounds.ToString() renders the whole struct and overflows the 30-char schema limit"
+    );
+    // The longest plausible value stays inside the schema's limit.
+    assert!("7680x4320".len() <= 30);
+}
+
+/// AdapterRAM is a uint32 of bytes, so it saturates just under 4 GB and reports
+/// ~4095 MB for every modern card. The code once carried a comment promising a
+/// fallback that was never written.
+#[test]
+fn vram_prefers_the_64_bit_registry_value() {
+    let src = include_str!("lib.rs");
+    assert!(
+        src.contains("registry_vram_mb().or(adapter_mb)"),
+        "the 64-bit qwMemorySize must win over the saturating AdapterRAM"
+    );
+    assert!(
+        src.contains("qwMemorySize"),
+        "qwMemorySize is the only source that can describe more than 4 GB"
+    );
+}
+
+/// A nonsense reading must be dropped rather than reported as detected VRAM.
+#[test]
+fn vram_registry_reading_is_sanity_checked() {
+    let src = include_str!("lib.rs");
+    let start = src.find("fn registry_vram_mb()").expect("registry_vram_mb");
+    let body = &src[start..start + 900];
+    assert!(body.contains("bytes == 0"), "zero is not a VRAM size");
+    assert!(body.contains("1024 * 1024 * 1024"), "an upper bound keeps a garbage value out");
+}
