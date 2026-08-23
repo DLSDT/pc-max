@@ -328,7 +328,7 @@ export default function MfgToolPage({
 
   if (!access.allowed) {
     return (
-      <div className="tool-accent-green space-y-6">
+      <div className={cn(accent, 'space-y-6')}>
         <BackLink />
         <SubscriptionGate access={access} title={t('mfg.lockedTitle')} description={t('mfg.lockedHint')} />
       </div>
@@ -336,7 +336,9 @@ export default function MfgToolPage({
   }
 
   return (
-    <div className="tool-accent-green space-y-6">
+    // Scope the page to its tool accent: every primary-coloured control below
+    // follows it, so the three tools are told apart by colour before a word is read.
+    <div className={cn(accent, 'space-y-6')}>
       <BackLink />
 
       <header className="space-y-1">

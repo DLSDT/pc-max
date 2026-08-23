@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Cpu, Layers, Wand2, Waves } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import HardwarePanel from '@/components/HardwarePanel';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 
@@ -90,8 +89,6 @@ export default function MultiFrameGenerationPage() {
               </Link>
             ))}
           </div>
-
-          <HardwarePanel />
         </>
       ) : (
         <SubscriptionGate access={access} title={t('mfg.lockedTitle')} description={t('mfg.lockedHint')} />
