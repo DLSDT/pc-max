@@ -57,6 +57,51 @@
     --ring: 355 78% 52%;
   }
 
+  /* --------------------------------------------------------------------
+     Multi-Frame Generation tool accents.
+
+     The two tools are told apart by colour before a word is read: AI Optical
+     Flow is NVIDIA-green because it drives an NVIDIA RTX card's Optical Flow
+     engine; OptiScaler keeps the product crimson because it is vendor-neutral.
+
+     These re-declare the same semantic variables the rest of the app already
+     consumes, so anything inside the scope — buttons, rings, badges, selected
+     states, hover tints — picks the tool's colour up without a single
+     component knowing a tool accent exists. Both light and dark are defined;
+     omitting dark would leave a green button on a crimson focus ring.
+     -------------------------------------------------------------------- */
+  .tool-accent-green {
+    --primary: 145 70% 33%; /* #199650 — NVIDIA green, darkened for AA text contrast */
+    --primary-foreground: 0 0% 100%;
+    --accent: 145 60% 95%;
+    --accent-foreground: 145 85% 20%;
+    --ring: 145 70% 33%;
+  }
+
+  :root.dark .tool-accent-green {
+    --primary: 145 63% 47%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 145 40% 16%;
+    --accent-foreground: 145 70% 72%;
+    --ring: 145 63% 47%;
+  }
+
+  .tool-accent-red {
+    --primary: 355 83% 41%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 0 82% 96%;
+    --accent-foreground: 0 100% 27%;
+    --ring: 355 83% 41%;
+  }
+
+  :root.dark .tool-accent-red {
+    --primary: 355 78% 52%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 355 45% 18%;
+    --accent-foreground: 355 90% 78%;
+    --ring: 355 78% 52%;
+  }
+
   /* Smooth animated theme switch (spec requirement) — the variables above
      drive color, background and border on virtually every element, so a
      single blanket transition on those properties covers the whole app. */

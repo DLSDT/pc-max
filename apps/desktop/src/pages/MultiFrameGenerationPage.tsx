@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Cpu, Layers, Wand2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import HardwarePanel from '@/components/HardwarePanel';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
@@ -24,6 +25,7 @@ const TOOLS = [
     titleKey: 'mfg.optiscaler.title',
     descKey: 'mfg.optiscaler.cardDescription',
     gpuKey: 'mfg.optiscaler.gpuSupport',
+    accent: 'tool-accent-red',
   },
   {
     to: '/multi-frame-generation/optiflow',
@@ -31,6 +33,7 @@ const TOOLS = [
     titleKey: 'mfg.optiflow.title',
     descKey: 'mfg.optiflow.cardDescription',
     gpuKey: 'mfg.optiflow.gpuSupport',
+    accent: 'tool-accent-green',
   },
 ] as const;
 
@@ -48,11 +51,18 @@ export default function MultiFrameGenerationPage() {
       {access.allowed ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            {TOOLS.map(({ to, icon: Icon, titleKey, descKey, gpuKey }) => (
+            {TOOLS.map(({ to, icon: Icon, titleKey, descKey, gpuKey, accent }) => (
               <Link
                 key={to}
                 to={to}
-                className="group flex flex-col gap-3 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                // The accent class re-scopes --primary/--accent/--ring, so every
+                // primary-coloured element below takes the tool's colour.
+                className={cn(
+                  accent,
+                  'group flex flex-col gap-3 rounded-xl border border-border bg-card p-5 transition-all',
+                  'hover:-translate-y-0.5 hover:border-primary/50 hover:bg-accent/40 hover:shadow-lg',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                )}
               >
                 <span className="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon aria-hidden className="size-5" />

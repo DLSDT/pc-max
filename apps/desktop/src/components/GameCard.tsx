@@ -12,6 +12,7 @@ import { toggleFavorite } from '@/lib/favorites';
 import { hasCuratedMetadata } from '@/lib/curation';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui';
+import { GameSpecsInline } from './GameSpecs';
 
 function Cover({ game }: { game: GameSummary }) {
   const icon = gameIconUrl(game.slug);
@@ -108,8 +109,10 @@ export default function GameCard({ game }: { game: GameSummary }) {
         </h3>
         <p className="line-clamp-1 text-xs text-muted-foreground">
           {game.genres.map((g) => genreName(g.slug, g.name, i18n.language)).join(' · ') || '—'}
-          {game.releaseYear ? ` · ${game.releaseYear}` : ''}
         </p>
+
+        {/* Engine / API / year, and only the ones this game actually has. */}
+        <GameSpecsInline game={game} />
 
         {techs.length > 0 && (
           <div className="flex flex-wrap gap-1">

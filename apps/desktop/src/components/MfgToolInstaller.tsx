@@ -10,6 +10,7 @@ import { gpuLabel } from '@/lib/hardware';
 import { isVendorMismatch, normalizeVendor, recommendProfile, supportsOpticalFlow } from '@/lib/gpuProfile';
 import { api, ApiError } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
+import { cn } from '@/lib/utils';
 import {
   componentNames,
   statusErrorFor,
@@ -172,7 +173,10 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
   const opticalFlowOk = tool === 'optiflow' ? supportsOpticalFlow(hardware) : null;
 
   return (
-    <div className="space-y-6">
+    // Scope the whole tool page to its accent: green for AI Optical Flow (it
+    // drives an NVIDIA RTX Optical Flow engine), crimson for the
+    // vendor-neutral OptiScaler. Every primary-coloured control below follows.
+    <div className={cn(tool === 'optiflow' ? 'tool-accent-green' : 'tool-accent-red', 'space-y-6')}>
       <BackLink />
 
       <header className="space-y-1">
