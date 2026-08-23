@@ -305,6 +305,12 @@ pub(crate) const ALLOWED_EXT: &[&str] = &[
     "cfg", "ini", "txt", "json", "xml", "toml", "preset", "pak", "bin", "dat", "dll",
     "fx", "nvpreset", "sig", "profile", "settings", "upd", "blend", "lut", "csv", "yml",
     "yaml", "log",
+    // A DLL under another extension, loaded in-process by an ASI loader the
+    // game already has. OptiScaler ships two. Same risk class as the dll entry
+    // above, which has always been here; nothing in this app executes a
+    // package file. (Keep quotation marks out of these comments: the
+    // server/client parity test parses this list by scanning for quoted words.)
+    "asi",
 ];
 
 /// Resolve `destination` relative to `game_dir`, rejecting any traversal or

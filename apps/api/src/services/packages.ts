@@ -17,6 +17,14 @@ import { badRequest, notFound } from '../lib/errors';
 export const PACKAGE_EXT = new Set([
   'cfg', 'ini', 'txt', 'json', 'xml', 'toml', 'preset', 'pak', 'bin', 'dat', 'dll', 'fx',
   'nvpreset', 'sig', 'profile', 'settings', 'upd', 'blend', 'lut', 'csv', 'yml', 'yaml', 'log',
+  // .asi is a DLL under another extension, loaded in-process by an ASI loader
+  // the game already has. OptiScaler ships two (OptiScaler.asi as one of its
+  // proxy Plans, and plugins/OptiPatcher.asi). Allowing it does not widen the
+  // envelope past 'dll', which has always been permitted: PC MAX never
+  // executes a package file, and the real protections are elsewhere — the
+  // destination is bounds-checked against the game folder, every byte is
+  // hash-verified before it is written, and the originals are backed up.
+  'asi',
 ]);
 
 /**

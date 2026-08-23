@@ -12,7 +12,9 @@ import {
   normalizeVendor,
   profileVendor,
   recommendProfile,
+  rtxGeneration,
   supportsOpticalFlow,
+  supportsStreamlinePcMax,
 } from '../gpuProfile';
 
 const PROFILES = ['NVIDIA P1-6X', 'NVIDIA P2-6X', 'AMD P1-6X', 'AMD P2-6X', 'XESS P1-2X', 'XESS P2-2X'];
@@ -110,5 +112,40 @@ describe('supportsOpticalFlow', () => {
     expect(supportsOpticalFlow(null)).toBeNull();
     expect(supportsOpticalFlow({})).toBeNull();
     expect(supportsOpticalFlow({ gpuVendor: 'nvidia' })).toBeNull();
+  });
+});
+
+describe('supportsStreamlinePcMax', () => {
+  it('accepts only the RTX 40 and 50 series', () => {
+    for (const m of ['NVIDIA GeForce RTX 4070', 'GeForce RTX 4090', 'NVIDIA GeForce RTX 5080', 'RTX 5070 Ti']) {
+      expect(supportsStreamlinePcMax({ gpuModel: m }), m).toBe(true);
+    }
+  });
+
+  it('rejects RTX 20 and 30 even though AI Optical Flow accepts them', () => {
+    // The two tools have different hardware floors; sharing one check would
+    // tell a 3080 owner this works when it does not.
+    for (const m of ['NVIDIA GeForce RTX 2060', 'GeForce RTX 3080 Ti', 'NVIDIA GeForce RTX 3090']) {
+      expect(supportsStreamlinePcMax({ gpuModel: m }), m).toBe(false);
+      expect(supportsOpticalFlow({ gpuModel: m }), `${m} (AOF)`).toBe(true);
+    }
+  });
+
+  it('rejects GTX and other vendors', () => {
+    expect(supportsStreamlinePcMax({ gpuModel: 'NVIDIA GeForce GTX 1080 Ti' })).toBe(false);
+    expect(supportsStreamlinePcMax({ gpuModel: 'AMD Radeon RX 7900 XTX' })).toBe(false);
+    expect(supportsStreamlinePcMax({ gpuModel: 'Intel(R) Arc(TM) A770 Graphics' })).toBe(false);
+  });
+
+  it('says "unknown" rather than guessing when nothing was detected', () => {
+    expect(supportsStreamlinePcMax(null)).toBeNull();
+    expect(supportsStreamlinePcMax({})).toBeNull();
+    expect(supportsStreamlinePcMax({ gpuVendor: 'nvidia' })).toBeNull();
+  });
+
+  it('does not bucket workstation RTX A-series by its number', () => {
+    // "RTX A4000" is not a 40-series part; reading the 4 would be wrong.
+    expect(rtxGeneration({ gpuModel: 'NVIDIA RTX A4000' })).toBeNull();
+    expect(supportsStreamlinePcMax({ gpuModel: 'NVIDIA RTX A4000' })).toBe(false);
   });
 });

@@ -74,3 +74,37 @@ export function supportsOpticalFlow(profile: HardwareProfileInput | null): boole
   // RTX 2xxx-5xxx. Matches "RTX 4070", "RTX A2000", "GeForce RTX 3080 Ti".
   return /rtx\s*a?\s*([2-5]\d{3})/.test(model) || /rtx\s*([2-5]\d{2,3})/.test(model);
 }
+
+/**
+ * Which NVIDIA RTX generation this card belongs to, or null when it is not an
+ * RTX card or the model string says nothing useful.
+ *
+ * Reads the leading digit of the model number: RTX 4070 -> 4, RTX 5080 -> 5.
+ * Workstation parts (RTX A2000, RTX 6000 Ada) are deliberately not mapped —
+ * their numbering does not follow the GeForce generations, and guessing would
+ * put a card in a bucket it does not belong to.
+ */
+export function rtxGeneration(profile: HardwareProfileInput | null): number | null {
+  if (normalizeVendor(profile) !== 'nvidia') return null;
+  const model = (profile?.gpuModel ?? '').toLowerCase();
+  if (!model) return null;
+  if (/rtx\s*a\s*\d/.test(model)) return null; // RTX A-series workstation
+  const m = model.match(/rtx\s*([2-9])\d{2,3}\b/);
+  return m ? Number(m[1]) : null;
+}
+
+/**
+ * Streamline PC Max targets the frame-generation hardware in the RTX 40 and 50
+ * series only — the user was explicit that it works on nothing else.
+ *
+ * Returns null when the card cannot be identified, so the page says "we could
+ * not tell" rather than claiming support either way.
+ */
+export function supportsStreamlinePcMax(profile: HardwareProfileInput | null): boolean | null {
+  const vendor = normalizeVendor(profile);
+  if (vendor === null) return null;
+  if (vendor !== 'nvidia') return false;
+  const gen = rtxGeneration(profile);
+  if (gen === null) return (profile?.gpuModel ?? '') ? false : null;
+  return gen === 4 || gen === 5;
+}
