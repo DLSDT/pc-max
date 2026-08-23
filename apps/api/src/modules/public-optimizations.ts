@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { ProfileListResponse, OptimizationProfile } from '@goh/validation';
@@ -32,7 +32,12 @@ export async function publicOptimizationsModule(app: FastifyInstance) {
             isNull(optimizationProfiles.deletedAt),
           ),
         )
-        .orderBy(optimizationProfiles.isDefault);
+        // `isDefault` ascending put the default LAST (Postgres orders false <
+        // true), and with no profile currently flagged the key is constant — so
+        // the order was whatever the planner returned and could flip between
+        // visits. The desktop preselects profiles[0] when nothing is flagged
+        // default, so which preset a user saw was effectively arbitrary.
+        .orderBy(desc(optimizationProfiles.isDefault), asc(optimizationProfiles.name), asc(optimizationProfiles.id));
       return { data: await attachSettings(rows) };
     },
   );

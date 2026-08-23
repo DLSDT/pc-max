@@ -72,20 +72,41 @@ async function ensureUniqueSlug(slug: string, excludeId?: string) {
   if (existing) throw conflict(`A game with slug "${slug}" already exists`);
 }
 
+/**
+ * Replace a game's genre links.
+ *
+ * Resolve and validate BEFORE deleting anything, then swap inside a
+ * transaction. The previous order deleted every link first and only then
+ * looked the slugs up, so a single typo in `genreSlugs` threw 404 *after* the
+ * delete had committed: the admin saw "Category not found", assumed nothing
+ * had changed, and the game had silently lost every genre it had — vanishing
+ * from the genre filter with no way to recover the old list.
+ */
 async function linkCategories(gameId: string, slugs: string[]) {
-  await db.delete(gameCategories).where(eq(gameCategories.gameId, gameId));
-  if (!slugs.length) return;
-  const rows = await db.select({ id: categories.id, slug: categories.slug }).from(categories).where(inArray(categories.slug, slugs));
+  const rows = slugs.length
+    ? await db.select({ id: categories.id, slug: categories.slug }).from(categories).where(inArray(categories.slug, slugs))
+    : [];
   const found = new Set(rows.map((r) => r.slug));
   const missing = slugs.filter((s) => !found.has(s));
   if (missing.length) throw notFound(`Category "${missing.join(', ')}"`);
-  await db.insert(gameCategories).values(rows.map((r) => ({ gameId, categoryId: r.id })));
+
+  await db.transaction(async (tx) => {
+    await tx.delete(gameCategories).where(eq(gameCategories.gameId, gameId));
+    if (rows.length) await tx.insert(gameCategories).values(rows.map((r) => ({ gameId, categoryId: r.id })));
+  });
 }
 
+/**
+ * Replace a game's tag links. Same ordering rule as `linkCategories`: resolve
+ * (and here, create) every tag first, and only then swap the links inside a
+ * transaction, so a failure part-way cannot leave the game with no tags.
+ *
+ * Unlike genres, an unknown tag slug is created rather than rejected — tags are
+ * free-form here — so the failure this guards against is a mid-operation error
+ * rather than a typo.
+ */
 async function linkTags(gameId: string, slugs: string[]) {
-  await db.delete(gameTags).where(eq(gameTags.gameId, gameId));
-  if (!slugs.length) return;
-  const existing = await db.select().from(tags).where(inArray(tags.slug, slugs));
+  const existing = slugs.length ? await db.select().from(tags).where(inArray(tags.slug, slugs)) : [];
   const bySlug = new Map(existing.map((t) => [t.slug, t]));
   const created = await Promise.all(
     slugs
@@ -99,7 +120,11 @@ async function linkTags(gameId: string, slugs: string[]) {
     .map((s) => bySlug.get(s))
     .filter((t): t is NonNullable<typeof t> => Boolean(t))
     .map((t) => ({ gameId, tagId: t.id }));
-  if (linkRows.length) await db.insert(gameTags).values(linkRows);
+
+  await db.transaction(async (tx) => {
+    await tx.delete(gameTags).where(eq(gameTags.gameId, gameId));
+    if (linkRows.length) await tx.insert(gameTags).values(linkRows);
+  });
 }
 
 export async function adminGamesModule(app: FastifyInstance) {

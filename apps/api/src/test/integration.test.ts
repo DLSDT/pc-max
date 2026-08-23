@@ -2486,6 +2486,112 @@ describe('multi-frame generation tools (OptiFlow / OptiScaler)', () => {
   });
 });
 
+/**
+ * Defects found by the debug sweep, each reproduced before it was fixed.
+ */
+describe('audit regressions', () => {
+  let adminToken: string;
+
+  beforeAll(async () => {
+    const login = await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    });
+    adminToken = (login.json as { accessToken: string }).accessToken;
+  });
+
+  it('GET /settings returns its payload instead of a 500', async () => {
+    // The query selected max(greatest(games, optimization_profiles, categories))
+    // with only `games` in FROM, so Postgres refused it and every call 500'd.
+    const res = await inject('GET', '/api/v1/settings');
+    expect(res.status).toBe(200);
+    const body = res.json as { appName: string; apiVersion: string; contentUpdatedAt: string | null };
+    expect(body.appName).toBe('PC MAX');
+    expect(body.apiVersion).toBe('v1');
+    expect(body.contentUpdatedAt === null || typeof body.contentUpdatedAt === 'string').toBe(true);
+  });
+
+  it('a rejected genre edit leaves the existing genres intact', async () => {
+    // linkCategories deleted every link before validating the slugs, so one typo
+    // threw 404 *after* the delete committed and the game silently lost its genres.
+    const created = await inject('POST', '/api/v1/admin/games', {
+      token: adminToken,
+      body: { name: 'Genre Rollback Probe', slug: 'genre-rollback-probe', status: 'published', genreSlugs: ['action'] },
+    });
+    expect(created.status).toBe(201);
+    const gameId = (created.json as { id: string }).id;
+
+    const before = (await inject('GET', `/api/v1/admin/games/${gameId}`, { token: adminToken })).json as {
+      genres?: { slug: string }[];
+    };
+    const beforeCount = (before.genres ?? []).length;
+    expect(beforeCount).toBeGreaterThan(0);
+
+    const bad = await inject('PATCH', `/api/v1/admin/games/${gameId}`, {
+      token: adminToken,
+      body: { genreSlugs: ['action', 'definitely-not-a-real-genre'] },
+    });
+    expect(bad.status).toBe(404);
+
+    const after = (await inject('GET', `/api/v1/admin/games/${gameId}`, { token: adminToken })).json as {
+      genres?: { slug: string }[];
+    };
+    expect((after.genres ?? []).length, 'genres were wiped by a rejected edit').toBe(beforeCount);
+
+    await inject('DELETE', `/api/v1/admin/games/${gameId}`, { token: adminToken });
+  });
+
+  it('genre counts exclude games that are not published', async () => {
+    // The count was on the join-table column, so the published/not-deleted
+    // filter on the games join did nothing.
+    const created = await inject('POST', '/api/v1/admin/games', {
+      token: adminToken,
+      body: { name: 'Count Probe', slug: 'count-probe', status: 'draft', genreSlugs: ['action'] },
+    });
+    expect(created.status).toBe(201);
+    const gameId = (created.json as { id: string }).id;
+
+    const cats = (await inject('GET', '/api/v1/categories')).json as { data: { slug: string; gameCount: number }[] };
+    const action = cats.data.find((c) => c.slug === 'action');
+    const listed = (await inject('GET', '/api/v1/games?genre=action&limit=1')).json as { meta: { total: number } };
+    expect(action?.gameCount, 'category count disagrees with the filtered list').toBe(listed.meta.total);
+
+    await inject('DELETE', `/api/v1/admin/games/${gameId}`, { token: adminToken });
+  });
+
+  it('a category whose only games were deleted can still be deleted', async () => {
+    // Soft-deleting a game leaves its category links, so the guard counted
+    // games that no longer exist and the category became undeletable forever.
+    const cat = await inject('POST', '/api/v1/admin/categories', {
+      token: adminToken,
+      body: { slug: 'probe-genre', name: 'Probe Genre' },
+    });
+    expect(cat.status).toBe(201);
+    const catId = (cat.json as { id: string }).id;
+
+    const game = await inject('POST', '/api/v1/admin/games', {
+      token: adminToken,
+      body: { name: 'Probe Genre Game', slug: 'probe-genre-game', status: 'published', genreSlugs: ['probe-genre'] },
+    });
+    expect(game.status).toBe(201);
+    const gameId = (game.json as { id: string }).id;
+
+    expect((await inject('DELETE', `/api/v1/admin/categories/${catId}`, { token: adminToken })).status).toBe(409);
+    expect((await inject('DELETE', `/api/v1/admin/games/${gameId}`, { token: adminToken })).status).toBe(200);
+    expect(
+      (await inject('DELETE', `/api/v1/admin/categories/${catId}`, { token: adminToken })).status,
+      'category still blocked by links to a deleted game',
+    ).toBe(200);
+  });
+
+  it('published profiles come back in a deterministic order', async () => {
+    // orderBy(isDefault) ascending sorted the default LAST, and with no default
+    // flagged the key was constant, so the order was planner-dependent.
+    const first = (await inject('GET', '/api/v1/games/dying-light/optimizations')).json as { data: { id: string }[] };
+    const second = (await inject('GET', '/api/v1/games/dying-light/optimizations')).json as { data: { id: string }[] };
+    expect(first.data.map((p) => p.id)).toEqual(second.data.map((p) => p.id));
+  });
+});
+
 function awaitImportFs() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('node:fs') as typeof import('node:fs');

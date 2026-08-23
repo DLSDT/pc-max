@@ -109,14 +109,31 @@ export async function systemModule(app: FastifyInstance) {
       schema: { response: { 200: AppSettings } },
     },
     async () => {
-      const contentUpdatedAt = await db
-        .select({ m: sql<string>`max(greatest(${games.updatedAt}, ${optimizationProfiles.updatedAt}, ${categories.updatedAt}))` })
-        .from(games)
-        .limit(1);
+      // Three independent maxima, combined in JS.
+      //
+      // This used to be one query: `max(greatest(games.updated_at,
+      // optimization_profiles.updated_at, categories.updated_at)) FROM games`.
+      // Only `games` was in the FROM clause, so Postgres rejected it with
+      // "missing FROM-clause entry" and the route returned 500 on every call.
+      // Joining the three tables instead would have been a cartesian product
+      // (313 games × every profile × every category) to compute one timestamp.
+      const [gameMax, profileMax, categoryMax] = await Promise.all([
+        db.select({ m: sql<Date | null>`max(${games.updatedAt})` }).from(games),
+        db.select({ m: sql<Date | null>`max(${optimizationProfiles.updatedAt})` }).from(optimizationProfiles),
+        db.select({ m: sql<Date | null>`max(${categories.updatedAt})` }).from(categories),
+      ]);
+
+      // node-postgres decodes a timestamptz as a Date, so these are compared by
+      // epoch and serialised explicitly. Sorting them as strings would order by
+      // "Sat Aug…"/"Sun Aug…" and the response schema wants an ISO timestamp.
+      const newest = [gameMax[0]?.m, profileMax[0]?.m, categoryMax[0]?.m]
+        .filter((v): v is Date => v instanceof Date)
+        .reduce<Date | null>((latest, d) => (latest === null || d.getTime() > latest.getTime() ? d : latest), null);
+
       return {
         appName: 'PC MAX',
         apiVersion: 'v1',
-        contentUpdatedAt: contentUpdatedAt[0]?.m ?? null,
+        contentUpdatedAt: newest ? newest.toISOString() : null,
       };
     },
   );

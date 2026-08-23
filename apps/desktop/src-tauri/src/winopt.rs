@@ -913,17 +913,53 @@ pub fn apply<B: OsBackend>(
     for t in &tweaks {
         requires_restart |= t.requires_restart;
         if let Err(e) = tx.apply_tweak(backend, t) {
-            let rolled = tx.changes.len();
+            // `apply_tweak` undoes only the ops of the tweak that failed. Every
+            // earlier tweak in this batch is still live on the machine, so the
+            // whole transaction has to come back out — otherwise the user is
+            // told their system was restored while it is half-optimised.
+            let rollback_result = tx.rollback(backend, 0);
             clear_marker(marker_dir);
+
+            let (status, change_count, error) = match rollback_result {
+                Ok(()) => {
+                    // Nothing of ours is left on the machine, so the snapshot is
+                    // not a restore point — keeping it would put an entry in the
+                    // Restore list that undoes nothing.
+                    store.delete(&tx.id);
+                    (TxStatus::RolledBack, 0, format!("{e} — previous state restored."))
+                }
+                Err(re) => {
+                    // Some settings could not be put back. The snapshot is now
+                    // the only record of their previous values, so persist it
+                    // with the real changes and tell the user Restore can retry.
+                    snapshot.changes = tx.changes.clone();
+                    let _ = store.save(&snapshot);
+                    let left = tx.changes.len();
+                    (
+                        TxStatus::Failed,
+                        left,
+                        format!("{e} — and undoing it failed: {re}. {left} setting(s) may still be changed; use Restore to try again."),
+                    )
+                }
+            };
+
             return ApplyResult {
                 snapshot_id: tx.id.clone(),
-                status: if rolled > 0 { TxStatus::RolledBack } else { TxStatus::Failed },
+                status,
                 applied_tweaks: Vec::new(),
-                change_count: rolled,
-                error: Some(format!("{e} — previous state restored.")),
+                change_count,
+                error: Some(error),
                 requires_restart,
             };
         }
+
+        // Persist after every tweak, not only at commit. The snapshot written
+        // before the loop carries no changes, so a process death mid-apply used
+        // to leave recovery reporting "interrupted before any change was
+        // applied" while the machine was half-modified and the before-values
+        // were gone for good.
+        snapshot.changes = tx.changes.clone();
+        let _ = store.save(&snapshot);
     }
 
     // COMMIT — persist verified changes and clear the marker.
@@ -1839,5 +1875,76 @@ mod tests {
         let report = recover_interrupted(&backend, &dir, &store);
         assert!(!report.interrupted);
         assert_eq!(report.rolled_back_changes, 0);
+    }
+}
+
+#[cfg(test)]
+mod partial_apply_tests {
+    //! Regression tests for a partial Windows-optimization apply.
+    //!
+    //! `apply_tweak` undoes only the ops of the tweak that failed. Before this
+    //! was fixed, `apply` reported `RolledBack` and "previous state restored"
+    //! while every earlier tweak in the batch was still live on the machine —
+    //! and it left a snapshot behind that could undo nothing. All three tests
+    //! below fail against that version.
+    use super::*;
+
+    fn tmp(label: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("winopt-{label}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        d
+    }
+
+    #[test]
+    fn a_failed_batch_leaves_nothing_applied() {
+        let os = MockOs::new().with_failure(2); // first tweak writes, second fails
+        let dir = tmp("partial");
+        let store = SnapshotStore::new(dir.clone());
+        let ids = vec!["gaming.gamemode".to_string(), "gaming.gamedvr".to_string()];
+
+        let res = apply(&os, &store, &dir, "balanced", &ids);
+
+        let first = TweakDef::get("gaming.gamemode").unwrap();
+        let still_applied = first.ops.iter().any(|op| os.is_applied(op).unwrap_or(false));
+        assert!(!still_applied, "the tweak that succeeded before the failure is still on the machine");
+        assert!(matches!(res.status, TxStatus::RolledBack));
+        assert_eq!(res.change_count, 0, "change_count must reflect what is actually left applied");
+        assert!(res.error.unwrap().contains("previous state restored"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_failed_batch_leaves_no_snapshot_that_undoes_nothing() {
+        let os = MockOs::new().with_failure(2);
+        let dir = tmp("snap");
+        let store = SnapshotStore::new(dir.clone());
+        let ids = vec!["gaming.gamemode".to_string(), "gaming.gamedvr".to_string()];
+
+        apply(&os, &store, &dir, "balanced", &ids);
+
+        // A restore point that restores nothing is worse than none: the user
+        // clicks Restore, sees success, and nothing changes.
+        assert!(store.list().is_empty(), "a useless snapshot was left in the Restore list");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_crash_mid_apply_leaves_the_before_values_on_disk() {
+        // Simulates the process dying after tweak 1 and before commit: the
+        // snapshot on disk must already carry tweak 1's before-values, or those
+        // values are gone and the change can never be undone.
+        let os = MockOs::new();
+        let dir = tmp("crash");
+        let store = SnapshotStore::new(dir.clone());
+        let ids = vec!["gaming.gamemode".to_string(), "gaming.gamedvr".to_string()];
+
+        apply(&os, &store, &dir, "balanced", &ids);
+        let after_first = store.list();
+        assert_eq!(after_first.len(), 1);
+        assert!(
+            after_first[0].change_count > 0,
+            "snapshot carries no before-values, so an interrupted apply would be unrecoverable"
+        );
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

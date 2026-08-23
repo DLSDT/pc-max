@@ -1,4 +1,4 @@
-import { and, asc, count, eq, sql } from 'drizzle-orm';
+import { and, asc, count, eq, isNull, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import {
@@ -11,7 +11,7 @@ import {
 } from '@goh/validation';
 import { z } from 'zod';
 import { db } from '../db';
-import { categories, gameCategories, optimizationCategories, tags } from '../db/schema';
+import { categories, gameCategories, games, optimizationCategories, tags } from '../db/schema';
 import { idParams } from '../lib/params';
 import { anyObjectSchema, dataListSchema, okSchema } from '../lib/schemas';
 import { conflict, notFound } from '../lib/errors';
@@ -32,10 +32,13 @@ export async function adminTaxonomyModule(app: FastifyInstance) {
           slug: categories.slug,
           name: categories.name,
           description: categories.description,
-          gameCount: sql<number>`count(${gameCategories.gameId})::int`,
+          // Soft-deleted games keep their links, so counting link rows reported
+          // games that no longer exist — and disagreed with the delete guard.
+          gameCount: sql<number>`count(${games.id})::int`,
         })
         .from(categories)
         .leftJoin(gameCategories, eq(gameCategories.categoryId, categories.id))
+        .leftJoin(games, and(eq(games.id, gameCategories.gameId), isNull(games.deletedAt)))
         .groupBy(categories.id)
         .orderBy(asc(categories.sortOrder));
       return { data: rows.map((r) => ({ ...r, gameCount: Number(r.gameCount ?? 0) })) };
@@ -92,7 +95,15 @@ export async function adminTaxonomyModule(app: FastifyInstance) {
     async (request) => {
       const existing = await db.query.categories.findFirst({ where: eq(categories.id, request.params.id) });
       if (!existing) throw notFound('Category');
-      const links = await db.select({ n: count() }).from(gameCategories).where(eq(gameCategories.categoryId, existing.id));
+      // Count only games that still exist. Deleting a game is a soft delete and
+      // does not remove its category links, so counting the link rows alone made
+      // a category permanently undeletable once its games were deleted — the
+      // admin saw an empty category and a "still has games" error forever.
+      const links = await db
+        .select({ n: count() })
+        .from(gameCategories)
+        .innerJoin(games, eq(games.id, gameCategories.gameId))
+        .where(and(eq(gameCategories.categoryId, existing.id), isNull(games.deletedAt)));
       if (Number(links[0]?.n ?? 0) > 0) throw conflict('Cannot delete a category that still has games');
       await db.delete(categories).where(eq(categories.id, existing.id));
       await recordAudit(request, { action: 'category.delete', entityType: 'category', entityId: existing.id, before: { name: existing.name } });

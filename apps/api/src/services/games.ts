@@ -164,7 +164,12 @@ export async function categoriesWithCounts() {
       slug: categories.slug,
       name: categories.name,
       description: categories.description,
-      gameCount: sql<number>`count(${gameCategories.gameId})::int`,
+      // count(games.id), NOT count(gameCategories.gameId): the join-table column
+      // is non-null for every link, so counting it ignores the published/
+      // not-deleted filter on the games join below entirely. Unpublishing a game
+      // left its genre counts unchanged, so the Categories page advertised more
+      // games than the genre-filtered list (which does filter) would return.
+      gameCount: sql<number>`count(${games.id})::int`,
     })
     .from(categories)
     .leftJoin(gameCategories, eq(gameCategories.categoryId, categories.id))
