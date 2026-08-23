@@ -20,13 +20,23 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }));
 vi.mock('@/lib/optimizer', () => ({ isTauriShell: () => true }));
 vi.mock('@/lib/api', () => ({
   api: { mfgToolDownload: (...a: unknown[]) => mfgToolDownload(...a) },
-  ApiError: class ApiError extends Error {},
+  ApiError: class ApiError extends Error {
+    constructor(
+      message: string,
+      public status = 500,
+      public body: unknown = null,
+      public kind: string = 'http',
+    ) {
+      super(message);
+      this.name = 'ApiError';
+    }
+  },
 }));
 vi.mock('@/hooks/useFeatureAccess', () => ({
   authorizeFeature: (...a: unknown[]) => authorizeFeature(...a),
 }));
 
-import { componentNames, installTool, OptiFlowError } from '../optiflow';
+import { componentNames, installTool, OptiFlowError, statusErrorFor } from '../optiflow';
 
 const BYTES = new TextEncoder().encode('the real dll bytes');
 /** sha256 of BYTES, computed the same way the browser will. */
@@ -125,5 +135,44 @@ describe('componentNames', () => {
         { destination: 'bin/x64/OptiScaler.ini', role: 'relative' },
       ]),
     ).toEqual(['sl.dlss_g.dll']);
+  });
+});
+
+describe('statusErrorFor', () => {
+  it('turns a 404 into "your server is behind", not Fastify\'s route message', async () => {
+    // This is what a tester actually saw on Windows: the desktop build shipped
+    // with the tool endpoints before the API was deployed, and the page showed
+    // "Route GET /api/v1/mfg/tools/optiflow not found" — an internal detail
+    // addressed to nobody who could act on it.
+    const { ApiError } = await import('@/lib/api');
+    const err = new (ApiError as new (m: string, s: number, b: unknown, k: string) => Error)(
+      'Route GET /api/v1/mfg/tools/optiflow not found',
+      404,
+      null,
+      'http',
+    );
+    expect(statusErrorFor(err)).toEqual({ key: 'mfg.serverOutdated' });
+  });
+
+  it('says "unreachable" for a network failure or timeout', async () => {
+    const { ApiError } = await import('@/lib/api');
+    const mk = (kind: string, status = 0) =>
+      new (ApiError as new (m: string, s: number, b: unknown, k: string) => Error)('boom', status, null, kind);
+    expect(statusErrorFor(mk('network'))).toEqual({ key: 'mfg.serverUnreachable' });
+    expect(statusErrorFor(mk('timeout'))).toEqual({ key: 'mfg.serverUnreachable' });
+    expect(statusErrorFor(new Error('something else'))).toEqual({ key: 'mfg.serverUnreachable' });
+  });
+
+  it('keeps the server\'s own wording for errors written for the user', async () => {
+    // A 403 already says "subscription required" in words the user can act on;
+    // replacing it with a generic message would lose information.
+    const { ApiError } = await import('@/lib/api');
+    const err = new (ApiError as new (m: string, s: number, b: unknown, k: string) => Error)(
+      'Your subscription does not include this feature',
+      403,
+      null,
+      'http',
+    );
+    expect(statusErrorFor(err)).toEqual({ message: 'Your subscription does not include this feature' });
   });
 });

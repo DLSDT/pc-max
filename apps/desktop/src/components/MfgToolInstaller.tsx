@@ -12,6 +12,7 @@ import { api, ApiError } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
 import {
   componentNames,
+  statusErrorFor,
   installTool,
   pickGameExecutable,
   scanGame,
@@ -85,7 +86,11 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
         // first only when detection found nothing to match.
         setVariant(recommendProfile(res.variants, gpuVendor) ?? res.variants[0] ?? null);
       })
-      .catch((err) => alive && setStatusError(err instanceof ApiError ? err.message : 'Could not reach the server.'));
+      .catch((err) => {
+        if (!alive) return;
+        const e = statusErrorFor(err);
+        setStatusError('key' in e ? t(e.key) : e.message);
+      });
     return () => {
       alive = false;
     };
@@ -93,7 +98,8 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
     // detection would refetch the package. The effect below moves the
     // selection instead.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tool]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tool, t]);
 
   // Detection often lands after the package does. Move the preselection once,
   // and never over a choice the user has already made.

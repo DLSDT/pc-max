@@ -17,7 +17,7 @@
  * of pretending to work.
  */
 import type { MfgTool, MfgToolPackageResponse, PackageFileRole } from '@goh/validation';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
 import { authorizeFeature } from '@/hooks/useFeatureAccess';
 
@@ -162,4 +162,26 @@ export async function installTool({ tool, exePath, variant, onProgress }: Instal
   const files = await fetchManifest(pkg, onProgress);
   const { invoke } = await import('@tauri-apps/api/core');
   return (await invoke('optiflow_install', { exePath, files })) as InstallReport;
+}
+
+/**
+ * Which message to show when the tool-status probe fails.
+ *
+ * A 404 on this endpoint has one meaning: the desktop build is newer than the
+ * API it is talking to. Fastify answers with "Route GET /api/v1/... not found",
+ * which is true and completely useless to the person reading it — they cannot
+ * deploy a server. Everything else keeps the server's own wording, because a
+ * 403 or a rate-limit message is written for the user already.
+ *
+ * Returns an i18n key, so the caller stays responsible for translation.
+ */
+export type StatusErrorKind = { key: 'mfg.serverOutdated' | 'mfg.serverUnreachable' } | { message: string };
+
+export function statusErrorFor(err: unknown): StatusErrorKind {
+  if (err instanceof ApiError) {
+    if (err.status === 404) return { key: 'mfg.serverOutdated' };
+    if (err.kind === 'network' || err.kind === 'timeout' || err.status === 0) return { key: 'mfg.serverUnreachable' };
+    return { message: err.message };
+  }
+  return { key: 'mfg.serverUnreachable' };
 }
