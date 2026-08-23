@@ -176,7 +176,12 @@ export default function MfgToolInstaller({ tool }: { tool: MfgTool }) {
     // Scope the whole tool page to its accent: green for AI Optical Flow (it
     // drives an NVIDIA RTX Optical Flow engine), crimson for the
     // vendor-neutral OptiScaler. Every primary-coloured control below follows.
-    <div className={cn(tool === 'optiflow' ? 'tool-accent-green' : 'tool-accent-red', 'space-y-6')}>
+    <div
+      className={cn(
+        tool === 'optiflow' ? 'tool-accent-green' : tool === 'streamline' ? 'tool-accent-blue' : 'tool-accent-red',
+        'space-y-6',
+      )}
+    >
       <BackLink />
 
       <header className="space-y-1">

@@ -368,3 +368,134 @@ fn scan_reports_what_an_install_would_touch_without_touching_it() {
     assert_eq!(report.missing, vec!["sl.dlss_g.dll".to_string()]);
     assert!(!t.exists(".goh-backup"), "a scan writes nothing");
 }
+
+// ---------------------------------------------------------------------------
+// Uninstall
+// ---------------------------------------------------------------------------
+
+mod uninstall_tests {
+    use super::*;
+    use crate::optiflow::{install, uninstall, InstalledFile};
+
+    /// Build a game, install into it, then undo — the round trip must leave the
+    /// tree byte-identical to how it started.
+    #[test]
+    fn uninstall_restores_the_game_to_its_original_state() {
+        let t = TempTree::new("uninstall-round");
+        let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+        t.file("bin/x64/sl.dlss_g.dll", b"ORIGINAL SHIPPED BUILD");
+        t.file("bin/x64/GameSaves.dat", b"precious");
+
+        let report = install(
+            &exe,
+            &[
+                payload("sl.dlss_g.dll", "sl.dlss_g.dll", FileRole::Streamline, b"pcmax build"),
+                payload("OptiScaler.dll", "OptiScaler.dll", FileRole::Launcher, b"drop-in"),
+            ],
+        )
+        .expect("install");
+
+        assert_eq!(t.read("bin/x64/sl.dlss_g.dll"), b"pcmax build");
+        assert!(t.exists("bin/x64/OptiScaler.dll"));
+
+        let installed: Vec<InstalledFile> = report
+            .written
+            .iter()
+            .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
+            .collect();
+
+        let un = uninstall(&t.root, Path::new(&report.backup_dir), &installed).expect("uninstall");
+
+        assert_eq!(t.read("bin/x64/sl.dlss_g.dll"), b"ORIGINAL SHIPPED BUILD", "replaced file not restored");
+        assert!(!t.exists("bin/x64/OptiScaler.dll"), "added file not removed");
+        assert_eq!(t.read("bin/x64/GameSaves.dat"), b"precious", "unrelated file touched");
+        assert_eq!(un.restored.len(), 1);
+        assert_eq!(un.removed.len(), 1);
+        assert!(un.failed.is_empty(), "{:?}", un.failed);
+    }
+
+    #[test]
+    fn uninstall_never_touches_a_same_named_file_it_did_not_install() {
+        // The property that stops "remove OptiScaler" from deleting a copy the
+        // user installed by hand, or one the game itself ships elsewhere.
+        let t = TempTree::new("uninstall-scope");
+        let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+        t.file("bin/x64/sl.dlss_g.dll", b"shipped");
+        t.file("mods/OptiScaler.dll", b"the user's own copy");
+        t.file("Engine/Binaries/sl.dlss_g.dll", b"a second shipped copy");
+
+        // Install touching ONLY the launcher folder's copy.
+        let report = install(
+            &exe,
+            &[payload("OptiScaler.dll", "OptiScaler.dll", FileRole::Launcher, b"drop-in")],
+        )
+        .expect("install");
+
+        let installed: Vec<InstalledFile> = report
+            .written
+            .iter()
+            .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
+            .collect();
+        uninstall(&t.root, Path::new(&report.backup_dir), &installed).expect("uninstall");
+
+        assert_eq!(t.read("mods/OptiScaler.dll"), b"the user's own copy", "deleted a same-named file it never installed");
+        assert_eq!(t.read("Engine/Binaries/sl.dlss_g.dll"), b"a second shipped copy");
+        assert_eq!(t.read("bin/x64/sl.dlss_g.dll"), b"shipped");
+    }
+
+    #[test]
+    fn a_missing_backup_leaves_the_file_alone_and_says_so() {
+        // Deleting a replaced file whose backup is gone would destroy the very
+        // original the backup existed to hold.
+        let t = TempTree::new("uninstall-nobackup");
+        let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+        t.file("bin/x64/sl.dlss.dll", b"shipped");
+
+        let report = install(&exe, &[payload("sl.dlss.dll", "sl.dlss.dll", FileRole::Streamline, b"new")]).unwrap();
+        fs::remove_dir_all(&report.backup_dir).unwrap();
+
+        let installed: Vec<InstalledFile> = report
+            .written
+            .iter()
+            .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
+            .collect();
+        let un = uninstall(&t.root, Path::new(&report.backup_dir), &installed).unwrap();
+
+        assert!(t.exists("bin/x64/sl.dlss.dll"), "file deleted despite having no backup to restore");
+        assert_eq!(un.failed.len(), 1);
+        assert!(un.failed[0].reason.contains("backup is missing"));
+        assert!(un.removed.is_empty());
+    }
+
+    #[test]
+    fn uninstall_refuses_a_recorded_path_outside_the_game_folder() {
+        // The record comes off disk, so it is re-validated rather than trusted.
+        let t = TempTree::new("uninstall-escape");
+        let outside = TempTree::new("uninstall-outside");
+        let victim = outside.file("important.dll", b"not ours");
+
+        let un = uninstall(
+            &t.root,
+            &t.root.join(".goh-backup"),
+            &[InstalledFile { path: victim.to_string_lossy().to_string(), replaced: false }],
+        )
+        .unwrap();
+
+        assert!(victim.exists(), "deleted a file outside the game folder");
+        assert_eq!(un.failed.len(), 1);
+        assert!(un.failed[0].reason.contains("outside the game folder"));
+    }
+
+    #[test]
+    fn an_already_gone_file_is_reported_not_failed() {
+        let t = TempTree::new("uninstall-gone");
+        let un = uninstall(
+            &t.root,
+            &t.root.join(".goh-backup"),
+            &[InstalledFile { path: t.root.join("never-existed.dll").to_string_lossy().to_string(), replaced: false }],
+        )
+        .unwrap();
+        assert_eq!(un.missing.len(), 1);
+        assert!(un.failed.is_empty());
+    }
+}

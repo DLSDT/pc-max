@@ -44,6 +44,7 @@ pub fn run() {
             apply_game_files,
             optiflow_scan,
             optiflow_install,
+            optiflow_uninstall,
             extract_game_icon,
             save_binary_file,
             windows_scan,
@@ -649,4 +650,15 @@ fn optiflow_install(
     files: Vec<optiflow::OptiFlowFile>,
 ) -> Result<optiflow::InstallReport, String> {
     optiflow::install(Path::new(&exe_path), &files)
+}
+
+/// Undo a previous OptiScaler/OptiFlow install from the record of what it
+/// wrote. Nothing is matched by filename — only the recorded list is touched.
+#[tauri::command]
+fn optiflow_uninstall(
+    game_dir: String,
+    backup_dir: String,
+    files: Vec<optiflow::InstalledFile>,
+) -> Result<optiflow::UninstallReport, String> {
+    optiflow::uninstall(Path::new(&game_dir), Path::new(&backup_dir), &files)
 }

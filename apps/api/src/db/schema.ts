@@ -31,7 +31,11 @@ export const packageGpuVendorEnum = pgEnum('package_gpu_vendor', ['any', 'nvidia
 export const packageArchEnum = pgEnum('package_arch', ['any', 'x64', 'arm64']);
 /** What kind of optimization package this is — drives which product area
  * (Optimized Setting vs Multi-Frame Generation) surfaces it. */
-export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler']);
+export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler', 'streamline']);
+/** What class of content a package file is. `variant` names WHICH one of a set
+ *  a file belongs to; this says what kind of set that is, so an OptiScaler
+ *  install can combine "installer + one plan + one order" from one package. */
+export const packageComponentEnum = pgEnum('package_component', ['installer', 'plan', 'order']);
 /** Where a package file lands. `relative` resolves against the game directory
  *  (every pre-OptiFlow package); `streamline` replaces the same-named file
  *  wherever it already exists in the install; `launcher` drops next to the
@@ -772,11 +776,12 @@ export const packageFiles = pgTable(
      *  mutually-exclusive profile this file belongs to (OptiScaler's per-vendor
      *  "order" profiles), installed only when the user picks it. */
     variant: text('variant'),
+    component: packageComponentEnum('component').notNull().default('installer'),
     storageKey: text('storage_key').notNull(),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: createdAt(),
   },
-  (t) => [index('package_files_package_idx').on(t.packageId), index('package_files_package_variant_idx').on(t.packageId, t.variant)],
+  (t) => [index('package_files_package_idx').on(t.packageId), index('package_files_package_variant_idx').on(t.packageId, t.variant), index('package_files_package_component_variant_idx').on(t.packageId, t.component, t.variant)],
 );
 
 /** Immutable snapshots of a package at each released version (manifest). */

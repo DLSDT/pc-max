@@ -38,6 +38,20 @@ describe('MFG plural strings', () => {
     expect(t('mfg.willReplace', { count: 3 })).toContain('3');
   });
 
+  it('has every OptiScaler key in both languages, and none echo the key name', async () => {
+    // The OptiScaler page is the largest string block in the app; a key present
+    // in one locale only renders as the raw dotted path on someone's screen.
+    const t = await tFor('fa');
+    const en = bundle('en').optiscaler as Record<string, string>;
+    const fa = bundle('fa').optiscaler as Record<string, string>;
+    expect(Object.keys(en).filter((k) => !(k in fa)), 'missing in fa').toEqual([]);
+    expect(Object.keys(fa).filter((k) => !(k in en)), 'missing in en').toEqual([]);
+    for (const k of Object.keys(en)) {
+      const out = t(`optiscaler.${k}`, { count: 2, n: 6, expected: 12, items: 'x', version: '1', when: 'now', restored: 1, removed: 1, failed: 1 });
+      expect(out, `optiscaler.${k}`).not.toContain('optiscaler.');
+    }
+  });
+
   it('has every MFG key in both languages', async () => {
     const flatten = (obj: unknown, prefix = ''): string[] =>
       typeof obj === 'object' && obj !== null

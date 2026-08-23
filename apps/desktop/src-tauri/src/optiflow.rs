@@ -501,3 +501,109 @@ fn rollback(originals: &[(PathBuf, PathBuf)], applied: &[PathBuf], backup_root: 
     }
     let _ = fs::remove_dir_all(backup_root);
 }
+
+// ---------------------------------------------------------------------------
+// Uninstall
+// ---------------------------------------------------------------------------
+
+/// One file a previous install wrote, as recorded in its report.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InstalledFile {
+    /// Absolute path the installer wrote to.
+    pub path: String,
+    /// True when the install replaced a file that was already there. Those are
+    /// restored from the backup; files we created are removed.
+    pub replaced: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UninstallReport {
+    pub restored: Vec<String>,
+    pub removed: Vec<String>,
+    /// Entries that could not be undone, each with why. Reported rather than
+    /// swallowed — a half-removed install the user is told was clean is worse
+    /// than one they can see the state of.
+    pub failed: Vec<SkippedFile>,
+    /// Recorded files that were already gone. Not an error: the user may have
+    /// verified the game's files or reinstalled it since.
+    pub missing: Vec<String>,
+}
+
+/// Undo an install, using only the record of what that install wrote.
+///
+/// The safety property is that this NEVER pattern-matches on filenames. It
+/// walks the recorded list and nothing else, so a file that merely shares a
+/// name with something OptiScaler ships — a copy the user installed by hand, a
+/// component the game itself shipped — is untouched unless this install
+/// actually wrote it.
+///
+/// A recorded file that was replaced is restored from the backup taken at
+/// install time. One that was newly created is deleted. If the backup is gone,
+/// the file is left alone and reported: deleting it would destroy the original
+/// the backup was supposed to hold.
+pub fn uninstall(game_dir: &Path, backup_dir: &Path, files: &[InstalledFile]) -> Result<UninstallReport, String> {
+    if !game_dir.is_dir() {
+        return Err(format!("Game folder not found: {}", game_dir.display()));
+    }
+    let real_root = game_dir
+        .canonicalize()
+        .map_err(|e| format!("Cannot resolve the game folder: {e}"))?;
+
+    let mut report = UninstallReport { restored: vec![], removed: vec![], failed: vec![], missing: vec![] };
+
+    for f in files {
+        let target = PathBuf::from(&f.path);
+
+        // Same containment rule as install: the recorded path is data from
+        // disk, so it is re-checked rather than trusted.
+        if !is_within(&real_root, &target) {
+            report.failed.push(SkippedFile {
+                filename: f.path.clone(),
+                reason: "outside the game folder — refused".to_string(),
+            });
+            continue;
+        }
+        if !target.exists() {
+            report.missing.push(f.path.clone());
+            continue;
+        }
+
+        if f.replaced {
+            let rel = match target.strip_prefix(&real_root) {
+                Ok(r) => r,
+                Err(_) => {
+                    report.failed.push(SkippedFile { filename: f.path.clone(), reason: "unexpected path".into() });
+                    continue;
+                }
+            };
+            let backup = backup_dir.join(rel);
+            if !backup.is_file() {
+                report.failed.push(SkippedFile {
+                    filename: f.path.clone(),
+                    reason: "the original backup is missing, so the file was left as it is".to_string(),
+                });
+                continue;
+            }
+            match fs::copy(&backup, &target) {
+                Ok(_) => report.restored.push(f.path.clone()),
+                Err(e) => report.failed.push(SkippedFile { filename: f.path.clone(), reason: format!("restore failed: {e}") }),
+            }
+        } else {
+            match fs::remove_file(&target) {
+                Ok(()) => report.removed.push(f.path.clone()),
+                Err(e) => report.failed.push(SkippedFile { filename: f.path.clone(), reason: format!("delete failed: {e}") }),
+            }
+        }
+    }
+
+    // Verify: nothing we claim to have removed may still be on disk.
+    for p in &report.removed {
+        if Path::new(p).exists() {
+            report.failed.push(SkippedFile { filename: p.clone(), reason: "still present after delete".into() });
+        }
+    }
+
+    Ok(report)
+}

@@ -368,7 +368,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
     async (request) => {
       const pkg = await findPackageById(request.params.id);
       if (!pkg) throw notFound('Optimization package');
-      const { storageKey, filename, size, destination, operation, role, variant } = request.body;
+      const { storageKey, filename, size, destination, operation, role, variant, component } = request.body;
 
       assertSafeFilename(filename);
       // Role-aware: a streamline/launcher destination is a bare filename because
@@ -398,7 +398,7 @@ export async function adminPackagesModule(app: FastifyInstance) {
 
       const [row] = await db
         .insert(packageFiles)
-        .values({ packageId: pkg.id, filename, sha256, size, destination, operation, role, variant: variant ?? null, storageKey })
+        .values({ packageId: pkg.id, filename, sha256, size, destination, operation, role, variant: variant ?? null, component, storageKey })
         .returning();
       await recordAudit(request, { action: 'package.file_add', entityType: 'optimization_package', entityId: pkg.id, after: { filename, sha256, size } });
       return row;

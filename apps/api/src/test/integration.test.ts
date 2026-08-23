@@ -2592,6 +2592,160 @@ describe('audit regressions', () => {
   });
 });
 
+/**
+ * OptiScaler: one package carrying three classes of content — the installer
+ * drop-in, the selectable Plans, and the selectable Orders — combined into one
+ * install.
+ */
+describe('optiscaler installer / plans / orders', () => {
+  let adminToken: string;
+  let premiumToken: string;
+  let pkgId: string;
+
+  async function up(id: string, filename: string, body: Record<string, unknown>, content = Buffer.from(`bytes:${filename}:${JSON.stringify(body)}`)) {
+    const pre = (
+      await inject('POST', `/api/v1/admin/packages/${id}/files/presign`, {
+        token: adminToken,
+        body: { filename, size: content.length },
+      })
+    ).json as { uploadUrl: string; objectKey: string };
+    const key = pre.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+    await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(content.length) },
+      payload: content,
+    });
+    return inject('POST', `/api/v1/admin/packages/${id}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: pre.objectKey, filename, size: content.length, ...body },
+    });
+  }
+
+  beforeAll(async () => {
+    adminToken = ((await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    })).json as { accessToken: string }).accessToken;
+
+    const reg = await registerUser('user000077@example.test', 'OsPass123!', 'ospremium');
+    premiumToken = (reg.json as { accessToken: string }).accessToken;
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: premiumToken,
+      body: { planId: plans.data[0]!.id, idempotencyKey: 'os-suite-1' },
+    });
+    await inject('POST', '/api/v1/payments/mock/callback', {
+      body: { paymentId: (purchase.json as { paymentId: string }).paymentId },
+    });
+
+    const create = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'OptiScaler Suite', slug: 'optiscaler-suite', kind: 'optiscaler' },
+    });
+    pkgId = (create.json as { id: string }).id;
+
+    // base drop-in + 1 installer build + 8 plans + 12 orders
+    await up(pkgId, 'libxess.dll', { destination: 'OptiScaler/libxess.dll', role: 'relative', operation: 'replace', component: 'installer' });
+    await up(pkgId, 'OptiScaler.dll', { destination: 'OptiScaler.dll', role: 'launcher', operation: 'replace', component: 'installer', variant: 'Build A' });
+    for (let i = 1; i <= 8; i += 1) {
+      await up(pkgId, 'plan.ini', { destination: 'plan.ini', role: 'launcher', operation: 'replace', component: 'plan', variant: `Plan ${i}` });
+    }
+    for (let i = 1; i <= 12; i += 1) {
+      await up(pkgId, 'OptiScaler.ini', { destination: 'OptiScaler.ini', role: 'launcher', operation: 'replace', component: 'order', variant: `Order ${i}` });
+    }
+    await inject('POST', `/api/v1/admin/packages/${pkgId}/publish`, { token: adminToken, body: {} });
+  });
+
+  it('keeps all 8 plans and all 12 orders despite shared destinations', async () => {
+    // Every Plan ships plan.ini and every Order ships OptiScaler.ini. Deduping
+    // on destination alone would collapse each group to a single entry.
+    const s = (await inject('GET', '/api/v1/mfg/tools/optiscaler')).json as {
+      available: boolean;
+      installers: { name: string }[];
+      plans: { name: string }[];
+      orders: { name: string }[];
+      baseFileCount: number;
+    };
+    expect(s.available).toBe(true);
+    expect(s.installers.map((c) => c.name)).toEqual(['Build A']);
+    expect(s.plans).toHaveLength(8);
+    expect(s.orders).toHaveLength(12);
+    expect(s.baseFileCount).toBe(1);
+  });
+
+  it('refuses a download that leaves a group unchosen', async () => {
+    // Installing the drop-in with no Plan would look like success and deliver
+    // none of the configuration the user picked.
+    const res = await inject('POST', '/api/v1/mfg/tools/optiscaler/download?installer=Build%20A', { token: premiumToken });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.json)).toMatch(/plan/i);
+  });
+
+  it('refuses a plan or order that was never published', async () => {
+    expect(
+      (await inject('POST', '/api/v1/mfg/tools/optiscaler/download?installer=Build%20A&plan=Plan%2099&order=Order%201', { token: premiumToken })).status,
+    ).toBe(400);
+    expect(
+      (await inject('POST', '/api/v1/mfg/tools/optiscaler/download?installer=Build%20A&plan=Plan%201&order=Nope', { token: premiumToken })).status,
+    ).toBe(400);
+  });
+
+  it('returns base + exactly the chosen installer, plan and order', async () => {
+    const res = await inject(
+      'POST',
+      '/api/v1/mfg/tools/optiscaler/download?installer=Build%20A&plan=Plan%203&order=Order%207',
+      { token: premiumToken },
+    );
+    expect(res.status).toBe(200);
+    const { files } = res.json as { files: { component: string; variant: string | null; destination: string; url: string }[] };
+
+    expect(files).toHaveLength(4); // base + installer + plan + order
+    expect(new Set(files.map((f) => f.variant))).toEqual(new Set([null, 'Build A', 'Plan 3', 'Order 7']));
+    // No two files may target the same path — the native installer refuses that.
+    expect(new Set(files.map((f) => f.destination)).size).toBe(files.length);
+    // And the bytes really are the chosen ones, not another plan's.
+    const plan = files.find((f) => f.component === 'plan')!;
+    const url = new URL(plan.url);
+    const body = await app.inject({ method: 'GET', url: url.pathname + url.search });
+    expect(body.body).toContain('Plan 3');
+  });
+
+  it('never leaks another plan or order into the install', async () => {
+    for (const [p, o] of [['Plan 1', 'Order 1'], ['Plan 8', 'Order 12']] as const) {
+      const res = await inject(
+        'POST',
+        `/api/v1/mfg/tools/optiscaler/download?installer=Build%20A&plan=${encodeURIComponent(p)}&order=${encodeURIComponent(o)}`,
+        { token: premiumToken },
+      );
+      const { files } = res.json as { files: { variant: string | null }[] };
+      const others = files.filter((f) => f.variant !== null && f.variant !== 'Build A' && f.variant !== p && f.variant !== o);
+      expect(others, `${p}/${o} leaked ${others.map((f) => f.variant).join()}`).toEqual([]);
+    }
+  });
+
+  it('still gates the bytes behind a subscription', async () => {
+    expect((await inject('POST', '/api/v1/mfg/tools/optiscaler/download?installer=Build%20A&plan=Plan%201&order=Order%201')).status).toBe(401);
+  });
+
+  it('names a packaging conflict instead of failing during the install', async () => {
+    // A shared file and a chosen Plan both claiming one path would reach the
+    // native installer as "two files both want to write X" — accurate, but
+    // discovered after the download and impossible for a user to act on.
+    const clash = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'OptiScaler Clash', slug: 'optiscaler-clash', kind: 'streamline' },
+    });
+    const id = (clash.json as { id: string }).id;
+    await up(id, 'conf.ini', { destination: 'conf.ini', role: 'launcher', operation: 'replace', component: 'installer' });
+    await up(id, 'conf.ini', { destination: 'conf.ini', role: 'launcher', operation: 'replace', component: 'plan', variant: 'P1' });
+    await inject('POST', `/api/v1/admin/packages/${id}/publish`, { token: adminToken, body: {} });
+
+    const res = await inject('POST', '/api/v1/mfg/tools/streamline/download?plan=P1', { token: premiumToken });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.json)).toContain('conf.ini');
+  });
+});
+
 function awaitImportFs() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('node:fs') as typeof import('node:fs');

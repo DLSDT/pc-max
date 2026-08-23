@@ -14,6 +14,7 @@ import LibraryPage from './pages/LibraryPage';
 import MultiFrameGenerationPage from './pages/MultiFrameGenerationPage';
 import OptiFlowPage from './pages/OptiFlowPage';
 import OptiScalerPage from './pages/OptiScalerPage';
+import StreamlinePcMaxPage from './pages/StreamlinePcMaxPage';
 import OptimizedSettingPage from './pages/OptimizedSettingPage';
 import RecentlyViewedPage from './pages/RecentlyViewedPage';
 import RecommendedPage from './pages/RecommendedPage';
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="multi-frame-generation" element={<MultiFrameGenerationPage />} />
           <Route path="multi-frame-generation/optiscaler" element={<OptiScalerPage />} />
           <Route path="multi-frame-generation/optiflow" element={<OptiFlowPage />} />
+          <Route path="multi-frame-generation/streamline" element={<StreamlinePcMaxPage />} />
           <Route path="optimized-setting" element={<OptimizedSettingPage />} />
           <Route path="admin" element={<AdminPage />} />
           <Route path="games" element={<GamesPage />} />

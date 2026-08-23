@@ -1,5 +1,5 @@
 import { and, desc, eq, isNull } from 'drizzle-orm';
-import type { PackageFileRole } from '@goh/validation';
+import type { PackageComponent, PackageFileRole } from '@goh/validation';
 import { db } from '../db';
 import { optimizationPackageVersions, optimizationPackages, packageFiles } from '../db/schema';
 import { badRequest, notFound } from '../lib/errors';
@@ -113,7 +113,7 @@ export async function findGlobalPackageBySlug(slug: string) {
  * rather than a supported layout, so the newest published one wins and the
  * choice is deterministic instead of whatever the planner returns first.
  */
-export async function findPublishedToolPackage(kind: 'optiflow' | 'optiscaler') {
+export async function findPublishedToolPackage(kind: 'optiflow' | 'optiscaler' | 'streamline') {
   return db.query.optimizationPackages.findFirst({
     where: and(
       isNull(optimizationPackages.gameId),
@@ -153,7 +153,11 @@ export async function listPackageFiles(packageId: string) {
     // silently discard five of OptiScaler's six profiles, since every one of
     // them supplies its own OptiScaler.ini — the newest upload would win and
     // the rest would vanish from the manifest.
-    const key = `${r.variant ?? ''}\u0000${r.destination}`;
+    // Keyed by component AND variant AND destination. A Plan and an Order can
+    // both legitimately ship a file with the same name, and every Plan ships
+    // its own copy of the same config file — dropping either axis would let one
+    // silently supersede the others.
+    const key = `${r.component}\u0000${r.variant ?? ''}\u0000${r.destination}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -214,6 +218,7 @@ export async function publishPackage(packageId: string, changeNote: string | und
     operation: f.operation,
     role: f.role,
     variant: f.variant,
+    component: f.component,
     sortOrder: f.sortOrder,
   }));
 
@@ -262,3 +267,55 @@ export function toPackagePublic(pkg: typeof optimizationPackages.$inferSelect) {
 }
 
 export { optimizationPackageVersions };
+
+/**
+ * The selectable entries in one component group, in upload order.
+ *
+ * Returns exactly what the administrator published. It deliberately does not
+ * pad the list out to any expected count — a Plans list showing eight entries
+ * when six were uploaded would be two entries that install nothing.
+ */
+export function packageChoices(
+  files: { component: PackageComponent; variant: string | null; size: number; sortOrder: number; createdAt: Date }[],
+  component: PackageComponent,
+): { name: string; fileCount: number; totalBytes: number }[] {
+  const byName = new Map<string, { fileCount: number; totalBytes: number; sortOrder: number; createdAt: Date }>();
+  for (const f of files) {
+    if (f.component !== component || !f.variant) continue;
+    const prev = byName.get(f.variant);
+    if (prev) {
+      prev.fileCount += 1;
+      prev.totalBytes += f.size;
+      if (f.createdAt < prev.createdAt) prev.createdAt = f.createdAt;
+    } else {
+      byName.set(f.variant, { fileCount: 1, totalBytes: f.size, sortOrder: f.sortOrder, createdAt: f.createdAt });
+    }
+  }
+  return [...byName.entries()]
+    .sort((a, b) => a[1].sortOrder - b[1].sortOrder || a[1].createdAt.getTime() - b[1].createdAt.getTime())
+    .map(([name, v]) => ({ name, fileCount: v.fileCount, totalBytes: v.totalBytes }));
+}
+
+/** Files every install gets: installer content with no variant chosen. */
+export function baseFiles<T extends { component: PackageComponent; variant: string | null }>(files: T[]): T[] {
+  return files.filter((f) => f.component === 'installer' && f.variant === null);
+}
+
+/**
+ * The exact file set one OptiScaler install writes: shared base content, plus
+ * the chosen installer build, plus the chosen Plan, plus the chosen Order.
+ *
+ * A selection naming something that was never published resolves to no files
+ * for that group; the route rejects that rather than installing a partial
+ * configuration and calling it success.
+ */
+export function resolveInstallFiles<
+  T extends { component: PackageComponent; variant: string | null },
+>(files: T[], sel: { installer?: string | null; plan?: string | null; order?: string | null }): T[] {
+  return files.filter((f) => {
+    if (f.variant === null) return f.component === 'installer';
+    if (f.component === 'installer') return sel.installer != null && f.variant === sel.installer;
+    if (f.component === 'plan') return sel.plan != null && f.variant === sel.plan;
+    return sel.order != null && f.variant === sel.order;
+  });
+}

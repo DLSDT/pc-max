@@ -9,13 +9,36 @@ export type PackageArch = z.infer<typeof PackageArch>;
 
 /** Which product area a package belongs to — Optimized Setting (graphics
  *  config files) vs Multi-Frame Generation (upscaler/frame-gen components). */
-export const PackageKind = z.enum(['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler']);
+export const PackageKind = z.enum(['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler', 'streamline']);
 export type PackageKind = z.infer<typeof PackageKind>;
 
 /** The two tools the Multi-Frame Generation section splits into. Each is
  *  backed by exactly one published global package of the matching kind. */
-export const MfgTool = z.enum(['optiflow', 'optiscaler']);
+export const MfgTool = z.enum(['optiflow', 'optiscaler', 'streamline']);
 export type MfgTool = z.infer<typeof MfgTool>;
+
+/**
+ * What class of content a package file is.
+ *
+ * `variant` says WHICH one of a set a file belongs to; this says what kind of
+ * set that is. An OptiScaler package therefore carries all three at once and
+ * one install combines them: the installer drop-in, plus exactly one Plan,
+ * plus exactly one Order.
+ *
+ * `installer` with no variant is shared base content that every install gets.
+ */
+export const PackageComponent = z.enum(['installer', 'plan', 'order']);
+export type PackageComponent = z.infer<typeof PackageComponent>;
+
+/** One selectable entry in a component group, as the picker renders it. */
+export const PackageChoice = z.object({
+  name: z.string(),
+  /** How many files this choice contributes. Zero means nothing to install. */
+  fileCount: z.number().int(),
+  /** Total bytes, so the UI can show the download size before committing. */
+  totalBytes: z.number().int(),
+});
+export type PackageChoice = z.infer<typeof PackageChoice>;
 
 /**
  * Where a package file ends up.
@@ -89,6 +112,7 @@ export const PackageFileCompleteInput = z.object({
   /** Omit for a base file. Set to install this file only when the user picks
    *  that profile — see `PackageFilePublic.variant`. */
   variant: z.string().trim().min(1).max(60).optional(),
+  component: PackageComponent.default('installer'),
 });
 export type PackageFileCompleteInput = z.infer<typeof PackageFileCompleteInput>;
 
@@ -128,6 +152,7 @@ export const PackageFilePublic = z.object({
   /** Null for a base file that every install gets. Otherwise the profile this
    *  file belongs to; exactly one profile is installed at a time. */
   variant: z.string().nullable(),
+  component: PackageComponent,
   sortOrder: z.number().int(),
 });
 export type PackageFilePublic = z.infer<typeof PackageFilePublic>;
@@ -144,6 +169,7 @@ export const PackageDownloadResponse = z.object({
       operation: FileOperation,
       role: PackageFileRole,
       variant: z.string().nullable(),
+      component: PackageComponent,
       url: z.string(),
       /** URL validity window in seconds — the client should fetch promptly. */
       expiresIn: z.number().int(),
@@ -171,6 +197,7 @@ export const MfgToolPackageResponse = z.object({
       operation: FileOperation,
       role: PackageFileRole,
       variant: z.string().nullable(),
+      component: PackageComponent,
       url: z.string(),
       expiresIn: z.number().int(),
     }),
@@ -189,5 +216,14 @@ export const MfgToolStatusResponse = z.object({
   /** Selectable profiles, in upload order. Empty when the package has no
    *  variants — then there is nothing to choose and the base is the install. */
   variants: z.array(z.string()),
+  /** Selectable installer builds. Empty when the package ships a single
+   *  unnamed drop-in, which every install then uses. */
+  installers: z.array(PackageChoice),
+  /** Selectable Plans and Orders. The UI lists exactly what is published — it
+   *  never pads the list out to an expected count. */
+  plans: z.array(PackageChoice),
+  orders: z.array(PackageChoice),
+  /** Files every install gets regardless of the choices above. */
+  baseFileCount: z.number().int(),
 });
 export type MfgToolStatusResponse = z.infer<typeof MfgToolStatusResponse>;

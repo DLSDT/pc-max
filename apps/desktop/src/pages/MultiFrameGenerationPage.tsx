@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Cpu, Layers, Wand2 } from 'lucide-react';
+import { ArrowRight, Cpu, Layers, Wand2, Waves } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import HardwarePanel from '@/components/HardwarePanel';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
@@ -35,6 +35,14 @@ const TOOLS = [
     gpuKey: 'mfg.optiflow.gpuSupport',
     accent: 'tool-accent-green',
   },
+  {
+    to: '/multi-frame-generation/streamline',
+    icon: Waves,
+    titleKey: 'mfg.streamline.title',
+    descKey: 'mfg.streamline.cardDescription',
+    gpuKey: 'mfg.streamline.gpuSupport',
+    accent: 'tool-accent-blue',
+  },
 ] as const;
 
 export default function MultiFrameGenerationPage() {
@@ -50,7 +58,7 @@ export default function MultiFrameGenerationPage() {
 
       {access.allowed ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {TOOLS.map(({ to, icon: Icon, titleKey, descKey, gpuKey, accent }) => (
               <Link
                 key={to}

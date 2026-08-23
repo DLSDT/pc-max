@@ -294,11 +294,24 @@ export const api = {
    *  uploaded yet" must not be shown to the user as a subscription problem. */
   mfgToolStatus: (tool: MfgTool) => request<MfgToolStatusResponse>(`/mfg/tools/${tool}`),
   /** Entitlement-gated manifest with signed per-file URLs. */
-  mfgToolDownload: (tool: MfgTool, variant?: string | null) =>
-    request<MfgToolPackageResponse>(
-      `/mfg/tools/${tool}/download${variant ? `?variant=${encodeURIComponent(variant)}` : ''}`,
-      { method: 'POST', authed: true },
-    ),
+  mfgToolDownload: (
+    tool: MfgTool,
+    sel?: string | null | { installer?: string | null; plan?: string | null; order?: string | null },
+  ) => {
+    const q = new URLSearchParams();
+    if (typeof sel === 'string') q.set('variant', sel);
+    else if (sel) {
+      // Only send what was chosen; an absent group means the package has none.
+      if (sel.installer) q.set('installer', sel.installer);
+      if (sel.plan) q.set('plan', sel.plan);
+      if (sel.order) q.set('order', sel.order);
+    }
+    const qs = q.toString();
+    return request<MfgToolPackageResponse>(`/mfg/tools/${tool}/download${qs ? `?${qs}` : ''}`, {
+      method: 'POST',
+      authed: true,
+    });
+  },
   updateMe: (body: { username?: string }) => request<UserPublic>('/me', { method: 'PATCH', body, authed: true }),
   getFavorites: () => request<GameListResponse>('/favorites', { authed: true }),
   addFavorite: (gameId: string) =>

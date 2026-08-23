@@ -61,6 +61,8 @@ export type {
   PackagePublic,
   PackageFilePublic,
   PackageFileRole,
+  PackageComponent,
+  PackageChoice,
   PackageDownloadResponse,
   MfgTool,
   MfgToolPackageResponse,

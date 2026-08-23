@@ -133,11 +133,16 @@ export function componentNames(files: { destination: string; role: PackageFileRo
   return files.filter((f) => f.role === 'streamline').map((f) => f.destination);
 }
 
+export type ToolSelection =
+  | string
+  | null
+  | { installer?: string | null; plan?: string | null; order?: string | null };
+
 export interface InstallOptions {
   tool: MfgTool;
   exePath: string;
-  /** Which profile to install, for a package that offers them. */
-  variant?: string | null;
+  /** A single profile name, or an installer/plan/order combination. */
+  variant?: ToolSelection;
   onProgress?: (p: FetchProgress) => void;
 }
 
@@ -184,4 +189,32 @@ export function statusErrorFor(err: unknown): StatusErrorKind {
     return { message: err.message };
   }
   return { key: 'mfg.serverUnreachable' };
+}
+
+/**
+ * Undo a recorded install.
+ *
+ * The record — which files were written, which of them replaced something, and
+ * where the originals were backed up — is the only input. Nothing is matched by
+ * name, so a copy of the same DLL the user put somewhere themselves is never
+ * touched.
+ */
+export interface UninstallReport {
+  restored: string[];
+  removed: string[];
+  failed: { filename: string; reason: string }[];
+  missing: string[];
+}
+
+export async function uninstallTool(args: {
+  gameDir: string;
+  backupDir: string;
+  files: { path: string; replaced: boolean }[];
+}): Promise<UninstallReport> {
+  requireShell();
+  if (args.files.length === 0) {
+    throw new OptiFlowError('There is no record of what was installed, so nothing can be safely removed.');
+  }
+  const { invoke } = await import('@tauri-apps/api/core');
+  return (await invoke('optiflow_uninstall', args)) as UninstallReport;
 }

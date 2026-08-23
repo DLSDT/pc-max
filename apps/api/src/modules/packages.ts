@@ -72,6 +72,7 @@ export async function packagesModule(app: FastifyInstance) {
           operation: f.operation,
           role: f.role,
           variant: f.variant,
+          component: f.component,
           sortOrder: f.sortOrder,
         })),
       };
@@ -109,6 +110,7 @@ export async function packagesModule(app: FastifyInstance) {
           operation: f.operation,
           role: f.role,
           variant: f.variant,
+          component: f.component,
           url: signed[i]!,
           expiresIn: config.DOWNLOAD_URL_TTL,
         })),

@@ -127,6 +127,20 @@
       "when": 1787340062148,
       "tag": "0017_package_file_variant",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1787340063148,
+      "tag": "0018_package_component",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1787340064148,
+      "tag": "0019_streamline_kind",
+      "breakpoints": true
     }
   ]
 }

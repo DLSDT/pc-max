@@ -4,15 +4,16 @@ import { ArrowLeft, Loader2, Plus, Rocket, Settings2, Trash2, Upload } from 'luc
 import { api } from '@/lib/api';
 import { errMessage, iconBtnClass, inputClass, LoadingState, ErrorState, EmptyState, primaryBtnClass, dangerIconBtnClass, TableWrap } from './shared';
 
-const KINDS = ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler'] as const;
+const KINDS = ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler', 'streamline'] as const;
 const GPU_VENDORS = ['any', 'nvidia', 'amd', 'intel'] as const;
 const ARCHES = ['any', 'x64', 'arm64'] as const;
 const OPERATIONS = ['replace', 'add'] as const;
 const ROLES = ['relative', 'streamline', 'launcher'] as const;
+const COMPONENTS = ['installer', 'plan', 'order'] as const;
 
 /** Kinds whose packages are global — the same bytes for every game, so the
  *  game select is not just optional but wrong to fill in. */
-const GLOBAL_KINDS = new Set<string>(['optiflow', 'optiscaler']);
+const GLOBAL_KINDS = new Set<string>(['optiflow', 'optiscaler', 'streamline']);
 
 /** i18n key + badge colour per package kind (single source for both selects). */
 const KIND_META: Record<(typeof KINDS)[number], { i18nKey: string; badge: string }> = {
@@ -21,6 +22,7 @@ const KIND_META: Record<(typeof KINDS)[number], { i18nKey: string; badge: string
   upscaler: { i18nKey: 'admin.kindUpscaler', badge: 'bg-emerald-500/10 text-emerald-400' },
   optiflow: { i18nKey: 'admin.kindOptiFlow', badge: 'bg-sky-500/10 text-sky-400' },
   optiscaler: { i18nKey: 'admin.kindOptiScaler', badge: 'bg-violet-500/10 text-violet-400' },
+  streamline: { i18nKey: 'admin.kindStreamline', badge: 'bg-teal-500/10 text-teal-400' },
 };
 
 function kindMeta(kind: string) {
@@ -275,6 +277,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const [operation, setOperation] = useState<(typeof OPERATIONS)[number]>('replace');
   const [role, setRole] = useState<(typeof ROLES)[number]>('relative');
   const [variant, setVariant] = useState('');
+  const [component, setComponent] = useState<(typeof COMPONENTS)[number]>('installer');
 
   const [form, setForm] = useState<Record<string, unknown>>({});
 
@@ -371,6 +374,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
         operation,
         role,
         variant: variant.trim() || undefined,
+        component,
       });
       setDestination('');
       load();
@@ -462,6 +466,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
         <h3 className="text-sm font-semibold">{t('admin.packageFiles')}</h3>
         <p className="text-xs text-muted-foreground">{t(`admin.roleHint_${role}`)}</p>
         <p className="text-xs text-muted-foreground">{t('admin.variantHint')}</p>
+        <p className="text-xs text-muted-foreground">{t('admin.componentHint')}</p>
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={destination}
@@ -480,10 +485,22 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
           <select value={operation} onChange={(e) => setOperation(e.target.value as (typeof OPERATIONS)[number])} className={inputClass}>
             {OPERATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
+          <select
+            value={component}
+            onChange={(e) => setComponent(e.target.value as (typeof COMPONENTS)[number])}
+            className={inputClass}
+            title={t('admin.componentHint')}
+          >
+            {COMPONENTS.map((c) => (
+              <option key={c} value={c}>
+                {t(`admin.component_${c}`)}
+              </option>
+            ))}
+          </select>
           <input
             value={variant}
             onChange={(e) => setVariant(e.target.value)}
-            placeholder={t('admin.variantPlaceholder')}
+            placeholder={component === 'installer' ? t('admin.variantPlaceholder') : t('admin.namePlaceholder')}
             dir="ltr"
             className={`${inputClass} max-w-44`}
             title={t('admin.variantHint')}
@@ -504,6 +521,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
                   <th className="px-4 py-2.5">{t('admin.name')}</th>
                   <th className="px-4 py-2.5">{t('admin.destination')}</th>
                   <th className="px-4 py-2.5">{t('admin.fileRole')}</th>
+                  <th className="px-4 py-2.5">{t('admin.component')}</th>
                   <th className="px-4 py-2.5">{t('admin.variant')}</th>
                   <th className="px-4 py-2.5">{t('admin.operation')}</th>
                   <th className="px-4 py-2.5 text-right">{t('admin.actions')}</th>
@@ -515,6 +533,9 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
                     <td className="px-4 py-2.5 font-medium" dir="ltr">{String(f.filename)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">{String(f.destination)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{t(`admin.role_${String(f.role ?? 'relative')}`)}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {t(`admin.component_${String(f.component ?? 'installer')}`)}
+                    </td>
                     <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">
                       {f.variant ? String(f.variant) : <span className="italic">{t('admin.variantBase')}</span>}
                     </td>
