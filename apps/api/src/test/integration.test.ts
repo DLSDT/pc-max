@@ -2746,6 +2746,158 @@ describe('optiscaler installer / plans / orders', () => {
   });
 });
 
+/**
+ * AI Optical Flow: one package, two selectable axes — which Unlocker build and
+ * which Streamline package — resolved through the same component machinery as
+ * OptiScaler rather than a second code path.
+ */
+describe('ai optical flow unlocker / streamline', () => {
+  let adminToken: string;
+  let premiumToken: string;
+  let pkgId: string;
+
+  async function up(id: string, filename: string, body: Record<string, unknown>, content = Buffer.from(`b:${filename}:${JSON.stringify(body)}`)) {
+    const pre = (
+      await inject('POST', `/api/v1/admin/packages/${id}/files/presign`, { token: adminToken, body: { filename, size: content.length } })
+    ).json as { uploadUrl: string; objectKey: string };
+    const key = pre.uploadUrl.split('/api/v1/uploads/packages/put/')[1]!;
+    await app.inject({
+      method: 'PUT',
+      url: `/api/v1/uploads/packages/put/${key}`,
+      headers: { 'content-type': 'application/octet-stream', 'content-length': String(content.length) },
+      payload: content,
+    });
+    return inject('POST', `/api/v1/admin/packages/${id}/files/complete`, {
+      token: adminToken,
+      body: { storageKey: pre.objectKey, filename, size: content.length, ...body },
+    });
+  }
+
+  beforeAll(async () => {
+    adminToken = ((await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    })).json as { accessToken: string }).accessToken;
+
+    const reg = await registerUser('user000088@example.test', 'AofPass123!', 'aofpremium');
+    premiumToken = (reg.json as { accessToken: string }).accessToken;
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { id: string }[] };
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: premiumToken,
+      body: { planId: plans.data[0]!.id, idempotencyKey: 'aof-suite-0001' },
+    });
+    await inject('POST', '/api/v1/payments/mock/callback', {
+      body: { paymentId: (purchase.json as { paymentId: string }).paymentId },
+    });
+    pkgId = ((await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'AI Optical Flow', slug: 'aof-suite', kind: 'optiflow' },
+    })).json as { id: string }).id;
+
+    // 3 unlocker builds, each a launcher-side version.dll
+    for (const v of ['Unlocker 7', 'Unlocker 8', 'Unlocker 13']) {
+      await up(pkgId, 'version.dll', { destination: 'version.dll', role: 'launcher', operation: 'replace', component: 'unlocker', variant: v });
+    }
+    // 4 streamline packages, each replacing the same two components in place
+    for (const v of ['Streamline PC Max V1', 'Streamline PC Max V2', 'Streamline 2-11', 'Streamline 2-12']) {
+      await up(pkgId, 'sl.interposer.dll', { destination: 'sl.interposer.dll', role: 'streamline', operation: 'replace', component: 'streamline', variant: v });
+      await up(pkgId, 'sl.dlss_g.dll', { destination: 'sl.dlss_g.dll', role: 'streamline', operation: 'replace', component: 'streamline', variant: v });
+    }
+    await inject('POST', `/api/v1/admin/packages/${pkgId}/publish`, { token: adminToken, body: {} });
+  });
+
+  it('keeps all 3 unlockers and all 4 streamline packages despite shared filenames', async () => {
+    // Every unlocker ships version.dll and every streamline package ships the
+    // same two component names; dropping the component axis from the manifest
+    // dedupe would collapse each group to one entry.
+    const s = (await inject('GET', '/api/v1/mfg/tools/optiflow')).json as {
+      available: boolean;
+      unlockers: { name: string; fileCount: number }[];
+      streamlines: { name: string; fileCount: number }[];
+    };
+    expect(s.available).toBe(true);
+    expect(s.unlockers.map((c) => c.name)).toEqual(['Unlocker 7', 'Unlocker 8', 'Unlocker 13']);
+    expect(s.streamlines.map((c) => c.name)).toEqual([
+      'Streamline PC Max V1',
+      'Streamline PC Max V2',
+      'Streamline 2-11',
+      'Streamline 2-12',
+    ]);
+    expect(s.streamlines.every((c) => c.fileCount === 2)).toBe(true);
+  });
+
+  it('refuses an install that leaves either axis unchosen', async () => {
+    for (const q of ['unlocker=Unlocker%207', 'streamline=Streamline%202-11']) {
+      const res = await inject('POST', `/api/v1/mfg/tools/optiflow/download?${q}`, { token: premiumToken });
+      expect(res.status, q).toBe(400);
+    }
+  });
+
+  it('installs exactly the versions chosen, never a different one', async () => {
+    // The requirement the spec is most explicit about: pick 2-11 and you get
+    // 2-11, not whichever package happened to be uploaded last.
+    for (const [u, sl] of [
+      ['Unlocker 7', 'Streamline PC Max V1'],
+      ['Unlocker 13', 'Streamline 2-12'],
+      ['Unlocker 8', 'Streamline 2-11'],
+    ] as const) {
+      const res = await inject(
+        'POST',
+        `/api/v1/mfg/tools/optiflow/download?unlocker=${encodeURIComponent(u)}&streamline=${encodeURIComponent(sl)}`,
+        { token: premiumToken },
+      );
+      expect(res.status, `${u}/${sl}`).toBe(200);
+      const { files } = res.json as { files: { component: string; variant: string | null; destination: string; url: string }[] };
+
+      expect(new Set(files.map((f) => f.variant)), `${u}/${sl}`).toEqual(new Set([u, sl]));
+      expect(files.filter((f) => f.component === 'unlocker')).toHaveLength(1);
+      expect(files.filter((f) => f.component === 'streamline')).toHaveLength(2);
+      expect(new Set(files.map((f) => f.destination)).size).toBe(files.length);
+
+      // And the bytes are that build's, not another's.
+      const unlockerFile = files.find((f) => f.component === 'unlocker')!;
+      const url = new URL(unlockerFile.url);
+      const body = await app.inject({ method: 'GET', url: url.pathname + url.search });
+      expect(body.body, `${u} bytes`).toContain(u);
+    }
+  });
+
+  it('rejects an unknown version by name and lists the real ones', async () => {
+    const res = await inject('POST', '/api/v1/mfg/tools/optiflow/download?unlocker=Unlocker%2099&streamline=Streamline%202-11', {
+      token: premiumToken,
+    });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.json)).toContain('Unlocker 7');
+  });
+
+  it('still gates the bytes behind a subscription', async () => {
+    expect(
+      (await inject('POST', '/api/v1/mfg/tools/optiflow/download?unlocker=Unlocker%207&streamline=Streamline%202-11')).status,
+    ).toBe(401);
+  });
+
+  it('keeps two groups apart when they share a version name and a filename', async () => {
+    // Nothing stops an administrator naming an Unlocker and a Streamline
+    // package both "V2", each shipping a file called config.ini. Deduping the
+    // manifest on (variant, destination) alone would keep one and silently
+    // drop the other, so one of the two groups would lose an entry.
+    const id = ((await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'Name Clash', slug: 'aof-name-clash', kind: 'streamline' },
+    })).json as { id: string }).id;
+
+    await up(id, 'config.ini', { destination: 'config.ini', role: 'launcher', operation: 'replace', component: 'unlocker', variant: 'V2' });
+    await up(id, 'config.ini', { destination: 'config.ini', role: 'streamline', operation: 'replace', component: 'streamline', variant: 'V2' });
+    await inject('POST', `/api/v1/admin/packages/${id}/publish`, { token: adminToken, body: {} });
+
+    const s = (await inject('GET', '/api/v1/mfg/tools/streamline')).json as {
+      unlockers: { name: string }[];
+      streamlines: { name: string }[];
+    };
+    expect(s.unlockers.map((c) => c.name), 'unlocker V2 was dropped').toEqual(['V2']);
+    expect(s.streamlines.map((c) => c.name), 'streamline V2 was dropped').toEqual(['V2']);
+  });
+});
+
 function awaitImportFs() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('node:fs') as typeof import('node:fs');

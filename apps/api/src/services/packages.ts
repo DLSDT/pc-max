@@ -302,20 +302,24 @@ export function baseFiles<T extends { component: PackageComponent; variant: stri
 }
 
 /**
- * The exact file set one OptiScaler install writes: shared base content, plus
- * the chosen installer build, plus the chosen Plan, plus the chosen Order.
+ * The exact file set one install writes: shared base content, plus the chosen
+ * variant of every component group that has one.
  *
- * A selection naming something that was never published resolves to no files
- * for that group; the route rejects that rather than installing a partial
- * configuration and calling it success.
+ * Keyed by component rather than hard-coded to a tool's axes, so OptiScaler
+ * (installer / plan / order) and AI Optical Flow (unlocker / streamline) go
+ * through the same path instead of each growing its own resolver.
+ *
+ * A group named in `sel` that was never published contributes nothing; the
+ * route rejects that rather than installing a partial configuration and
+ * calling it success.
  */
-export function resolveInstallFiles<
-  T extends { component: PackageComponent; variant: string | null },
->(files: T[], sel: { installer?: string | null; plan?: string | null; order?: string | null }): T[] {
+export function resolveInstallFiles<T extends { component: PackageComponent; variant: string | null }>(
+  files: T[],
+  sel: Partial<Record<PackageComponent, string | null | undefined>>,
+): T[] {
   return files.filter((f) => {
+    // Unnamed installer content is the shared base every install gets.
     if (f.variant === null) return f.component === 'installer';
-    if (f.component === 'installer') return sel.installer != null && f.variant === sel.installer;
-    if (f.component === 'plan') return sel.plan != null && f.variant === sel.plan;
-    return sel.order != null && f.variant === sel.order;
+    return sel[f.component] === f.variant;
   });
 }

@@ -294,17 +294,14 @@ export const api = {
    *  uploaded yet" must not be shown to the user as a subscription problem. */
   mfgToolStatus: (tool: MfgTool) => request<MfgToolStatusResponse>(`/mfg/tools/${tool}`),
   /** Entitlement-gated manifest with signed per-file URLs. */
-  mfgToolDownload: (
-    tool: MfgTool,
-    sel?: string | null | { installer?: string | null; plan?: string | null; order?: string | null },
-  ) => {
+  mfgToolDownload: (tool: MfgTool, sel?: string | null | Partial<Record<string, string | null>>) => {
     const q = new URLSearchParams();
     if (typeof sel === 'string') q.set('variant', sel);
     else if (sel) {
-      // Only send what was chosen; an absent group means the package has none.
-      if (sel.installer) q.set('installer', sel.installer);
-      if (sel.plan) q.set('plan', sel.plan);
-      if (sel.order) q.set('order', sel.order);
+      // Send only what was chosen; an absent group means the package has none.
+      for (const [component, value] of Object.entries(sel)) {
+        if (value) q.set(component, value);
+      }
     }
     const qs = q.toString();
     return request<MfgToolPackageResponse>(`/mfg/tools/${tool}/download${qs ? `?${qs}` : ''}`, {

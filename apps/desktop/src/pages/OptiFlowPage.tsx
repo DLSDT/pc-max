@@ -1,8 +1,7 @@
-import MfgToolInstaller from '@/components/MfgToolInstaller';
+import AiOpticalFlowPage from './AiOpticalFlowPage';
 
-/** OptiFlow — replaces the game's Streamline components and drops the
- *  unlocker beside the launcher. The flow itself is shared with OptiScaler;
- *  what differs is the published manifest. */
+/** Route target for AI Optical Flow. The page itself lives in
+ *  AiOpticalFlowPage so the filename matches the product name. */
 export default function OptiFlowPage() {
-  return <MfgToolInstaller tool="optiflow" />;
+  return <AiOpticalFlowPage />;
 }

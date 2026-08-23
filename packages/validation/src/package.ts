@@ -27,7 +27,7 @@ export type MfgTool = z.infer<typeof MfgTool>;
  *
  * `installer` with no variant is shared base content that every install gets.
  */
-export const PackageComponent = z.enum(['installer', 'plan', 'order']);
+export const PackageComponent = z.enum(['installer', 'plan', 'order', 'unlocker', 'streamline']);
 export type PackageComponent = z.infer<typeof PackageComponent>;
 
 /** One selectable entry in a component group, as the picker renders it. */
@@ -223,6 +223,9 @@ export const MfgToolStatusResponse = z.object({
    *  never pads the list out to an expected count. */
   plans: z.array(PackageChoice),
   orders: z.array(PackageChoice),
+  /** AI Optical Flow's two axes: which Unlocker build, which Streamline package. */
+  unlockers: z.array(PackageChoice),
+  streamlines: z.array(PackageChoice),
   /** Files every install gets regardless of the choices above. */
   baseFileCount: z.number().int(),
 });

@@ -1,22 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  AlertTriangle,
-  ArrowLeft,
-  CheckCircle2,
-  FolderOpen,
-  Loader2,
-  PackageCheck,
-  ShieldCheck,
-  Trash2,
-} from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, FolderOpen, Loader2, PackageCheck, ShieldCheck, Trash2 } from 'lucide-react';
 import type { MfgToolStatusResponse } from '@goh/types';
 import ChoiceGrid from '@/components/ChoiceGrid';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { api, ApiError } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
+import { gpuLabel } from '@/lib/hardware';
+import { supportsOpticalFlow } from '@/lib/gpuProfile';
+import { useHardware } from '@/store/hardware';
 import {
   installTool,
   pickGameExecutable,
@@ -31,9 +25,9 @@ import {
 import { clearInstall, getInstall, recordInstall, type MfgInstall } from '@/lib/mfgInstalls';
 import { cn } from '@/lib/utils';
 
-/** How many the product ships; used only to tell the user when fewer are published. */
-const EXPECTED_PLANS = 8;
-const EXPECTED_ORDERS = 12;
+/** How many builds the tool ships with; used only to say when fewer are published. */
+const EXPECTED_UNLOCKERS = 3;
+const EXPECTED_STREAMLINES = 4;
 
 type Stage = 'idle' | 'scanning' | 'installing' | 'removing';
 
@@ -61,19 +55,24 @@ function Notice({
 }
 
 /**
- * OptiScaler — configure, then install.
+ * AI Optical Flow — choose an Unlocker, choose a Streamline package, choose the
+ * game, install.
  *
- * The sequence is deliberate: installer, Plan, Order, game, install. Each
- * choice is a real published package component, and the Install button stays
- * disabled until every group that HAS choices has one, so the user can never
- * reach an install that silently drops half of what they picked.
+ * The two steps the installer performs are already the native layer's two file
+ * roles, so nothing here re-implements them: the Unlocker is a `launcher` file
+ * (written beside the executable the user picked) and the Streamline package is
+ * `streamline` files (each replacing the game's own copy wherever the recursive
+ * scan finds it, at every location, with the original backed up first). A
+ * component the game does not ship is reported, never created.
  *
- * Removal is driven entirely by the record written at install time, never by
- * matching filenames — see `lib/optiscalerInstalls.ts`.
+ * Removal reads the record written at install time and undoes exactly that —
+ * see `lib/mfgInstalls.ts`.
  */
-export default function OptiScalerPage() {
+export default function AiOpticalFlowPage() {
   const { t } = useTranslation();
   const access = useFeatureAccess('multi_frame_generation');
+  const hardware = useHardware((s) => s.profile);
+  const ensureHardware = useHardware((s) => s.ensure);
 
   const [status, setStatus] = useState<MfgToolStatusResponse | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -81,9 +80,8 @@ export default function OptiScalerPage() {
   const [step, setStep] = useState<string | null>(null);
   const [progress, setProgress] = useState<FetchProgress | null>(null);
 
-  const [installer, setInstaller] = useState<string | null>(null);
-  const [plan, setPlan] = useState<string | null>(null);
-  const [order, setOrder] = useState<string | null>(null);
+  const [unlocker, setUnlocker] = useState<string | null>(null);
+  const [streamline, setStreamline] = useState<string | null>(null);
 
   const [exePath, setExePath] = useState<string | null>(null);
   const [scan, setScan] = useState<ScanReport | null>(null);
@@ -94,9 +92,13 @@ export default function OptiScalerPage() {
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   useEffect(() => {
+    void ensureHardware();
+  }, [ensureHardware]);
+
+  useEffect(() => {
     let alive = true;
     api
-      .mfgToolStatus('optiscaler')
+      .mfgToolStatus('optiflow')
       .then((res) => alive && setStatus(res))
       .catch((err) => {
         if (!alive) return;
@@ -109,22 +111,42 @@ export default function OptiScalerPage() {
   }, [t]);
 
   const busy = stage !== 'idle';
-  const installers = status?.installers ?? [];
-  const plans = status?.plans ?? [];
-  const orders = status?.orders ?? [];
+  const unlockers = status?.unlockers ?? [];
+  const streamlines = status?.streamlines ?? [];
+  // null = undetected; only a definite false means this card cannot run it.
+  const gpuOk = supportsOpticalFlow(hardware);
 
-  // A group only counts as "chosen" when it actually offers something.
+  /** The Streamline filenames the chosen package would replace. */
+  const wantedComponents = useMemo(
+    () =>
+      (status?.manifest ?? [])
+        .filter((f) => f.component === 'streamline' && f.variant === streamline)
+        .map((f) => f.destination),
+    [status, streamline],
+  );
+
   const missing = useMemo(() => {
     const m: string[] = [];
-    if (installers.length > 0 && !installer) m.push(t('optiscaler.installer'));
-    if (plans.length > 0 && !plan) m.push(t('optiscaler.plans'));
-    if (orders.length > 0 && !order) m.push(t('optiscaler.orders'));
+    if (unlockers.length > 0 && !unlocker) m.push(t('aof.unlocker'));
+    if (streamlines.length > 0 && !streamline) m.push(t('aof.streamline'));
     if (!exePath) m.push(t('optiscaler.game'));
     else if (!scan) m.push(t('optiscaler.validGamePath'));
     return m;
-  }, [installers.length, plans.length, orders.length, installer, plan, order, exePath, scan, t]);
+  }, [unlockers.length, streamlines.length, unlocker, streamline, exePath, scan, t]);
 
   const canInstall = Boolean(status?.available) && missing.length === 0 && isTauriShell() && !busy;
+
+  // Re-scan when the Streamline choice changes: which of the game's files would
+  // be replaced depends on which package was picked.
+  const rescan = useCallback(
+    async (path: string) => {
+      const report = await scanGame(path, wantedComponents);
+      setScan(report);
+      setExisting(getInstall('optiflow', report.gameDir));
+      return report;
+    },
+    [wantedComponents],
+  );
 
   const chooseGame = useCallback(async () => {
     setError(null);
@@ -135,10 +157,8 @@ export default function OptiScalerPage() {
       if (!picked) return;
       setExePath(picked);
       setStage('scanning');
-      setStep(t('optiscaler.stepLocating'));
-      const report = await scanGame(picked, []);
-      setScan(report);
-      setExisting(getInstall('optiscaler', report.gameDir));
+      setStep(t('aof.stepFinding'));
+      await rescan(picked);
     } catch (err) {
       setScan(null);
       setExisting(null);
@@ -147,7 +167,14 @@ export default function OptiScalerPage() {
       setStage('idle');
       setStep(null);
     }
-  }, [t]);
+  }, [rescan, t]);
+
+  useEffect(() => {
+    if (!exePath || !streamline) return;
+    void rescan(exePath).catch(() => {
+      /* the picker already reported any failure */
+    });
+  }, [streamline, exePath, rescan]);
 
   const runInstall = useCallback(async () => {
     if (!exePath || !scan) return;
@@ -155,31 +182,31 @@ export default function OptiScalerPage() {
     setRemoved(null);
     setStage('installing');
     try {
-      setStep(t('optiscaler.stepPreparing'));
+      setStep(t('aof.stepValidating'));
       const report = await installTool({
-        tool: 'optiscaler',
+        tool: 'optiflow',
         exePath,
-        variant: { installer, plan, order },
+        variant: { unlocker, streamline },
         onProgress: (p) => {
-          setStep(t('optiscaler.stepDownloading'));
+          setStep(t('aof.stepInstalling'));
           setProgress(p);
         },
       });
       setStep(t('optiscaler.stepVerifying'));
 
       const entry: MfgInstall = {
-        tool: 'optiscaler',
+        tool: 'optiflow',
         gameDir: report.gameDir,
         launcherDir: report.launcherDir,
         exePath,
         version: status?.package?.version ?? '—',
-        selection: { installer, plan, order },
+        selection: { unlocker, streamline },
         installedAt: new Date().toISOString(),
         backupDir: report.backupDir,
         files: report.written.map((w) => ({ path: w.path, replaced: w.replaced })),
       };
-      // Record before reporting success: without it, Remove cannot identify
-      // these files later and would have nothing safe to act on.
+      // Record before reporting success: without it Remove cannot identify
+      // these files and would have nothing safe to act on.
       try {
         recordInstall(entry);
       } catch {
@@ -194,7 +221,7 @@ export default function OptiScalerPage() {
       setStep(null);
       setProgress(null);
     }
-  }, [exePath, scan, installer, plan, order, status, t]);
+  }, [exePath, scan, unlocker, streamline, status, t]);
 
   const runRemove = useCallback(async () => {
     if (!existing) return;
@@ -210,9 +237,9 @@ export default function OptiScalerPage() {
       });
       setRemoved(report);
       // Keep the record when something could not be undone — it is the only
-      // handle on the files that are still there.
+      // handle on the files still there.
       if (report.failed.length === 0) {
-        clearInstall('optiscaler', existing.gameDir);
+        clearInstall('optiflow', existing.gameDir);
         setExisting(null);
       }
     } catch (err) {
@@ -226,7 +253,7 @@ export default function OptiScalerPage() {
 
   if (!access.allowed) {
     return (
-      <div className="tool-accent-red space-y-6">
+      <div className="tool-accent-green space-y-6">
         <BackLink />
         <SubscriptionGate access={access} title={t('mfg.lockedTitle')} description={t('mfg.lockedHint')} />
       </div>
@@ -234,63 +261,57 @@ export default function OptiScalerPage() {
   }
 
   return (
-    <div className="tool-accent-red space-y-6">
+    <div className="tool-accent-green space-y-6">
       <BackLink />
 
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('mfg.optiscaler.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('optiscaler.subtitle')}</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('mfg.optiflow.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('aof.subtitle')}</p>
       </header>
 
       {!isTauriShell() && <Notice tone="warn" icon={AlertTriangle}>{t('mfg.desktopOnly')}</Notice>}
       {statusError && <Notice tone="warn" icon={AlertTriangle}>{statusError}</Notice>}
-      {status && !status.available && <Notice tone="warn" icon={AlertTriangle}>{t('mfg.optiscaler.notPublished')}</Notice>}
+      {status && !status.available && <Notice tone="warn" icon={AlertTriangle}>{t('mfg.optiflow.notPublished')}</Notice>}
+      {gpuOk === false && (
+        <Notice tone="warn" icon={AlertTriangle}>
+          {t('mfg.optiflow.unsupportedGpu', { gpu: gpuLabel(hardware ?? {}) ?? '' })}
+        </Notice>
+      )}
+      <p className="text-xs text-muted-foreground">{t('mfg.optiflow.gpuSupport')}</p>
       {status?.available && (
         <p className="text-xs text-muted-foreground">
-          {t('mfg.packageVersion', { name: status.package?.name ?? 'OptiScaler', version: status.package?.version ?? '—' })}
-          {status.baseFileCount > 0 && ` · ${t('optiscaler.baseFiles', { count: status.baseFileCount })}`}
+          {t('mfg.packageVersion', { name: status.package?.name ?? 'AI Optical Flow', version: status.package?.version ?? '—' })}
         </p>
       )}
 
-      {/* 1 — Opti Installer */}
+      {/* 1 — Unlocker */}
       <ChoiceGrid
-        label={t('optiscaler.installer')}
-        hint={t('optiscaler.installerHint')}
-        choices={installers}
-        value={installer}
-        onChange={setInstaller}
+        label={t('aof.unlocker')}
+        hint={t('aof.unlockerHint')}
+        choices={unlockers}
+        value={unlocker}
+        onChange={setUnlocker}
         disabled={busy}
-        emptyMessage={t('optiscaler.installerEmpty')}
+        expected={EXPECTED_UNLOCKERS}
+        emptyMessage={t('aof.unlockerEmpty')}
       />
 
-      {/* 2 — Opti Plans */}
+      {/* 2 — Streamline */}
       <ChoiceGrid
-        label={t('optiscaler.plans')}
-        hint={t('optiscaler.plansHint')}
-        choices={plans}
-        value={plan}
-        onChange={setPlan}
+        label={t('aof.streamline')}
+        hint={t('aof.streamlineHint')}
+        choices={streamlines}
+        value={streamline}
+        onChange={setStreamline}
         disabled={busy}
-        expected={EXPECTED_PLANS}
-        emptyMessage={t('optiscaler.plansEmpty')}
+        expected={EXPECTED_STREAMLINES}
+        emptyMessage={t('aof.streamlineEmpty')}
       />
 
-      {/* 3 — Opti Orders */}
-      <ChoiceGrid
-        label={t('optiscaler.orders')}
-        hint={t('optiscaler.ordersHint')}
-        choices={orders}
-        value={order}
-        onChange={setOrder}
-        disabled={busy}
-        expected={EXPECTED_ORDERS}
-        emptyMessage={t('optiscaler.ordersEmpty')}
-      />
-
-      {/* 4 — Game */}
+      {/* 3 — Game */}
       <section className="rounded-xl border border-border bg-card p-5">
         <h2 className="text-sm font-semibold text-foreground">{t('optiscaler.game')}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t('optiscaler.gameHint')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('mfg.optiflow.step1Hint')}</p>
         <button
           type="button"
           onClick={chooseGame}
@@ -304,22 +325,57 @@ export default function OptiScalerPage() {
         {exePath && <p className="mt-3 break-all font-mono text-xs text-muted-foreground">{exePath}</p>}
 
         {scan && (
-          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
-            <div className="min-w-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('mfg.gameFolder')}</dt>
-              <dd className="mt-0.5 break-all font-mono text-xs text-foreground">{scan.gameDir}</dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('mfg.launcherFolder')}</dt>
-              <dd className="mt-0.5 break-all font-mono text-xs text-foreground">{scan.launcherDir}</dd>
-            </div>
-          </dl>
+          <>
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+              <div className="min-w-0">
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('mfg.gameFolder')}</dt>
+                <dd className="mt-0.5 break-all font-mono text-xs text-foreground">{scan.gameDir}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('mfg.launcherFolder')}</dt>
+                <dd className="mt-0.5 break-all font-mono text-xs text-foreground">{scan.launcherDir}</dd>
+              </div>
+            </dl>
+
+            {streamline && (
+              <div className="mt-4 space-y-2">
+                {scan.found.length > 0 ? (
+                  <>
+                    <p className="text-sm font-medium text-foreground">
+                      {t('mfg.willReplace', { count: scan.found.reduce((n, c) => n + c.locations.length, 0) })}
+                    </p>
+                    <ul className="space-y-1">
+                      {scan.found.map((c) => (
+                        <li key={c.filename} className="text-xs text-muted-foreground">
+                          <span className="font-mono text-foreground">{c.filename}</span>
+                          {c.locations.map((l) => (
+                            <span key={l} className="ms-2 font-mono opacity-70">
+                              {l}
+                            </span>
+                          ))}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <Notice tone="warn" icon={AlertTriangle}>{t('mfg.optiflow.noComponents')}</Notice>
+                )}
+                {scan.missing.length > 0 && (
+                  <>
+                    <p className="text-sm font-medium text-foreground">{t('mfg.willSkip')}</p>
+                    <p className="text-xs text-muted-foreground">{t('mfg.willSkipHint')}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{scan.missing.join(', ')}</p>
+                  </>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {existing && (
           <div className="mt-4">
             <Notice tone="ok" icon={PackageCheck}>
-              {t('optiscaler.alreadyInstalled', {
+              {t('aof.alreadyInstalled', {
                 version: existing.version,
                 when: new Date(existing.installedAt).toLocaleString(),
               })}
@@ -331,9 +387,9 @@ export default function OptiScalerPage() {
         )}
       </section>
 
-      {/* 5 — Install */}
+      {/* 4 — Install */}
       <section className="rounded-xl border border-border bg-card p-5">
-        <h2 className="text-sm font-semibold text-foreground">{t('optiscaler.install')}</h2>
+        <h2 className="text-sm font-semibold text-foreground">{t('aof.install')}</h2>
         <Notice tone="info" icon={ShieldCheck}>{t('mfg.backupNote')}</Notice>
 
         {missing.length > 0 && (
@@ -347,7 +403,7 @@ export default function OptiScalerPage() {
           className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {stage === 'installing' && <Loader2 aria-hidden className="size-4 animate-spin" />}
-          {existing ? t('optiscaler.reinstall') : t('optiscaler.install')}
+          {existing ? t('optiscaler.reinstall') : t('aof.install')}
         </button>
 
         {step && (
@@ -373,17 +429,29 @@ export default function OptiScalerPage() {
               </li>
             ))}
           </ul>
+          {result.skipped.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-foreground">{t('mfg.skipped')}</p>
+              <ul className="mt-1 space-y-1">
+                {result.skipped.map((s) => (
+                  <li key={s.filename} className="text-xs text-muted-foreground">
+                    <span className="font-mono">{s.filename}</span> — {s.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <p className="break-all text-xs text-muted-foreground">
             {t('mfg.backupAt')} <span className="font-mono">{result.backupDir}</span>
           </p>
         </section>
       )}
 
-      {/* 6 — Remove */}
+      {/* 5 — Remove */}
       {existing && (
         <section className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold text-foreground">{t('optiscaler.remove')}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t('optiscaler.removeHint')}</p>
+          <h2 className="text-sm font-semibold text-foreground">{t('aof.remove')}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t('aof.removeHint')}</p>
 
           {!confirmRemove ? (
             <button
@@ -393,13 +461,11 @@ export default function OptiScalerPage() {
               className="mt-4 inline-flex items-center gap-2 rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Trash2 aria-hidden className="size-4" />
-              {t('optiscaler.remove')}
+              {t('aof.remove')}
             </button>
           ) : (
             <div className="mt-4 space-y-3">
-              <Notice tone="warn" icon={AlertTriangle}>
-                {t('optiscaler.confirmRemove', { count: existing.files.length })}
-              </Notice>
+              <Notice tone="warn" icon={AlertTriangle}>{t('aof.confirmRemove', { count: existing.files.length })}</Notice>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"

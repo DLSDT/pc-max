@@ -9,7 +9,7 @@ const GPU_VENDORS = ['any', 'nvidia', 'amd', 'intel'] as const;
 const ARCHES = ['any', 'x64', 'arm64'] as const;
 const OPERATIONS = ['replace', 'add'] as const;
 const ROLES = ['relative', 'streamline', 'launcher'] as const;
-const COMPONENTS = ['installer', 'plan', 'order'] as const;
+const COMPONENTS = ['installer', 'plan', 'order', 'unlocker', 'streamline'] as const;
 
 /** Kinds whose packages are global — the same bytes for every game, so the
  *  game select is not just optional but wrong to fill in. */

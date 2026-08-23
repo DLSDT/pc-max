@@ -50,6 +50,8 @@ export async function mfgToolsModule(app: FastifyInstance) {
         installers: [],
         plans: [],
         orders: [],
+        unlockers: [],
+        streamlines: [],
         baseFileCount: 0,
       };
       if (!pkg) return empty;
@@ -76,6 +78,8 @@ export async function mfgToolsModule(app: FastifyInstance) {
         installers: packageChoices(files, 'installer'),
         plans: packageChoices(files, 'plan'),
         orders: packageChoices(files, 'order'),
+        unlockers: packageChoices(files, 'unlocker'),
+        streamlines: packageChoices(files, 'streamline'),
         baseFileCount: baseFiles(files).length,
       };
     },
@@ -90,12 +94,14 @@ export async function mfgToolsModule(app: FastifyInstance) {
       schema: {
         params: z.object({ tool: MfgTool }),
         querystring: z.object({
-          // `variant` is the older single-choice form still used by AI Optical
-          // Flow; installer/plan/order is the three-axis form OptiScaler needs.
+          // `variant` is the older single-choice form; the named component
+          // params are the multi-axis form OptiScaler and AI Optical Flow use.
           variant: z.string().trim().min(1).max(60).optional(),
           installer: z.string().trim().min(1).max(60).optional(),
           plan: z.string().trim().min(1).max(60).optional(),
           order: z.string().trim().min(1).max(60).optional(),
+          unlocker: z.string().trim().min(1).max(60).optional(),
+          streamline: z.string().trim().min(1).max(60).optional(),
         }),
         response: { 200: MfgToolPackageResponse },
       },
@@ -108,40 +114,40 @@ export async function mfgToolsModule(app: FastifyInstance) {
       const all = await listPackageFiles(pkg.id);
       if (all.length === 0) throw notFound('Package manifest');
 
-      const installers = packageChoices(all, 'installer');
-      const plans = packageChoices(all, 'plan');
-      const orders = packageChoices(all, 'order');
       const q = request.query;
-
-      // Naming something that was never published would otherwise resolve to a
-      // partial file set and install "successfully" without what was chosen.
-      const check = (label: string, value: string | undefined, available: { name: string }[]) => {
-        if (value === undefined) return;
-        if (!available.some((c) => c.name === value)) {
-          throw badRequest(
-            available.length === 0
-              ? `No ${label} has been published for this tool`
-              : `Unknown ${label} "${value}". Available: ${available.map((c) => c.name).join(', ')}`,
-          );
-        }
-      };
-      check('installer', q.installer, installers);
-      check('plan', q.plan, plans);
-      check('order', q.order, orders);
+      // One loop over every component group, so a new axis needs no new branch.
+      const GROUPS = ['installer', 'plan', 'order', 'unlocker', 'streamline'] as const;
+      type Group = (typeof GROUPS)[number];
+      const available = {} as Record<Group, { name: string }[]>;
+      const chosen = {} as Record<Group, string | undefined>;
+      for (const g of GROUPS) {
+        available[g] = packageChoices(all, g);
+        chosen[g] = q[g];
+      }
+      const usesGroups = GROUPS.some((g) => chosen[g] !== undefined);
 
       let files;
-      if (q.installer !== undefined || q.plan !== undefined || q.order !== undefined) {
-        // Three-axis selection. Every group that HAS choices must be chosen
-        // from — a missing Plan means the user gets the drop-in with no
-        // configuration and no indication anything is wrong.
-        const missing: string[] = [];
-        if (installers.length > 0 && q.installer === undefined) missing.push('installer');
-        if (plans.length > 0 && q.plan === undefined) missing.push('plan');
-        if (orders.length > 0 && q.order === undefined) missing.push('order');
+      if (usesGroups) {
+        for (const g of GROUPS) {
+          const value = chosen[g];
+          if (value === undefined) continue;
+          // Naming something that was never published would resolve to a
+          // partial file set and install "successfully" without it.
+          if (!available[g].some((c) => c.name === value)) {
+            throw badRequest(
+              available[g].length === 0
+                ? `No ${g} has been published for this tool`
+                : `Unknown ${g} "${value}". Available: ${available[g].map((c) => c.name).join(', ')}`,
+            );
+          }
+        }
+        // Every group that HAS choices must be chosen from. A missing Streamline
+        // means the user gets the unlocker alone with no indication anything is
+        // wrong.
+        const missing = GROUPS.filter((g) => available[g].length > 0 && chosen[g] === undefined);
         if (missing.length) throw badRequest(`This package requires a ${missing.join(' and a ')}`);
-        files = resolveInstallFiles(all, { installer: q.installer, plan: q.plan, order: q.order });
+        files = resolveInstallFiles(all, chosen);
       } else {
-        // Single-choice form.
         const variants = packageVariants(all);
         if (q.variant !== undefined && !variants.includes(q.variant)) throw badRequest(`Unknown profile "${q.variant}"`);
         if (q.variant === undefined && variants.length > 0) {

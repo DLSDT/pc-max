@@ -35,7 +35,7 @@ export const packageKindEnum = pgEnum('package_kind', ['graphics', 'frame_genera
 /** What class of content a package file is. `variant` names WHICH one of a set
  *  a file belongs to; this says what kind of set that is, so an OptiScaler
  *  install can combine "installer + one plan + one order" from one package. */
-export const packageComponentEnum = pgEnum('package_component', ['installer', 'plan', 'order']);
+export const packageComponentEnum = pgEnum('package_component', ['installer', 'plan', 'order', 'unlocker', 'streamline']);
 /** Where a package file lands. `relative` resolves against the game directory
  *  (every pre-OptiFlow package); `streamline` replaces the same-named file
  *  wherever it already exists in the install; `launcher` drops next to the

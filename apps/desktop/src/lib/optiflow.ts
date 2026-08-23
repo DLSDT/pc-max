@@ -16,7 +16,7 @@
  * every function that would touch one returns a clear "not available" instead
  * of pretending to work.
  */
-import type { MfgTool, MfgToolPackageResponse, PackageFileRole } from '@goh/validation';
+import type { MfgTool, MfgToolPackageResponse, PackageComponent, PackageFileRole } from '@goh/validation';
 import { api, ApiError } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
 import { authorizeFeature } from '@/hooks/useFeatureAccess';
@@ -133,10 +133,9 @@ export function componentNames(files: { destination: string; role: PackageFileRo
   return files.filter((f) => f.role === 'streamline').map((f) => f.destination);
 }
 
-export type ToolSelection =
-  | string
-  | null
-  | { installer?: string | null; plan?: string | null; order?: string | null };
+/** A single profile name, or a choice per component group. Keyed by component
+ *  so a new axis needs no change here. */
+export type ToolSelection = string | null | Partial<Record<PackageComponent, string | null>>;
 
 export interface InstallOptions {
   tool: MfgTool;
