@@ -7,8 +7,8 @@
 //! confirmed to fail against a version of the code without its guard.
 
 use super::optiflow::{
-    find_components, install, is_within, resolve_game_root, safe_component_name, scan, FileRole,
-    OptiFlowFile,
+    find_components, install, is_within, resolve_game_root, safe_component_name, scan, uninstall,
+    FileRole, InstalledFile, OptiFlowFile,
 };
 use base64::Engine;
 use sha2::{Digest, Sha256};
@@ -404,7 +404,7 @@ mod uninstall_tests {
             .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
             .collect();
 
-        let un = uninstall(&t.root, Path::new(&report.backup_dir), &installed).expect("uninstall");
+        let un = uninstall(&exe, Path::new(&report.backup_dir), &installed).expect("uninstall");
 
         assert_eq!(t.read("bin/x64/sl.dlss_g.dll"), b"ORIGINAL SHIPPED BUILD", "replaced file not restored");
         assert!(!t.exists("bin/x64/OptiScaler.dll"), "added file not removed");
@@ -436,7 +436,7 @@ mod uninstall_tests {
             .iter()
             .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
             .collect();
-        uninstall(&t.root, Path::new(&report.backup_dir), &installed).expect("uninstall");
+        uninstall(&exe, Path::new(&report.backup_dir), &installed).expect("uninstall");
 
         assert_eq!(t.read("mods/OptiScaler.dll"), b"the user's own copy", "deleted a same-named file it never installed");
         assert_eq!(t.read("Engine/Binaries/sl.dlss_g.dll"), b"a second shipped copy");
@@ -459,7 +459,7 @@ mod uninstall_tests {
             .iter()
             .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
             .collect();
-        let un = uninstall(&t.root, Path::new(&report.backup_dir), &installed).unwrap();
+        let un = uninstall(&exe, Path::new(&report.backup_dir), &installed).unwrap();
 
         assert!(t.exists("bin/x64/sl.dlss.dll"), "file deleted despite having no backup to restore");
         assert_eq!(un.failed.len(), 1);
@@ -471,12 +471,15 @@ mod uninstall_tests {
     fn uninstall_refuses_a_recorded_path_outside_the_game_folder() {
         // The record comes off disk, so it is re-validated rather than trusted.
         let t = TempTree::new("uninstall-escape");
+        let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+        let backup = t.root.join(".goh-backup");
+        std::fs::create_dir_all(&backup).unwrap();
         let outside = TempTree::new("uninstall-outside");
         let victim = outside.file("important.dll", b"not ours");
 
         let un = uninstall(
-            &t.root,
-            &t.root.join(".goh-backup"),
+            &exe,
+            &backup,
             &[InstalledFile { path: victim.to_string_lossy().to_string(), replaced: false }],
         )
         .unwrap();
@@ -489,13 +492,102 @@ mod uninstall_tests {
     #[test]
     fn an_already_gone_file_is_reported_not_failed() {
         let t = TempTree::new("uninstall-gone");
+        let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+        let backup = t.root.join(".goh-backup");
+        std::fs::create_dir_all(&backup).unwrap();
         let un = uninstall(
-            &t.root,
-            &t.root.join(".goh-backup"),
+            &exe,
+            &backup,
             &[InstalledFile { path: t.root.join("never-existed.dll").to_string_lossy().to_string(), replaced: false }],
         )
         .unwrap();
         assert_eq!(un.missing.len(), 1);
         assert!(un.failed.is_empty());
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Uninstall boundary
+// ---------------------------------------------------------------------------
+
+/// Build a game tree with one installed file recorded, and return
+/// (exe, backup_dir, record) ready to hand to `uninstall`.
+fn installed_fixture(label: &str) -> (TempTree, PathBuf, PathBuf, Vec<InstalledFile>) {
+    let t = TempTree::new(label);
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+    t.file("bin/x64/sl.dlss.dll", b"pcmax version");
+    let backup = t.root.join(".goh-backup/x");
+    fs::create_dir_all(backup.join("bin/x64")).unwrap();
+    fs::write(backup.join("bin/x64/sl.dlss.dll"), b"original").unwrap();
+    let rec = vec![InstalledFile {
+        path: t.root.join("bin/x64/sl.dlss.dll").to_string_lossy().to_string(),
+        replaced: true,
+    }];
+    (t, exe, backup, rec)
+}
+
+#[test]
+fn uninstall_restores_the_original_from_the_backup() {
+    let (t, exe, backup, rec) = installed_fixture("uninst-ok");
+    let report = uninstall(&exe, &backup, &rec).expect("uninstall should succeed");
+    assert_eq!(report.restored.len(), 1, "{report:?}");
+    assert_eq!(t.read("bin/x64/sl.dlss.dll"), b"original".to_vec());
+}
+
+#[test]
+fn uninstall_refuses_a_backup_folder_outside_the_game() {
+    // The boundary must not be something the caller can move. A record pointing
+    // at a backup elsewhere on disk would let a crafted record copy arbitrary
+    // bytes over a real game file.
+    let (_t, exe, _backup, rec) = installed_fixture("uninst-backup");
+    let elsewhere = TempTree::new("uninst-elsewhere");
+    fs::create_dir_all(elsewhere.root.join("bin/x64")).unwrap();
+    fs::write(elsewhere.root.join("bin/x64/sl.dlss.dll"), b"attacker bytes").unwrap();
+
+    let err = uninstall(&exe, &elsewhere.root, &rec).expect_err("must refuse an outside backup");
+    assert!(err.contains("outside the game folder"), "unexpected: {err}");
+}
+
+#[test]
+fn uninstall_refuses_a_recorded_path_outside_the_game() {
+    let (_t, exe, backup, _rec) = installed_fixture("uninst-escape");
+    let outside = TempTree::new("uninst-target");
+    let victim = outside.file("important.dll", b"do not touch");
+
+    let rec = vec![InstalledFile { path: victim.to_string_lossy().to_string(), replaced: false }];
+    let report = uninstall(&exe, &backup, &rec).expect("should report, not error");
+    assert_eq!(report.removed.len(), 0);
+    assert_eq!(report.failed.len(), 1);
+    assert!(victim.is_file(), "a file outside the game folder was deleted");
+}
+
+#[test]
+fn uninstall_refuses_a_recorded_path_this_installer_could_not_have_written() {
+    // Every path install could write had an allowlisted extension. A record
+    // naming a .exe was not written by us, so removing it is not ours to do.
+    let (t, exe, backup, _rec) = installed_fixture("uninst-ext");
+    let other = t.file("bin/x64/GameLauncher.exe", b"the real launcher");
+
+    let rec = vec![InstalledFile { path: other.to_string_lossy().to_string(), replaced: false }];
+    let report = uninstall(&exe, &backup, &rec).expect("should report, not error");
+    assert_eq!(report.removed.len(), 0);
+    assert_eq!(report.failed.len(), 1);
+    assert!(other.is_file(), "the game's own launcher was deleted");
+}
+
+#[test]
+fn uninstall_derives_the_root_from_the_exe_not_from_the_caller() {
+    // The old signature took game_dir and files[].path from the same caller and
+    // checked one against the other. Passing an exe whose real root does not
+    // contain the recorded file must now fail closed.
+    let (_t, _exe, backup, rec) = installed_fixture("uninst-derive");
+    let other_game = TempTree::new("uninst-othergame");
+    let other_exe = other_game.file("bin/x64/Other.exe", b"MZ");
+
+    let report = uninstall(&other_exe, &backup, &rec);
+    // Either the backup is rejected as outside that game, or the recorded path is.
+    match report {
+        Err(e) => assert!(e.contains("outside the game folder"), "unexpected: {e}"),
+        Ok(r) => assert_eq!(r.restored.len(), 0, "restored across two different games: {r:?}"),
     }
 }

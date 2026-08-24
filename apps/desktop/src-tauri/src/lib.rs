@@ -476,15 +476,36 @@ fn rollback(originals: &[(PathBuf, PathBuf)], applied: &[PathBuf], backup_root: 
 /// over the already-fetched image. There is no fs plugin in this app, so this
 /// is the only write path outside the game-file installer.
 ///
-/// The destination comes from the OS save dialog (never from page content),
-/// and only the parent directory is created — no traversal handling is needed
-/// because the path is absolute and user-chosen.
+/// The destination is expected to come from the OS save dialog. That is a
+/// convention the caller follows, not something this function can verify, so it
+/// additionally refuses any extension outside the image set below — see the
+/// note in the body.
 #[tauri::command]
 fn save_binary_file(path: String, content_base64: String) -> Result<(), String> {
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(&content_base64)
         .map_err(|_| "Invalid base64 content".to_string())?;
     let target = PathBuf::from(&path);
+
+    // The path is meant to come from the OS save dialog, but "meant to" is a
+    // convention the webview is trusted to follow, not something this function
+    // could previously check — it took any absolute path and wrote any bytes.
+    // A single injection anywhere in the UI would have turned that into
+    // persistence (drop a .bat into the Startup folder). The dialog only ever
+    // returns an image destination, so refusing anything Windows would execute
+    // costs the real caller nothing and removes the primitive.
+    let ext = target
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|e| e.to_ascii_lowercase())
+        .unwrap_or_default();
+    const SAVEABLE_EXT: &[&str] = &["png", "jpg", "jpeg", "webp", "gif", "bmp", "ico", "svg"];
+    if !SAVEABLE_EXT.contains(&ext.as_str()) {
+        return Err(format!("Refusing to save a .{ext} file here"));
+    }
+    if !target.is_absolute() {
+        return Err("The save location must be an absolute path".to_string());
+    }
     if let Some(parent) = target.parent() {
         fs::create_dir_all(parent).map_err(|e| format!("Cannot create {}: {e}", parent.display()))?;
     }
@@ -662,9 +683,9 @@ fn optiflow_install(
 /// wrote. Nothing is matched by filename — only the recorded list is touched.
 #[tauri::command]
 fn optiflow_uninstall(
-    game_dir: String,
+    exe_path: String,
     backup_dir: String,
     files: Vec<optiflow::InstalledFile>,
 ) -> Result<optiflow::UninstallReport, String> {
-    optiflow::uninstall(Path::new(&game_dir), Path::new(&backup_dir), &files)
+    optiflow::uninstall(Path::new(&exe_path), Path::new(&backup_dir), &files)
 }

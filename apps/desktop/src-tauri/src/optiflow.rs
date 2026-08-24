@@ -543,13 +543,38 @@ pub struct UninstallReport {
 /// install time. One that was newly created is deleted. If the backup is gone,
 /// the file is left alone and reported: deleting it would destroy the original
 /// the backup was supposed to hold.
-pub fn uninstall(game_dir: &Path, backup_dir: &Path, files: &[InstalledFile]) -> Result<UninstallReport, String> {
-    if !game_dir.is_dir() {
-        return Err(format!("Game folder not found: {}", game_dir.display()));
-    }
-    let real_root = game_dir
+pub fn uninstall(exe_path: &Path, backup_dir: &Path, files: &[InstalledFile]) -> Result<UninstallReport, String> {
+    // Derive the root the same way `install` does, from the recorded executable
+    // — NOT from a game_dir the caller also supplies.
+    //
+    // This used to take game_dir and files[].path from the same caller and then
+    // check one against the other, which proves nothing: whoever supplies the
+    // paths supplies the boundary they are checked against. Re-deriving it from
+    // the exe means the boundary comes from `resolve_game_root`'s own rules
+    // (walk up out of bin/x64, never past the depth floor) rather than from the
+    // record being acted on.
+    let launcher_dir = exe_path
+        .parent()
+        .ok_or_else(|| "The recorded executable has no folder".to_string())?;
+    let real_root = resolve_game_root(launcher_dir)
+        .ok_or_else(|| "That executable is not inside a game folder".to_string())?
         .canonicalize()
         .map_err(|e| format!("Cannot resolve the game folder: {e}"))?;
+
+    // The backup is read from and copied over live game files, so it has to be
+    // inside the same install — otherwise a crafted record could restore
+    // arbitrary bytes from anywhere on disk into the game.
+    //
+    // Resolved leniently on purpose: a missing backup folder is not a reason to
+    // refuse the whole removal. An install that only ADDED files has nothing to
+    // restore, and a user who deleted the backup still deserves to get PC MAX's
+    // files out of their game. Only the restore branch needs it, and that branch
+    // already reports "the original backup is missing" per file.
+    let real_backup = match backup_dir.canonicalize() {
+        Ok(p) if p.starts_with(&real_root) => Some(p),
+        Ok(_) => return Err("The backup folder is outside the game folder — refused".to_string()),
+        Err(_) => None,
+    };
 
     let mut report = UninstallReport { restored: vec![], removed: vec![], failed: vec![], missing: vec![] };
 
@@ -570,6 +595,22 @@ pub fn uninstall(game_dir: &Path, backup_dir: &Path, files: &[InstalledFile]) ->
             continue;
         }
 
+        // Every path install could write had an allowlisted extension. A record
+        // naming anything else was not written by us, so it is not ours to
+        // restore over or delete.
+        if target
+            .file_name()
+            .and_then(|n| n.to_str())
+            .and_then(safe_component_name)
+            .is_none()
+        {
+            report.failed.push(SkippedFile {
+                filename: f.path.clone(),
+                reason: "not a file this installer could have written — refused".to_string(),
+            });
+            continue;
+        }
+
         if f.replaced {
             let rel = match target.strip_prefix(&real_root) {
                 Ok(r) => r,
@@ -578,7 +619,16 @@ pub fn uninstall(game_dir: &Path, backup_dir: &Path, files: &[InstalledFile]) ->
                     continue;
                 }
             };
-            let backup = backup_dir.join(rel);
+            let backup = match &real_backup {
+                Some(b) => b.join(rel),
+                None => {
+                    report.failed.push(SkippedFile {
+                        filename: f.path.clone(),
+                        reason: "the original backup is missing, so the file was left as it is".to_string(),
+                    });
+                    continue;
+                }
+            };
             if !backup.is_file() {
                 report.failed.push(SkippedFile {
                     filename: f.path.clone(),

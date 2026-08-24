@@ -306,7 +306,7 @@ export default function MfgToolPage({
     try {
       setStep(t('optiscaler.stepRemoving'));
       const report = await uninstallTool({
-        gameDir: existing.gameDir,
+        exePath: existing.exePath,
         backupDir: existing.backupDir,
         files: existing.files,
       });

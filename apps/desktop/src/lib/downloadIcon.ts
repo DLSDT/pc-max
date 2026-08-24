@@ -37,11 +37,17 @@ export async function downloadGameIcon(iconUrl: string, fileName: string): Promi
   });
   if (!path) return null; // user cancelled
 
+  // The native writer only accepts image extensions, and the save dialog does
+  // not guarantee one — a user who clears the suffix in the filename box gets a
+  // bare path back. Append the format we are actually writing rather than
+  // letting the write be refused.
+  const withExt = /\.(webp|png|jpe?g|gif|bmp|ico|svg)$/i.test(path) ? path : `${path}.webp`;
+
   const bytes = new Uint8Array(await blob.arrayBuffer());
   let binary = '';
   for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]!);
 
   const { invoke } = await import('@tauri-apps/api/core');
-  await invoke('save_binary_file', { path, contentBase64: btoa(binary) });
-  return path;
+  await invoke('save_binary_file', { path: withExt, contentBase64: btoa(binary) });
+  return withExt;
 }

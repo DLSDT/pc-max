@@ -206,7 +206,10 @@ export interface UninstallReport {
 }
 
 export async function uninstallTool(args: {
-  gameDir: string;
+  /** The executable recorded at install time. The native side re-derives the
+   *  game root from it rather than trusting a folder we hand over — the record
+   *  and the boundary must not come from the same place. */
+  exePath: string;
   backupDir: string;
   files: { path: string; replaced: boolean }[];
 }): Promise<UninstallReport> {
