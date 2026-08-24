@@ -1,0 +1,152 @@
+{
+  "package": {
+    "name": "OptiScaler",
+    "slug": "optiscaler",
+    "kind": "optiscaler",
+    "gpuVendor": "any",
+    "arch": "any"
+  },
+  "changeNote": "OPTI MFG-2X-6X-V5 — 8 plans and 12 orders",
+  "variants": [
+    {
+      "name": "Plan - OptiScaler",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - OptiScaler",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - d3d12",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - d3d12",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - dbghelp",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - dbghelp",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - dxgi",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - dxgi",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - version",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - version",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - winhttp",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - winhttp",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - wininet",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - wininet",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "Plan - winmm",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - winmm",
+      "role": "launcher",
+      "component": "plan",
+      "operation": "replace"
+    },
+    {
+      "name": "AMD P1-6X",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/AMD P1-6X",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "AMD P1-6X NATIVE",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/AMD P1-6X NATIVE",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "AMD P2-6X",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/AMD P2-6X",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "AMD P2-6X NATIVE",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/AMD P2-6X NATIVE",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "NVIDIA P1-6X",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/NVIDIA P1-6X",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "NVIDIA P1-6X NATIVE",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/NVIDIA P1-6X NATIVE",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "NVIDIA P2-6X",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/NVIDIA P2-6X",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "NVIDIA P2-6X NATIVE",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/NVIDIA P2-6X NATIVE",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "XESS P1-2X",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/XESS P1-2X",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "XESS P1-6X NATIVE",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/XESS P1-6X NATIVE",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "XESS P2-2X",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/XESS P2-2X",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    },
+    {
+      "name": "XESS P2-6X NATIVE",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Order/XESS P2-6X NATIVE",
+      "role": "launcher",
+      "component": "order",
+      "operation": "replace"
+    }
+  ]
+}

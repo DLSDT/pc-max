@@ -91,7 +91,8 @@ for t in optiflow optiscaler streamline; do
 done
 ```
 
-اگر `streamline` هنوز `false` است، فایل‌هایش را آپلود کن:
+اگر چیزی `false` بود یا لیست‌ها خالی بودند، `docs/TOOL-PACKAGES.md` را ببین —
+وضعیت کامل هر سه بسته و مانیفست‌های آماده آنجاست. برای Streamline:
 
 ```bash
 PCMAX_ADMIN_PASSWORD='…' node apps/api/scripts/push-package.mjs \
@@ -102,10 +103,11 @@ PCMAX_ADMIN_PASSWORD='…' node apps/api/scripts/push-package.mjs \
 
 اول با `--dry-run` ببین چه چیزی قرار است برود.
 
-> صفحهٔ Streamline چهار واریانت انتظار دارد. مانیفست فعلی فقط
-> **Streamline PC Max V2** را دارد، چون فقط فایل‌های آن روی دیسک موجود است.
-> سه واریانت دیگر تا وقتی فایل‌هایشان را نداشته باشی «۱ از ۴» می‌مانند —
-> برنامه صادقانه همین را نشان می‌دهد و این باگ نیست.
+> صفحهٔ Streamline `expected: 4` دارد، ولی روی دیسک **فقط یک ست واقعی** هست
+> (هر ۱۶ فایل در هر سه پوشه بایت‌به‌بایت یکی‌اند). پس «سه واریانت گمشده»
+> وجود ندارد و بعد از آپلود هم «۱ از ۴» می‌ماند، مگر `expected` را در
+> `StreamlinePcMaxPage.tsx` روی `1` بگذاری. تصمیمش در
+> `docs/TOOL-PACKAGES.md` توضیح داده شده.
 
 ### ۷ · تست کامل سرور
 
