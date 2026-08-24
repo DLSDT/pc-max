@@ -22,7 +22,7 @@ import {
   type ScanReport,
   type UninstallReport,
 } from '@/lib/optiflow';
-import { clearInstall, getInstall, recordInstall, type MfgInstall } from '@/lib/mfgInstalls';
+import { clearInstall, getInstall, listInstalls, recordInstall, type MfgInstall } from '@/lib/mfgInstalls';
 import { cn } from '@/lib/utils';
 
 type Stage = 'idle' | 'scanning' | 'installing' | 'removing';
@@ -142,7 +142,24 @@ export default function MfgToolPage({
   const [result, setResult] = useState<InstallReport | null>(null);
   const [removed, setRemoved] = useState<UninstallReport | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [confirmRemove, setConfirmRemove] = useState(false);
+
+  /**
+   * Every install of this tool on this machine, not just the one belonging to
+   * the executable currently picked.
+   *
+   * Removal is driven by the record written at install time — it never guesses
+   * by filename — so a record the user cannot reach is an install they cannot
+   * undo. Gating the remove button on a fresh scan meant exactly that: after
+   * installing into three games, each one could only be reverted by coming
+   * back and re-selecting that game's .exe, and if the scan failed for any
+   * reason the files stayed with no way back.
+   */
+  const [installs, setInstalls] = useState<MfgInstall[]>([]);
+  const refreshInstalls = useCallback(() => setInstalls(listInstalls(tool)), [tool]);
+  useEffect(() => { refreshInstalls(); }, [refreshInstalls]);
+
+  /** Which record the confirm prompt is for — null when nothing is pending. */
+  const [pendingRemoval, setPendingRemoval] = useState<MfgInstall | null>(null);
 
   useEffect(() => {
     void ensureHardware();
@@ -284,6 +301,7 @@ export default function MfgToolPage({
       // these files and would have nothing safe to act on.
       try {
         recordInstall(entry);
+        refreshInstalls();
       } catch {
         setError(t('optiscaler.recordFailed'));
       }
@@ -298,33 +316,33 @@ export default function MfgToolPage({
     }
   }, [exePath, scan, selection, status, t, tool, titleKey]);
 
-  const runRemove = useCallback(async () => {
-    if (!existing) return;
+  const runRemove = useCallback(async (entry: MfgInstall) => {
     setError(null);
     setResult(null);
     setStage('removing');
     try {
       setStep(t('optiscaler.stepRemoving'));
       const report = await uninstallTool({
-        exePath: existing.exePath,
-        backupDir: existing.backupDir,
-        files: existing.files,
+        exePath: entry.exePath,
+        backupDir: entry.backupDir,
+        files: entry.files,
       });
       setRemoved(report);
       // Keep the record when something could not be undone — it is the only
       // handle on the files still there.
       if (report.failed.length === 0) {
-        clearInstall(tool, existing.gameDir);
-        setExisting(null);
+        clearInstall(tool, entry.gameDir);
+        if (existing?.gameDir === entry.gameDir) setExisting(null);
       }
+      refreshInstalls();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setStage('idle');
       setStep(null);
-      setConfirmRemove(false);
+      setPendingRemoval(null);
     }
-  }, [existing, t, tool]);
+  }, [existing, refreshInstalls, t, tool]);
 
   if (!access.allowed) {
     return (
@@ -515,46 +533,69 @@ export default function MfgToolPage({
         </section>
       )}
 
-      {/* Remove */}
-      {existing && (
+      {/* Remove — every recorded install of this tool, not just the picked one */}
+      {installs.length > 0 && (
         <section className="rounded-xl border border-border bg-card p-5">
           <h2 className="text-sm font-semibold text-foreground">{t(removeKey)}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t(removeHintKey)}</p>
 
-          {!confirmRemove ? (
-            <button
-              type="button"
-              onClick={() => setConfirmRemove(true)}
-              disabled={busy}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-destructive/40 px-4 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Trash2 aria-hidden className="size-4" />
-              {t(removeKey)}
-            </button>
-          ) : (
-            <div className="mt-4 space-y-3">
-              <Notice tone="warn" icon={AlertTriangle}>{t(confirmRemoveKey, { count: existing.files.length })}</Notice>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={runRemove}
-                  disabled={busy}
-                  className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {stage === 'removing' && <Loader2 aria-hidden className="size-4 animate-spin" />}
-                  {t('optiscaler.confirmRemoveYes')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmRemove(false)}
-                  disabled={busy}
-                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/40"
-                >
-                  {t('common.cancel')}
-                </button>
-              </div>
-            </div>
-          )}
+          <ul className="mt-4 space-y-3">
+            {installs.map((entry) => {
+              const pending = pendingRemoval?.gameDir === entry.gameDir;
+              return (
+                <li key={entry.gameDir} className="rounded-lg border border-border/70 p-3">
+                  <p className="truncate text-sm font-medium text-foreground" title={entry.gameDir}>
+                    {entry.gameDir}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {t('optiscaler.installedSummary', {
+                      version: entry.version,
+                      when: new Date(entry.installedAt).toLocaleString(),
+                    })}
+                    {' · '}
+                    {Object.values(entry.selection).filter(Boolean).join(' · ') || '—'}
+                  </p>
+
+                  {!pending ? (
+                    <button
+                      type="button"
+                      onClick={() => setPendingRemoval(entry)}
+                      disabled={busy}
+                      className="mt-3 inline-flex items-center gap-2 rounded-lg border border-destructive/40 px-3 py-1.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 aria-hidden className="size-4" />
+                      {t(removeKey)}
+                    </button>
+                  ) : (
+                    <div className="mt-3 space-y-3">
+                      <Notice tone="warn" icon={AlertTriangle}>
+                        {t(confirmRemoveKey, { count: entry.files.length })}
+                      </Notice>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void runRemove(entry)}
+                          disabled={busy}
+                          className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {stage === 'removing' && <Loader2 aria-hidden className="size-4 animate-spin" />}
+                          {t('optiscaler.confirmRemoveYes')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPendingRemoval(null)}
+                          disabled={busy}
+                          className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/40"
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
 
