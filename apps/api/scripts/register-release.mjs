@@ -163,8 +163,10 @@ await api('POST', '/admin/app-versions', {
 console.log('  registered');
 
 // --- 3. prove the updater now offers it ------------------------------------
+// `latest` is the whole row, not a version string — interpolating it directly
+// printed "[object Object]" and told the operator nothing.
 const ver = await api('GET', '/app/version');
-console.log(`\n  /app/version → latest=${ver?.latest ?? 'null'}`);
+console.log(`\n  /app/version → latest=${ver?.latest?.version ?? 'null'}`);
 
 const res = await fetch(`${base}/updates/windows/x86_64/0.0.1`);
 if (res.status === 200) {
