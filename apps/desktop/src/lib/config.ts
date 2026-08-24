@@ -29,7 +29,7 @@ function resolveApiUrl(): string {
 export const config = {
   apiUrl: resolveApiUrl(),
   /** Build-time fallback only — see getRuntimeAppVersion() for the real, packaged version. */
-  appVersion: '0.4.0',
+  appVersion: '0.4.1',
   syncIntervalMs: 5 * 60 * 1000,
   /** Default timeout for API requests (network flakiness must not hang the UI). */
   requestTimeoutMs: 15 * 1000,
