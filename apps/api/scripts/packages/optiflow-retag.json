@@ -1,0 +1,18 @@
+{
+  "slug": "optiflow",
+  "changeNote": "Re-file unlocker and streamline components so the AI Optical Flow pickers resolve",
+  "rules": [
+    {
+      "files": ["version.dll", "dlss-enabler.ini"],
+      "component": "unlocker",
+      "role": "launcher",
+      "variant": "DLSS Enabler"
+    },
+    {
+      "pattern": "^(sl\\.|nvngx_|NvLowLatencyVk)",
+      "component": "streamline",
+      "role": "streamline",
+      "variant": "Streamline PC Max V2"
+    }
+  ]
+}
