@@ -56,6 +56,14 @@ case "${1:-help}" in
     "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/apply-catalog-metadata.js "${@:2}"
     ;;
 
+  # Fill optimization_profiles.target_fps from each profile's preset colour.
+  # Profiles ship with it NULL, which the app renders as "—". Idempotent: fills
+  # NULLs only, so a target an admin set by hand survives. Pass --dry-run to
+  # see the count first, --force to overwrite hand-set values.
+  target-fps)
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/apply-target-fps.js "${@:2}"
+    ;;
+
   # Create or rotate a super-admin login. Prompts for the password rather than
   # taking it as an argument, so it never lands in shell history.
   set-admin)
@@ -71,5 +79,5 @@ case "${1:-help}" in
     echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
     ;;
 
-  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|set-admin <email>|fix-sequences|backup|restore <f>|health}" ;;
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|fix-sequences|backup|restore <f>|health}" ;;
 esac

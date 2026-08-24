@@ -277,6 +277,7 @@ pcmax health
 | `pcmax logs` | لاگ API |
 | `pcmax deploy` | گرفتن کد جدید + بیلد + اجرا |
 | `pcmax metadata` | اعمال ژانرها و بازی‌های منتخب (idempotent) |
+| `pcmax target-fps` | پر کردن FPS هدف پروفایل‌ها از روی رنگ پریست (idempotent) |
 | `pcmax fix-sequences` | تعمیر شمارنده‌های id بعد از restore (idempotent) |
 | `pcmax set-admin <email>` | ساخت یا تغییر رمز ادمین (رمز را می‌پرسد) |
 | `pcmax backup` | بکاپ دیتابیس |
