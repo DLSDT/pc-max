@@ -10,7 +10,10 @@ export const tests = [
         body: { identifier: 'e2e-nobody-8f3a2b@example.invalid', password: 'definitely-not-the-password' },
         noCookies: true,
       });
-      oneOf(r.status, [401, 400, 422], 'bad-credentials login status');
+      // 429 counts as refused: repeated bad logins are exactly what the
+      // limiter is for, and after a few runs of this suite it is the correct
+      // answer. Demanding 401 here would fail the suite for working right.
+      oneOf(r.status, [401, 400, 422, 429], 'bad-credentials login status');
       // The reply must not reveal whether the account exists — that turns the
       // login form into an account-enumeration oracle.
       assert(!/not found|no such (user|account)|does not exist/i.test(r.text),

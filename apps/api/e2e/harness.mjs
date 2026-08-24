@@ -36,6 +36,8 @@ export class Ctx {
     this.timeoutMs = timeoutMs;
     this.cookies = new Map();
     this._adminToken = null;
+    /** Set once if admin login is rejected, so it is reported once, not per test. */
+    this.adminLoginError = null;
     /** Ids created during a run, so `full` mode can clean up after itself. */
     this.created = [];
     /** Facts one suite discovers that another can reuse (e.g. a real slug). */
@@ -104,9 +106,17 @@ export class Ctx {
     return Boolean(this.adminEmail && this.adminPassword);
   }
 
-  /** Cached admin access token. Throws with the server's message if login fails. */
+  /**
+   * Cached admin access token.
+   *
+   * A failed login is remembered, not retried. Bad credentials are one fact
+   * about the run, and re-attempting them per test turns that one fact into a
+   * screenful of identical failures that buries every real one — besides
+   * hammering the login endpoint, which is rate-limited and audited.
+   */
   async adminToken() {
     if (this._adminToken) return this._adminToken;
+    if (this.adminLoginError) throw new Error(this.adminLoginError);
     if (!this.hasAdminCreds()) {
       throw new Error('admin credentials not provided (--admin-email / PCMAX_ADMIN_PASSWORD)');
     }
@@ -114,10 +124,14 @@ export class Ctx {
       body: { email: this.adminEmail, password: this.adminPassword },
     });
     if (r.status !== 200) {
-      throw new Error(`admin login failed: ${r.status} ${r.text.slice(0, 200)}`);
+      this.adminLoginError = `admin login failed: ${r.status} ${r.text.slice(0, 200)}`;
+      throw new Error(this.adminLoginError);
     }
     const tok = r.json?.data?.accessToken ?? r.json?.accessToken ?? r.json?.data?.token;
-    if (!tok) throw new Error(`admin login returned no token: ${r.text.slice(0, 200)}`);
+    if (!tok) {
+      this.adminLoginError = `admin login returned no token: ${r.text.slice(0, 200)}`;
+      throw new Error(this.adminLoginError);
+    }
     this._adminToken = tok;
     return tok;
   }
@@ -163,6 +177,14 @@ export async function runSuites(suites, ctx, { filter } = {}) {
         process.stdout.write(`  ${DIM}○ ${test.name} ${YELLOW}(skipped: no admin credentials)${RESET}\n`);
         continue;
       }
+      // Credentials were supplied but the server rejected them. The first
+      // admin test reports that; the rest have nothing to add.
+      if (test.admin && ctx.adminLoginError) {
+        skip++;
+        results.push({ suite: suite.name, test: test.name, state: 'skip' });
+        process.stdout.write(`  ${DIM}○ ${test.name} ${YELLOW}(skipped: admin login was rejected)${RESET}\n`);
+        continue;
+      }
       const started = Date.now();
       try {
         await test.run(ctx);
@@ -185,7 +207,14 @@ export async function runSuites(suites, ctx, { filter } = {}) {
   process.stdout.write(`  ${GREEN}${pass} passed${RESET}`);
   if (fail) process.stdout.write(`   ${RED}${fail} failed${RESET}`);
   if (skip) process.stdout.write(`   ${YELLOW}${skip} skipped${RESET}`);
-  process.stdout.write(`\n  ${DIM}${ctx.base}  (${ctx.mode} mode)${RESET}\n\n`);
+  process.stdout.write(`\n  ${DIM}${ctx.base}  (${ctx.mode} mode)${RESET}\n`);
+  if (ctx.adminLoginError) {
+    // Loud on purpose: a run where the admin half never executed must not read
+    // as a clean bill of health just because the rest went green.
+    process.stdout.write(`\n  ${YELLOW}⚠ ${ctx.adminLoginError}${RESET}\n`);
+    process.stdout.write(`  ${DIM}every admin-authenticated test was skipped — this run did not check them${RESET}\n`);
+  }
+  process.stdout.write('\n');
 
   if (fail) {
     process.stdout.write(`${BOLD}Failures${RESET}\n`);
