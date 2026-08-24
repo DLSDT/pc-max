@@ -262,7 +262,11 @@ export type OtpInputProps = {
   errorMessage?: string;
   successMessage?: string;
   hint?: string;
+  /** Announced to assistive tech only — this component never renders a visible
+   *  label, so the surrounding card is responsible for saying what the field is. */
   label?: string;
+  /** 'lg' matches the auth card: bigger slots, evenly spaced, no 3+3 grouping. */
+  size?: 'md' | 'lg';
   groupEvery?: number;
   disabled?: boolean;
   autoFocus?: boolean;
@@ -282,6 +286,7 @@ export function OtpInput({
   successMessage = '',
   hint = '',
   label = 'Verification code',
+  size = 'md',
   groupEvery = 3,
   disabled = false,
   autoFocus = false,
@@ -321,12 +326,17 @@ export function OtpInput({
   const message = error ? errorMessage : success ? successMessage : hint;
   const messageTone = error ? 'text-destructive' : success ? 'text-emerald-500' : 'text-muted-foreground';
 
+  // 'lg' drops the 3+3 grouping and widens the slots to match the auth card.
+  const lg = size === 'lg';
+  const slot = lg ? 'h-[60px] w-[52px] text-lg sm:h-14 sm:w-14' : 'h-12 w-10 text-[15px]';
+  const groupGap = lg ? 0 : groupEvery;
+
   return (
-    <div dir="ltr" className={cn('inline-flex flex-col', className)}>
+    <div dir="ltr" className={cn('inline-flex flex-col', lg && 'w-full', className)}>
       <motion.div
         role="group"
         aria-label={label}
-        className="relative flex gap-2"
+        className={cn('relative flex', lg ? 'w-full justify-between gap-2 sm:gap-3' : 'gap-2')}
         initial={false}
         variants={{ idle: { x: 0 }, wrong: { x: [0, -5, 4, -3, 0] } }}
         animate={error && !reduced ? 'wrong' : 'idle'}
@@ -335,17 +345,18 @@ export function OtpInput({
         {Array.from({ length }, (_, i) => {
           const char = chars[i] ?? '';
           const active = focusedIndex === i;
-          const gap = groupEvery > 0 && i > 0 && i % groupEvery === 0;
+          const gap = groupGap > 0 && i > 0 && i % groupGap === 0;
 
           return (
-            <div key={i} className={cn('relative h-12 w-10', gap && 'ml-3')}>
+            <div key={i} className={cn('relative', slot, gap && 'ms-3')}>
               <input
                 {...getCellProps(i)}
                 aria-label={`${label}, character ${i + 1} of ${length}`}
                 aria-invalid={error || undefined}
                 aria-describedby={hasStatus ? statusId : undefined}
                 className={cn(
-                  'h-12 w-10 rounded-[10px] border-2 bg-background text-center text-[15px] text-transparent caret-transparent outline-none transition-colors duration-150 selection:bg-transparent focus-visible:outline-none disabled:opacity-50',
+                  'absolute inset-0 rounded-[10px] border-2 bg-background text-center text-transparent caret-transparent outline-none transition-colors duration-150 selection:bg-transparent focus-visible:outline-none disabled:opacity-50',
+                  lg ? 'text-lg' : 'text-[15px]',
                   error
                     ? 'border-destructive'
                     : success

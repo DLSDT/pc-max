@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, AtSign, KeyRound, Mail, Send, UserPlus } from 'lucide-react';
+import { ArrowLeft, AtSign, KeyRound, Mail, MailCheck, Send, UserPlus } from 'lucide-react';
 import { useAuth } from '@/store/auth';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui';
@@ -9,6 +9,8 @@ import { PasswordStrength } from '@/components/ui/password-strength';
 import { OtpInput } from '@/components/ui/otp-input';
 import { usePasswordRules, MIN_PASSWORD_LENGTH, isValidEmail } from '@/lib/passwordRules';
 import { AuthAlert, AuthCard, AuthField, AuthFooter, AuthHeader } from '@/components/auth/AuthShell';
+import { AuthBadge } from '@/components/auth/AuthBadge';
+import { Separator } from '@/components/ui/separator';
 
 type Step = 'email' | 'details';
 
@@ -99,7 +101,9 @@ export default function RegisterPage() {
     <>
       <AuthHeader
         title={t('auth.createAccountTitle')}
-        subtitle={step === 'email' ? t('auth.registerHint') : t('auth.codeSentTo', { email: email.trim() })}
+        // On the code step the card states the address itself, so repeating it
+        // here would say the same sentence twice on one screen.
+        subtitle={step === 'email' ? t('auth.registerHint') : undefined}
       />
 
       <AuthCard>
@@ -134,10 +138,25 @@ export default function RegisterPage() {
           </form>
         ) : (
           <form onSubmit={onSubmit} noValidate className="space-y-5">
+            {/* Code step: badge, title, rule, slots — the address has already been
+                confirmed, so this screen is about one thing and says so. */}
+            <div className="flex flex-col items-center gap-3 text-center">
+              <AuthBadge icon={MailCheck} />
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold tracking-tight text-foreground">{t('auth.otpTitle')}</h2>
+                <p className="text-balance text-sm leading-relaxed text-muted-foreground">
+                  {t('auth.otpSubtitle', { email: email.trim() })}
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
             <div className="space-y-2">
               {/* OtpInput is uncontrolled and owns its own status/error slot. */}
               <OtpInput
                 label={t('auth.verificationCode')}
+                size="lg"
                 autoFocus
                 disabled={busy}
                 status={fieldErrors.otp ? 'error' : 'idle'}
@@ -147,14 +166,6 @@ export default function RegisterPage() {
                   clearField('otp');
                 }}
               />
-              <button
-                type="button"
-                onClick={() => void resend()}
-                disabled={sending || busy}
-                className="rounded text-xs font-medium text-primary underline-offset-4 transition-colors hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {sending ? t('auth.sendingCode') : t('auth.resendCode')}
-              </button>
             </div>
 
             <AuthField
@@ -229,6 +240,22 @@ export default function RegisterPage() {
               >
                 <ArrowLeft aria-hidden className="size-3.5 rtl:rotate-180" />
                 {t('auth.changeEmail')}
+              </button>
+            </div>
+
+            <Separator className="mt-1" />
+
+            {/* Resend sits at the foot, phrased as the question a stuck user is
+                actually asking rather than as a bare action. */}
+            <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm">
+              <span className="text-muted-foreground">{t('auth.otpTrouble')}</span>
+              <button
+                type="button"
+                onClick={() => void resend()}
+                disabled={sending || busy}
+                className="rounded font-medium text-primary underline underline-offset-4 transition-opacity hover:opacity-80 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {sending ? t('auth.sendingCode') : t('auth.resendCode')}
               </button>
             </div>
           </form>

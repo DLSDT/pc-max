@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 /**
@@ -121,9 +122,10 @@ export function PasswordStrength({
   rules = defaultPasswordRules,
   labels = defaultLabels as readonly string[],
   showRules = true,
-  guessableLabel = 'Commonly guessed',
+  guessableLabel,
   className,
 }: PasswordStrengthProps) {
+  const { t } = useTranslation();
   const { score, max, label, rules: evaluated, guessable, announcement } = usePasswordStrength(value, { rules, labels });
   const tone = toneFor(score, max);
 
@@ -156,7 +158,7 @@ export function PasswordStrength({
           className="whitespace-nowrap text-[11px] leading-5 text-amber-500 transition-opacity duration-200"
           style={{ opacity: guessable ? 1 : 0 }}
         >
-          {guessableLabel}
+          {guessableLabel ?? t('auth.pwGuessable')}
         </span>
       </div>
 
@@ -182,7 +184,7 @@ export function PasswordStrength({
               <span className={cn('text-xs leading-5 transition-colors duration-200', rule.met ? 'text-foreground' : 'text-muted-foreground')}>
                 {rule.label}
               </span>
-              <span className="sr-only">{rule.met ? 'met' : 'not met'}</span>
+              <span className="sr-only">{rule.met ? t('auth.pwMet') : t('auth.pwNotMet')}</span>
             </li>
           ))}
         </ul>
