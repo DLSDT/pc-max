@@ -1,0 +1,20 @@
+{
+  "package": {
+    "name": "Streamline PC Max",
+    "slug": "streamline-pc-max",
+    "kind": "streamline",
+    "gpuVendor": "any",
+    "arch": "any",
+    "isDefault": false
+  },
+  "changeNote": "Streamline PC Max V2 — NVIDIA Streamline runtime set",
+  "variants": [
+    {
+      "name": "Streamline PC Max V2",
+      "dir": "Untitled Folder/NVIDIA MFG Original V2/Streamline PC MAX V2",
+      "role": "streamline",
+      "component": "streamline",
+      "operation": "replace"
+    }
+  ]
+}
