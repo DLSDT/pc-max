@@ -49,14 +49,29 @@ ssh root@31.57.63.253 'cd /www/pcmax && git pull && pcmax deploy && pcmax health
 
 ---
 
-## بیلد
+## بیلد و انتشار
 
-GitHub → Actions → **build-windows-installer** → Run workflow.
+یک تگ بزن؛ بقیه‌اش خودکار است:
 
-خروجی: artifact با نام `pcmax-windows-setup` شامل `.exe` و `.sig`.
+```bash
+git tag -a v0.4.1 -m "PC MAX 0.4.1" && git push origin v0.4.1
+```
 
-> `.sig` را دور نینداز — امضای به‌روزرسانی خودکار است. بدون آن نمی‌شود این
-> نسخه را به‌عنوان آپدیت منتشر کرد.
+ورک‌فلو بیلد می‌گیرد و **خودش GitHub Release می‌سازد** با نصاب و `.sig`.
+حدود ۶ دقیقه. آدرس دانلود از قبل قابل حدس است:
+
+```
+https://github.com/DLSDT/pc-max/releases/download/v<نسخه>/PC.MAX_<نسخه>_x64-setup.exe
+```
+
+(گیت‌هاب فاصله‌های نام فایل را به نقطه تبدیل می‌کند.)
+
+> قبلاً باید دستی Release می‌ساختی و لینک را کپی می‌کردی. دلیلش این است که
+> دانلود artifact توکن می‌خواهد و updater بی‌نام‌ونشان درخواست می‌دهد — پس
+> نصاب باید جایی عمومی باشد.
+
+> `.sig` حیاتی است: سرور نسخهٔ بدون امضا را «آپدیتی موجود نیست» حساب می‌کند،
+> یعنی بی‌سروصدا هیچ‌چیز عرضه نمی‌کند.
 
 CI مقدار `VITE_API_URL` را از secret مخزن می‌گیرد و اگر نبود روی
 `https://pc-maxapp.rixy.ir/api/v1` می‌افتد. یعنی بیلدهای CI هیچ‌وقت مشکل
@@ -70,7 +85,14 @@ CI مقدار `VITE_API_URL` را از secret مخزن می‌گیرد و اگر
 
 **بدون این، به‌روزرسانی خودکار برای هیچ کاربری کار نمی‌کند.**
 
-پنل ادمین → App Versions → نسخهٔ جدید با فایل `.exe` و امضای `.sig`.
+```bash
+read -rsp 'admin password: ' P && PCMAX_ADMIN_PASSWORD="$P" node apps/api/scripts/register-release.mjs \
+  --exe <exe> --sig <sig> --url <لینک ریلیز> \
+  --base https://pc-maxapp.rixy.ir/api/v1 --admin-email admin@pcmax.rixy.ir --apply; unset P
+```
+
+اول بدون `--apply` بزن: اسکریپت کلید امضا را با pubkey داخل برنامه مقایسه
+می‌کند و لینک را دانلود می‌کند تا مطمئن شود همان بایت‌هاست.
 
 بررسی:
 
