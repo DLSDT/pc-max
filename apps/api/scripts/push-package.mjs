@@ -254,10 +254,10 @@ function putRaw(url, bytes) {
         const end = Math.min(sent + CHUNK, bytes.length);
         const ok = req.write(bytes.subarray(sent, end));
         sent = end;
-        if (big) process.stdout.write(`\r     ${(sent / 1048576).toFixed(1)}/${(bytes.length / 1048576).toFixed(1)} MB   `);
+        if (big && process.stdout.isTTY) process.stdout.write(`\r     ${(sent / 1048576).toFixed(1)}/${(bytes.length / 1048576).toFixed(1)} MB   `);
         if (!ok) { req.once('drain', write); return; }
       }
-      if (big) process.stdout.write('\r                                   \r');
+      if (big && process.stdout.isTTY) process.stdout.write('\r                                   \r');
       req.end();
     };
     write();

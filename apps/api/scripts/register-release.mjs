@@ -80,19 +80,40 @@ console.log(`  key id    : ${pubKeyId} ✓ matches the pubkey compiled into the 
 
 // --- 2. does the URL serve these exact bytes? ------------------------------
 if (!skipFetch) {
-  process.stdout.write('  url check : ');
+  console.log('  url check : downloading to compare bytes…');
   const res = await fetch(downloadUrl, { redirect: 'follow' });
   if (!res.ok) {
-    console.error(`\n  ✗ ${downloadUrl} returned ${res.status}. The updater fetches this URL anonymously.`);
+    console.error(`  ✗ ${downloadUrl} returned ${res.status}. The updater fetches this URL anonymously.`);
     process.exit(1);
   }
-  const remote = Buffer.from(await res.arrayBuffer());
-  const remoteSha = createHash('sha256').update(remote).digest('hex');
+
+  // Size first: it is free, and a mismatch here is already conclusive, so a
+  // wrong URL fails in a second instead of after a full download.
+  const declared = Number(res.headers.get('content-length') ?? 0);
+  if (declared && declared !== exe.length) {
+    console.error(`  ✗ the URL serves ${declared} bytes, the local installer is ${exe.length}`);
+    process.exit(1);
+  }
+
+  // Streamed with progress. This is a multi-megabyte fetch over whatever line
+  // the operator happens to have — measured at ~85 KB/s here, so roughly two
+  // minutes — and a silent process for that long is indistinguishable from a
+  // hung one, which is exactly how it first got reported.
+  const hash = createHash('sha256');
+  let got = 0;
+  for await (const chunk of res.body) {
+    hash.update(chunk);
+    got += chunk.length;
+    if (process.stdout.isTTY) process.stdout.write(`\r              ${(got / 1048576).toFixed(1)}/${(exe.length / 1048576).toFixed(1)} MB   `);
+  }
+  if (process.stdout.isTTY) process.stdout.write('\r                                        \r');
+
+  const remoteSha = hash.digest('hex');
   if (remoteSha !== sha256) {
-    console.error(`\n  ✗ the URL serves different bytes (${remoteSha.slice(0, 16)}… vs ${sha256.slice(0, 16)}…)`);
+    console.error(`  ✗ the URL serves different bytes (${remoteSha.slice(0, 16)}… vs ${sha256.slice(0, 16)}…)`);
     process.exit(1);
   }
-  console.log('same bytes as the local file ✓');
+  console.log('  url check : same bytes as the local file ✓');
 }
 
 if (!apply) {
