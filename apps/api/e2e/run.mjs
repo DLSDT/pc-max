@@ -62,6 +62,11 @@ for (const f of files) {
 const ctx = new Ctx({ base, mode, adminEmail, adminPassword });
 console.log(`\nPC MAX e2e — ${suites.length} suites, ${suites.reduce((n, s) => n + s.tests.length, 0)} tests`);
 console.log(`target: ${base}  mode: ${mode}`);
+if (!ctx.hasAdminCreds()) {
+  const missing = adminEmail ? 'PCMAX_ADMIN_PASSWORD is not set' : '--admin-email was not passed';
+  console.log(`\n⚠  ${missing} — admin-authenticated tests will be skipped.`);
+  console.log('   PCMAX_ADMIN_PASSWORD=… node apps/api/e2e/run.mjs --admin-email …');
+}
 
 const failures = await runSuites(suites, ctx, { filter });
 process.exit(failures ? 1 : 0);

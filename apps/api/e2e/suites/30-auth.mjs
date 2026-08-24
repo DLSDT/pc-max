@@ -41,6 +41,7 @@ export const tests = [
   },
   {
     name: 'a tampered JWT signature is rejected',
+    admin: true,
     run: async (ctx) => {
       // Take a real admin token and flip the signature. If this is accepted,
       // anyone can mint their own admin.
@@ -69,6 +70,7 @@ export const tests = [
   },
   {
     name: 'admin login issues a usable short-lived token',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       assert(typeof tok === 'string' && tok.split('.').length === 3, 'admin token must be a JWT');
@@ -82,6 +84,7 @@ export const tests = [
   },
   {
     name: 'GET /admin/auth/me returns the admin identity and permissions',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/auth/me', { token: tok });
@@ -94,6 +97,7 @@ export const tests = [
   },
   {
     name: 'a user-kind token cannot reach an admin route',
+    admin: true,
     run: async (ctx) => {
       // Re-sign is impossible without the secret, so instead assert the guard
       // rejects a structurally valid token whose kind is wrong.

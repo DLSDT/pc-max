@@ -83,6 +83,7 @@ export const tests = [
   },
   {
     name: 'admin payment listing requires auth and returns an envelope',
+    admin: true,
     run: async (ctx) => {
       const anon = await ctx.req('GET', '/admin/payments', { noCookies: true });
       eq(anon.status, 401, 'admin payments must require auth');
@@ -94,6 +95,7 @@ export const tests = [
   },
   {
     name: 'admin subscription plans match the public list',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const [pub, adm] = await Promise.all([

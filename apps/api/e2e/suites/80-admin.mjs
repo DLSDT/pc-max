@@ -25,6 +25,7 @@ const LIST_ROUTES = [
 export const tests = [
   {
     name: 'GET /admin/dashboard returns coherent stats',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/dashboard', { token: tok });
@@ -40,6 +41,7 @@ export const tests = [
   },
   {
     name: 'dashboard game count agrees with the public catalog',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const [dash, pub] = await Promise.all([
@@ -54,6 +56,7 @@ export const tests = [
   },
   {
     name: 'every admin list route answers with a data envelope',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const bad = [];
@@ -68,6 +71,7 @@ export const tests = [
   },
   {
     name: 'GET /admin/settings returns the settings map',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/settings', { token: tok });
@@ -81,6 +85,7 @@ export const tests = [
   },
   {
     name: 'admin settings and public /config agree',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const [adm, pub] = await Promise.all([
@@ -95,6 +100,7 @@ export const tests = [
   },
   {
     name: 'GET /admin/email/status reports a configured transport',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/email/status', { token: tok });
@@ -111,6 +117,7 @@ export const tests = [
   },
   {
     name: 'GET /admin/email/logs never returns a full address',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/email/logs', { token: tok });
@@ -130,6 +137,7 @@ export const tests = [
   },
   {
     name: 'GET /admin/security/login-attempts records outcomes',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/security/login-attempts', { token: tok });
@@ -143,6 +151,7 @@ export const tests = [
   },
   {
     name: 'GET /admin/audit-logs attributes each action to an admin',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/audit-logs', { token: tok });
@@ -157,6 +166,7 @@ export const tests = [
   },
   {
     name: 'admin user list never exposes password material',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const r = await ctx.req('GET', '/admin/users', { token: tok });
@@ -171,6 +181,7 @@ export const tests = [
   {
     name: 'a tag can be created, read back and deleted',
     mode: 'full',
+    admin: true,
     run: async (ctx) => {
       const tok = await ctx.adminToken();
       const slug = `e2e-tag-${Math.random().toString(36).slice(2, 8)}`;

@@ -99,10 +99,15 @@ export class Ctx {
     return { status: res.status, headers: res.headers, json, text, ms, url };
   }
 
+  /** Whether admin-authenticated tests can run at all. */
+  hasAdminCreds() {
+    return Boolean(this.adminEmail && this.adminPassword);
+  }
+
   /** Cached admin access token. Throws with the server's message if login fails. */
   async adminToken() {
     if (this._adminToken) return this._adminToken;
-    if (!this.adminEmail || !this.adminPassword) {
+    if (!this.hasAdminCreds()) {
       throw new Error('admin credentials not provided (--admin-email / PCMAX_ADMIN_PASSWORD)');
     }
     const r = await this.req('POST', '/admin/auth/login', {
@@ -143,11 +148,19 @@ export async function runSuites(suites, ctx, { filter } = {}) {
     if (filter && !suite.name.includes(filter)) continue;
     process.stdout.write(`\n${BOLD}▸ ${suite.name}${RESET}\n`);
     for (const test of suite.tests) {
-      const needsFull = test.mode === 'full';
-      if (needsFull && ctx.mode !== 'full') {
+      if (test.mode === 'full' && ctx.mode !== 'full') {
         skip++;
         results.push({ suite: suite.name, test: test.name, state: 'skip' });
         process.stdout.write(`  ${DIM}○ ${test.name} ${YELLOW}(skipped: mutates state)${RESET}\n`);
+        continue;
+      }
+      // A missing password is a setup gap, not a broken API. Reporting it as a
+      // failure per test buries the one real failure under a wall of identical
+      // ones — which is exactly what it did the first time this ran.
+      if (test.admin && !ctx.hasAdminCreds()) {
+        skip++;
+        results.push({ suite: suite.name, test: test.name, state: 'skip' });
+        process.stdout.write(`  ${DIM}○ ${test.name} ${YELLOW}(skipped: no admin credentials)${RESET}\n`);
         continue;
       }
       const started = Date.now();
