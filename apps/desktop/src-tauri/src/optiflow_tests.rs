@@ -7,7 +7,8 @@
 //! confirmed to fail against a version of the code without its guard.
 
 use super::optiflow::{
-    find_components, install, is_within, resolve_game_root, safe_component_name, scan, uninstall,
+    depth_ok, find_components, install, is_within, resolve_game_root, safe_component_name, scan,
+    uninstall,
     FileRole, InstalledFile, OptiFlowFile,
 };
 use base64::Engine;
@@ -590,4 +591,55 @@ fn uninstall_derives_the_root_from_the_exe_not_from_the_caller() {
         Err(e) => assert!(e.contains("outside the game folder"), "unexpected: {e}"),
         Ok(r) => assert_eq!(r.restored.len(), 0, "restored across two different games: {r:?}"),
     }
+}
+
+#[test]
+#[cfg(windows)]
+fn a_game_directly_on_a_drive_root_is_a_game_folder() {
+    // The layout that broke in the field: a second drive holding games at its
+    // top level. `E:\Resident Evil 2 2019` has one named component, and the
+    // old two-component floor rejected it with "That executable is not inside
+    // a game folder" — every install on a drive root, refused.
+    let dir = Path::new(r"E:\Resident Evil 2 2019");
+    assert_eq!(resolve_game_root(dir).unwrap(), PathBuf::from(r"E:\Resident Evil 2 2019"));
+}
+
+#[test]
+#[cfg(windows)]
+fn a_bare_drive_root_is_still_refused() {
+    // The floor exists to stop the installer searching and writing across a
+    // whole drive. Allowing the case above must not cost that.
+    assert!(resolve_game_root(Path::new(r"E:\")).is_none());
+    assert!(resolve_game_root(Path::new(r"C:\")).is_none());
+}
+
+#[test]
+#[cfg(windows)]
+fn walks_up_out_of_bin_x64_on_a_drive_root() {
+    let dir = Path::new(r"E:\Cyberpunk 2077\bin\x64");
+    assert_eq!(resolve_game_root(dir).unwrap(), PathBuf::from(r"E:\Cyberpunk 2077"));
+}
+
+#[test]
+fn a_game_on_a_drive_root_clears_the_depth_floor() {
+    // `E:\Resident Evil 2 2019` — one named component under a drive prefix.
+    // The old rule demanded two named components and refused it, so every game
+    // installed at the top of a second drive reported "That executable is not
+    // inside a game folder". Reported from a real machine.
+    assert!(depth_ok(1, true), "a game directly on a drive root must qualify");
+}
+
+#[test]
+fn a_bare_drive_root_still_fails_the_depth_floor() {
+    // What the floor is actually for: never let the installer treat a whole
+    // drive as the game folder and search or write across it.
+    assert!(!depth_ok(0, true), "E:\\ must never be a game root");
+}
+
+#[test]
+fn posix_still_needs_two_named_components() {
+    // Unchanged off Windows: `/games/Foo` yes, `/games` no.
+    assert!(depth_ok(2, false));
+    assert!(!depth_ok(1, false));
+    assert!(!depth_ok(0, false));
 }

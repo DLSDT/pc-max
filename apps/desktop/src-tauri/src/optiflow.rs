@@ -188,11 +188,28 @@ pub fn resolve_game_root(launcher_dir: &Path) -> Option<PathBuf> {
 /// A path shallow enough to be a filesystem or install root is never a game
 /// directory. Two named components is the floor (`C:\Games\Foo` qualifies,
 /// `C:\Games` does not).
+///
+/// A Windows drive letter counts as one of those levels. `E:\Resident Evil 2`
+/// has a single named component but is a perfectly ordinary game folder — the
+/// "second drive full of games" layout — and requiring two named components
+/// rejected every install sitting directly on a drive with "That executable is
+/// not inside a game folder". `E:\` alone still has no named component and is
+/// still refused, which is what the floor is actually for.
+///
+/// Only Windows paths carry a Prefix, so POSIX behaviour is unchanged.
 fn has_enough_depth(path: &Path) -> bool {
-    path.components()
-        .filter(|c| matches!(c, std::path::Component::Normal(_)))
-        .count()
-        >= 2
+    use std::path::Component;
+    let named = path.components().filter(|c| matches!(c, Component::Normal(_))).count();
+    let rooted_at_a_drive = path.components().any(|c| matches!(c, Component::Prefix(_)));
+    depth_ok(named, rooted_at_a_drive)
+}
+
+/// The depth rule itself, separated from path parsing so it can be tested off
+/// Windows. `Component::Prefix` only exists on Windows targets, so a test
+/// written against a real `E:\…` path compiles away everywhere CI runs — which
+/// is how the drive-root case went unnoticed in the first place.
+pub fn depth_ok(named_components: usize, rooted_at_a_drive: bool) -> bool {
+    named_components >= if rooted_at_a_drive { 1 } else { 2 }
 }
 
 /// True when `target` is inside `root`. The parent is canonicalised first, so
