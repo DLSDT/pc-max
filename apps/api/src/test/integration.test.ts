@@ -2898,6 +2898,60 @@ describe('ai optical flow unlocker / streamline', () => {
   });
 });
 
+describe('admin email test + delivery log', () => {
+  let adminToken: string;
+
+  beforeAll(async () => {
+    adminToken = ((await inject('POST', '/api/v1/admin/auth/login', {
+      body: { email: 'admin@test.local', password: 'TestPass123!' },
+    })).json as { accessToken: string }).accessToken;
+  });
+
+  it('sends the test to a chosen address, not only the admin\'s own', async () => {
+    // Testing delivery only to the bootstrap admin address proves SMTP accepted
+    // the message, not that mail reaches a mailbox anyone can open.
+    const res = await inject('POST', '/api/v1/admin/email/test', {
+      token: adminToken,
+      body: { to: 'someone-else@example.test' },
+    });
+    expect(res.status).toBe(200);
+    expect((res.json as { to: string }).to).toBe('someone-else@example.test');
+  });
+
+  it('falls back to the admin address when none is given', async () => {
+    const res = await inject('POST', '/api/v1/admin/email/test', { token: adminToken, body: {} });
+    expect(res.status).toBe(200);
+    expect((res.json as { to: string }).to).toBe('admin@test.local');
+  });
+
+  it('rejects a recipient that is not an address', async () => {
+    const res = await inject('POST', '/api/v1/admin/email/test', { token: adminToken, body: { to: 'not-an-email' } });
+    expect(res.status).toBe(400);
+  });
+
+  it('records every send in a log an admin can read', async () => {
+    const res = await inject('GET', '/api/v1/admin/email/logs?limit=10', { token: adminToken });
+    expect(res.status).toBe(200);
+    const { data } = res.json as {
+      data: { event: string; recipient: string; status: string; createdAt: string }[];
+    };
+    expect(data.length).toBeGreaterThan(0);
+    const test = data.find((r) => r.event === 'admin_test');
+    expect(test, 'the test send was not logged').toBeDefined();
+    expect(['sent', 'failed']).toContain(test!.status);
+    // The full address is never stored, so it cannot leak here.
+    expect(test!.recipient).not.toContain('someone-else@example.test');
+    expect(test!.recipient).toMatch(/\*/);
+  });
+
+  it('needs admin auth', async () => {
+    expect((await inject('GET', '/api/v1/admin/email/logs')).status).toBe(401);
+    // With a well-formed body, so this asserts the guard rather than the schema
+    // — Fastify validates before preHandler, so a bodyless POST 400s first.
+    expect((await inject('POST', '/api/v1/admin/email/test', { body: {} })).status).toBe(401);
+  });
+});
+
 function awaitImportFs() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require('node:fs') as typeof import('node:fs');

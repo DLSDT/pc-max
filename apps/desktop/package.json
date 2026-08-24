@@ -2,18 +2,19 @@
   "name": "@goh/desktop",
   "version": "0.4.0",
   "private": true,
-  "description": "Game Optimization Hub — Windows Desktop App (Tauri 2 + React)",
+  "description": "Game Optimization Hub \u2014 Windows Desktop App (Tauri 2 + React)",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "test": "vitest run",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/check-api-url.mjs && tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "icons": "node scripts/generate-icons.mjs",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "check:api-url": "node scripts/check-api-url.mjs"
   },
   "dependencies": {
     "@goh/types": "^0.1.0",

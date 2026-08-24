@@ -15,6 +15,12 @@
  */
 function resolveApiUrl(): string {
   const injected = import.meta.env.VITE_API_URL as string | undefined;
+  // A localhost override must never reach a production build: Vite inlines this
+  // as a string literal, so a stale .env.local becomes the shipped app's API
+  // address and the only symptom is "Unable to reach the PC MAX service" on
+  // every login. That cannot be caught here — by the time this runs the wrong
+  // value is already compiled in — so scripts/check-api-url.mjs fails the build
+  // instead, before Vite substitutes it.
   if (injected) return injected.replace(/\/+$/, '');
   if (import.meta.env.DEV) return 'http://localhost:4000/api/v1';
   return 'https://pc-maxapp.rixy.ir/api/v1';
