@@ -10,11 +10,19 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/build-windows.yml'
+    # A `v*` tag additionally publishes a release. Branch builds only produce an
+    # artifact, and artifact downloads need a token — which the auto-updater
+    # does not have. A release asset is fetchable anonymously, which is the
+    # whole requirement for `downloadUrl`.
+    tags: ['v*']
 
 jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 30
+    # Only needed to create the release below; the build itself reads nothing.
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,3 +74,23 @@ jobs:
             apps/desktop/src-tauri/target/release/bundle/nsis/*.exe
             apps/desktop/src-tauri/target/release/bundle/nsis/*.sig
           if-no-files-found: error
+
+      # Publish on a tag. The .sig must ship beside the installer: without it
+      # the release cannot be registered as an update at all, since the server
+      # treats an unsigned version as "no update available".
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd apps/desktop/src-tauri/target/release/bundle/nsis
+          # Fail loudly rather than publishing a release with nothing attached.
+          ls *.exe >/dev/null
+          ls *.sig >/dev/null
+          gh release create "${GITHUB_REF_NAME}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "PC MAX ${GITHUB_REF_NAME#v}" \
+            --notes "Windows installer for ${GITHUB_REF_NAME#v}. The .sig is the auto-updater signature." \
+            *.exe *.sig
