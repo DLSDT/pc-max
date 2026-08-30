@@ -113,8 +113,20 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${PCMAX_ADMIN_PASSWORD}" ]; then
-            echo "PCMAX_ADMIN_PASSWORD is not set — release published, not registered."
-            echo "Add the secret to have tags register themselves."
+            # This used to `exit 0`, which is how 0.4.2 and 0.4.3 both shipped
+            # as green builds while every installed client went on being told
+            # 0.4.1 was the latest — the exact failure this step exists to
+            # prevent, reproduced by the step itself. A skip that reports
+            # success is indistinguishable from a success.
+            #
+            # A fork has no reason to hold this secret and should still publish
+            # its own installer, so only the repo that owns the update server
+            # treats the missing secret as a failure.
+            if [ "${GITHUB_REPOSITORY}" = "DLSDT/pc-max" ]; then
+              echo "::error::PCMAX_ADMIN_PASSWORD is not set, so ${GITHUB_REF_NAME} was published but never registered. No existing install will be offered it until someone registers it by hand."
+              exit 1
+            fi
+            echo "::warning::PCMAX_ADMIN_PASSWORD is not set — release published, not registered."
             exit 0
           fi
 
