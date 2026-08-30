@@ -30,6 +30,9 @@ async function verifyAndActivate(paymentId: string): Promise<(typeof VerifySchem
     providerRef: payment.providerRef ?? '',
     amount: payment.amount,
     currency: payment.currency,
+    // Our row id is what was sent as the gateway's order reference at request
+    // time; IDPay verifies against both and refuses with only its own id.
+    orderId: payment.id,
   });
 
   if (!result.verified) {
@@ -59,11 +62,39 @@ async function verifyAndActivate(paymentId: string): Promise<(typeof VerifySchem
   };
 }
 
-/** Find the payment by explicit id, or by the provider authority reference. */
-async function resolvePayment(paymentId: string | undefined, authority: string | undefined) {
-  if (paymentId) return db.query.payments.findFirst({ where: eq(payments.id, paymentId) });
-  if (authority) return db.query.payments.findFirst({ where: eq(payments.providerRef, authority) });
-  throw badRequest('Missing paymentId or authority');
+/**
+ * Every name a gateway might use for "our payment id" and "your reference".
+ *
+ * Each gateway invented its own: ZarinPal sends `Authority`, Zibal sends
+ * `trackId` plus our `orderId`, IDPay sends `id` plus our `order_id`. They all
+ * mean one of two things, so they are normalised here rather than giving each
+ * provider its own callback route — the verification that follows is identical.
+ */
+const OUR_ID_KEYS = ['paymentId', 'orderId', 'order_id'] as const;
+const PROVIDER_REF_KEYS = ['authority', 'Authority', 'trackId', 'id'] as const;
+
+function pick(params: Record<string, unknown>, keys: readonly string[]): string | undefined {
+  for (const k of keys) {
+    const v = params[k];
+    if (typeof v === 'string' && v.length > 0) return v;
+    if (typeof v === 'number') return String(v);
+  }
+  return undefined;
+}
+
+/** Find the payment by our own id, or by whatever reference the gateway sent. */
+async function resolvePayment(params: Record<string, unknown>) {
+  const ours = pick(params, OUR_ID_KEYS);
+  // Our own id is a uuid; a gateway echoing something else back must not be
+  // used to look up a row by primary key.
+  if (ours && /^[0-9a-f-]{36}$/i.test(ours)) {
+    const byId = await db.query.payments.findFirst({ where: eq(payments.id, ours) });
+    if (byId) return byId;
+  }
+  const ref = pick(params, PROVIDER_REF_KEYS);
+  if (ref) return db.query.payments.findFirst({ where: eq(payments.providerRef, ref) });
+  if (!ours) throw badRequest('Missing payment reference');
+  return undefined;
 }
 
 export async function paymentsModule(app: FastifyInstance) {
@@ -74,17 +105,23 @@ export async function paymentsModule(app: FastifyInstance) {
     '/payments/:provider/callback',
     {
       schema: {
-        params: z.object({ provider: z.enum(['mock', 'zarinpal']) }),
+        params: z.object({ provider: z.enum(['mock', 'zarinpal', 'zibal', 'idpay']) }),
         querystring: z.object({
           authority: z.string().optional(),
-          paymentId: z.string().uuid().optional(),
-          status: z.string().optional(),
+          Authority: z.string().optional(),
+          trackId: z.union([z.string(), z.number()]).optional(),
+          id: z.string().optional(),
+          paymentId: z.string().optional(),
+          orderId: z.string().optional(),
+          order_id: z.string().optional(),
+          status: z.union([z.string(), z.number()]).optional(),
+          success: z.union([z.string(), z.number()]).optional(),
         }),
         response: { 200: VerifySchema },
       },
     },
     async (request) => {
-      const payment = await resolvePayment(request.query.paymentId, request.query.authority);
+      const payment = await resolvePayment(request.query as Record<string, unknown>);
       if (!payment) throw notFound('Payment');
       return verifyAndActivate(payment.id);
     },
@@ -95,17 +132,23 @@ export async function paymentsModule(app: FastifyInstance) {
     '/payments/:provider/callback',
     {
       schema: {
-        params: z.object({ provider: z.enum(['mock', 'zarinpal']) }),
+        params: z.object({ provider: z.enum(['mock', 'zarinpal', 'zibal', 'idpay']) }),
         body: z.object({
           authority: z.string().optional(),
-          paymentId: z.string().uuid().optional(),
-          status: z.string().optional(),
+          Authority: z.string().optional(),
+          trackId: z.union([z.string(), z.number()]).optional(),
+          id: z.string().optional(),
+          paymentId: z.string().optional(),
+          orderId: z.string().optional(),
+          order_id: z.string().optional(),
+          status: z.union([z.string(), z.number()]).optional(),
+          success: z.union([z.string(), z.number()]).optional(),
         }),
         response: { 200: VerifySchema },
       },
     },
     async (request) => {
-      const payment = await resolvePayment(request.body.paymentId, request.body.authority);
+      const payment = await resolvePayment(request.body as Record<string, unknown>);
       if (!payment) throw notFound('Payment');
       return verifyAndActivate(payment.id);
     },

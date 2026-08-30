@@ -70,7 +70,7 @@ export async function subscriptionsModule(app: FastifyInstance) {
           amount: purchase.plan.price,
           currency: purchase.plan.currency,
           description: `${purchase.plan.name} — Game Optimization Hub`,
-          callbackUrl: `${config.ZARINPAL_CALLBACK_BASE_URL}/api/v1/payments/${provider.name}/callback`,
+          callbackUrl: `${config.paymentCallbackBaseUrl}/api/v1/payments/${provider.name}/callback`,
         });
         redirectUrl = result.redirectUrl;
         await db

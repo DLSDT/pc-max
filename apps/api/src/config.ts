@@ -44,7 +44,7 @@ const envSchema = z.object({
 
   // Payment system — provider-agnostic. `mock` auto-verifies (dev/tests);
   // `zarinpal` talks to the real gateway (sandbox by default).
-  PAYMENT_PROVIDER: z.enum(['mock', 'zarinpal']).default('mock'),
+  PAYMENT_PROVIDER: z.enum(['mock', 'zarinpal', 'zibal', 'idpay']).default('mock'),
   /** Consciously run the always-approve mock gateway in production — only ever
    *  correct while nobody is being charged (a free beta). Off by default so a
    *  paid deployment can't ship it by accident. */
@@ -58,6 +58,31 @@ const envSchema = z.object({
     .default('true')
     .transform((v) => v === 'true'),
   ZARINPAL_CALLBACK_BASE_URL: z.string().default('http://localhost:4000'),
+
+  // --- Zibal ---------------------------------------------------------------
+  /** `zibal` is the gateway's own always-succeeds test merchant. */
+  ZIBAL_MERCHANT: z.string().min(1).default('zibal'),
+
+  // --- IDPay ---------------------------------------------------------------
+  /** Optional, not defaulted: the compose file has to pass it through for
+   *  .env to reach the container, and a schema default paired with a
+   *  `${VAR:-}` line is the shape that once broke boot. */
+  IDPAY_API_KEY: z.string().optional(),
+  IDPAY_SANDBOX: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
+
+  /**
+   * Where gateways send the user back.
+   *
+   * Separate from the API's own address because Iranian gateways only accept a
+   * callback on the domain the merchant was verified against, which is not
+   * necessarily where the API lives. Falls back to the ZarinPal-specific name
+   * this used to be read from, so an existing deployment keeps working without
+   * touching its .env.
+   */
+  PAYMENT_CALLBACK_BASE_URL: z.string().optional(),
 
   // Secure downloads — package files are never served publicly; the download
   // endpoint returns short-lived signed URLs (HMAC for the local driver,
@@ -155,7 +180,8 @@ if (parsed.data.NODE_ENV === 'production' && parsed.data.PAYMENT_PROVIDER === 'm
   // eslint-disable-next-line no-console
   console.error(
     '❌ PAYMENT_PROVIDER=mock approves every payment and would grant paid subscriptions for free.\n' +
-      '   Set PAYMENT_PROVIDER=zarinpal (with its credentials), or set ALLOW_MOCK_PAYMENTS=true\n' +
+      '   Set PAYMENT_PROVIDER to a real gateway (zarinpal / zibal / idpay) with its\n' +
+      '   credentials, or set ALLOW_MOCK_PAYMENTS=true\n' +
       '   to run a deliberately free beta where nobody is charged.',
   );
   process.exit(1);
@@ -223,4 +249,15 @@ if (parsed.data.NODE_ENV === 'production') {
   }
 }
 
-export const config = parsed.data;
+export const config = {
+  ...parsed.data,
+  /**
+   * The origin gateways redirect back to. Provider-neutral, because the
+   * callback has to sit on whichever domain the merchant was verified against
+   * — which need not be the API's own host. Existing deployments set only the
+   * ZarinPal-named variable, so that remains the fallback.
+   */
+  paymentCallbackBaseUrl: (
+    parsed.data.PAYMENT_CALLBACK_BASE_URL || parsed.data.ZARINPAL_CALLBACK_BASE_URL
+  ).replace(/\/+$/, ''),
+};

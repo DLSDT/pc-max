@@ -78,6 +78,12 @@ services:
       # schema's own default is used otherwise.
       ZARINPAL_MERCHANT_ID: ${ZARINPAL_MERCHANT_ID:-sandbox-test-merchant}
       ZARINPAL_CALLBACK_BASE_URL: ${ZARINPAL_CALLBACK_BASE_URL:-https://pc-maxapp.rixy.ir}
+      # Gateways only accept a callback on the domain their merchant was
+      # verified against, which need not be where the API lives.
+      PAYMENT_CALLBACK_BASE_URL: ${PAYMENT_CALLBACK_BASE_URL:-}
+      ZIBAL_MERCHANT: ${ZIBAL_MERCHANT:-zibal}
+      IDPAY_API_KEY: ${IDPAY_API_KEY:-}
+      IDPAY_SANDBOX: ${IDPAY_SANDBOX:-true}
       # 300 (the app default) was sized before the catalog grew to 280+ games —
       # a single client's offline-first sync alone fires 2 requests per changed
       # game, so a full sync trips the default limit on its own.

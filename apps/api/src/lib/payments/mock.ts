@@ -14,7 +14,7 @@ export const mockProvider: PaymentProvider = {
     const authority = `MOCK-${randomUUID()}`;
     return {
       providerRef: authority,
-      redirectUrl: `${config.ZARINPAL_CALLBACK_BASE_URL}/api/v1/payments/mock/callback?paymentId=${input.referenceId}`,
+      redirectUrl: `${config.paymentCallbackBaseUrl}/api/v1/payments/mock/callback?paymentId=${input.referenceId}`,
       raw: { authority, mock: true },
     };
   },

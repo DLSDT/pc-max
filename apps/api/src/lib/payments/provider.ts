@@ -33,6 +33,11 @@ export interface PaymentVerifyInput {
   providerRef: string;
   amount: number;
   currency: string;
+  /**
+   * Our own payment id, echoed back by gateways that key a verification on the
+   * merchant's order reference as well as their own (IDPay requires both).
+   */
+  orderId?: string;
 }
 
 export interface PaymentVerifyResult {
@@ -47,13 +52,17 @@ export interface PaymentProvider {
   verifyPayment(input: PaymentVerifyInput): Promise<PaymentVerifyResult>;
 }
 
+import { idpayProvider } from './idpay';
 import { mockProvider } from './mock';
 import { zarinpalProvider } from './zarinpal';
+import { zibalProvider } from './zibal';
 
 /** Registry — extend here when a new gateway is added. */
 const PROVIDERS: Record<string, () => PaymentProvider> = {
   mock: () => mockProvider,
   zarinpal: () => zarinpalProvider,
+  zibal: () => zibalProvider,
+  idpay: () => idpayProvider,
 };
 
 export function getPaymentProvider(name: string): PaymentProvider {
