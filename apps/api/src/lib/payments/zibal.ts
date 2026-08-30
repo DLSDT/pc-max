@@ -77,6 +77,19 @@ export const zibalProvider: PaymentProvider = {
     };
   },
 
+  /**
+   * Zibal refuses a navigation that arrives with an empty `Referer`:
+   * "امکان انجام تراکنش با Referrer خالی وجود ندارد". Opening the URL from the
+   * desktop shell does exactly that — there is no page for the browser to say
+   * it came from — so the payment page has to be reached via the bounce page.
+   *
+   * A trackId is always digits. Anything else is refused rather than
+   * interpolated, so a corrupt reference cannot become part of a redirect.
+   */
+  gatewayUrl(providerRef: string): string | null {
+    return /^\d+$/.test(providerRef) ? `${START}/${providerRef}` : null;
+  },
+
   async verifyPayment(input: PaymentVerifyInput): Promise<PaymentVerifyResult> {
     const body = await call('/v1/verify', { trackId: Number(input.providerRef) });
 

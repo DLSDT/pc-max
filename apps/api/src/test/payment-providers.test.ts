@@ -97,6 +97,22 @@ describe('zibal', () => {
     expect((await zibalProvider.verifyPayment({ providerRef: '1', amount: 10_000, currency: 'IRR' })).verified).toBe(false);
   });
 
+  it('rebuilds the gateway page url from a stored track id', async () => {
+    // The bounce page exists because Zibal refuses an empty Referer; it can
+    // only send the user on if the URL can be rebuilt from what we stored.
+    const { zibalProvider } = await import('../lib/payments/zibal');
+    expect(zibalProvider.gatewayUrl?.('987654')).toBe('https://gateway.zibal.ir/start/987654');
+  });
+
+  it('refuses to rebuild a gateway url from a reference that is not a track id', async () => {
+    // The result is interpolated into a redirect and into an href, so anything
+    // that is not plainly a track id has to be turned away rather than escaped.
+    const { zibalProvider } = await import('../lib/payments/zibal');
+    for (const bad of ['', '1/../evil', 'javascript:alert(1)', '12 34', 'https://evil.example']) {
+      expect(zibalProvider.gatewayUrl?.(bad)).toBeNull();
+    }
+  });
+
   it('rejects a plan priced in anything but rial', async () => {
     stubFetch([]);
     const { zibalProvider } = await import('../lib/payments/zibal');

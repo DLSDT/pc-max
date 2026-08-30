@@ -50,6 +50,19 @@ export interface PaymentProvider {
   readonly name: string;
   requestPayment(input: PaymentRequestInput): Promise<PaymentRequestResult>;
   verifyPayment(input: PaymentVerifyInput): Promise<PaymentVerifyResult>;
+  /**
+   * Rebuild the gateway page URL from the stored provider reference.
+   *
+   * Only for gateways that refuse a navigation arriving with an empty
+   * `Referer` — Zibal does, which makes its payment page unreachable when the
+   * desktop app hands the URL straight to the OS. Implementing this opts the
+   * provider into the bounce page (see GET /payments/go/:paymentId), which
+   * gives the browser a page on our own domain to come from.
+   *
+   * Returns null when the reference is not one this provider recognises, so a
+   * malformed value can never be spliced into a redirect.
+   */
+  gatewayUrl?(providerRef: string): string | null;
 }
 
 import { idpayProvider } from './idpay';

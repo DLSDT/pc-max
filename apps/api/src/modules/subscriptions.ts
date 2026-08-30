@@ -72,7 +72,13 @@ export async function subscriptionsModule(app: FastifyInstance) {
           description: `${purchase.plan.name} — Game Optimization Hub`,
           callbackUrl: `${config.paymentCallbackBaseUrl}/api/v1/payments/${provider.name}/callback`,
         });
-        redirectUrl = result.redirectUrl;
+        // A gateway that refuses an empty Referer (Zibal) can only be reached
+        // from a page on our own domain, so the client is pointed at the bounce
+        // page instead. Reusing `redirectUrl` rather than adding a field keeps
+        // already-installed clients working without an update.
+        redirectUrl = provider.gatewayUrl
+          ? `${config.paymentCallbackBaseUrl}/api/v1/payments/go/${purchase.paymentId}`
+          : result.redirectUrl;
         await db
           .update(payments)
           .set({ provider: provider.name, providerRef: result.providerRef })
