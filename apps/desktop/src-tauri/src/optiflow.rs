@@ -212,16 +212,42 @@ pub fn depth_ok(named_components: usize, rooted_at_a_drive: bool) -> bool {
     named_components >= if rooted_at_a_drive { 1 } else { 2 }
 }
 
-/// True when `target` is inside `root`. The parent is canonicalised first, so
-/// a symlinked directory inside the game cannot redirect a write outside it.
-/// `target` itself may not exist yet — that is the normal case for the
-/// unlocker.
+/// True when `target` is inside `root`. Directories on the way down are
+/// canonicalised, so a symlinked directory inside the game cannot redirect a
+/// write outside it. Neither `target` nor the folders leading to it need exist
+/// yet — an install routinely creates them.
 pub fn is_within(root: &Path, target: &Path) -> bool {
+    use std::path::Component;
+
     let Some(parent) = target.parent() else { return false };
-    let (Ok(real_root), Ok(real_parent)) = (root.canonicalize(), parent.canonicalize()) else {
+    let Ok(real_root) = root.canonicalize() else { return false };
+
+    // `..` is the one component that could climb back out of an ancestor we
+    // have already accepted, so it disqualifies the path outright rather than
+    // being resolved. Nothing legitimate here contains one.
+    if target.components().any(|c| matches!(c, Component::ParentDir)) {
         return false;
-    };
-    real_parent.starts_with(&real_root)
+    }
+
+    // `canonicalize` fails on a path that does not exist, and this used to
+    // canonicalise the immediate parent — so a destination one folder deep,
+    // like `<game>/OptiScaler/libxess_fg.dll`, was refused as "outside the game
+    // folder" purely because `OptiScaler` had not been created yet.
+    //
+    // Verify the deepest ancestor that *does* exist instead. What is missing
+    // cannot be a symlink pointing anywhere, because it is not anything yet,
+    // and the components below it are all `Normal` (see the `..` check above),
+    // so they can only descend.
+    let mut existing = parent;
+    loop {
+        if let Ok(real) = existing.canonicalize() {
+            return real.starts_with(&real_root);
+        }
+        match existing.parent() {
+            Some(up) => existing = up,
+            None => return false,
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -629,7 +655,23 @@ pub fn uninstall(exe_path: &Path, backup_dir: &Path, files: &[InstalledFile]) ->
         }
 
         if f.replaced {
-            let rel = match target.strip_prefix(&real_root) {
+            // `real_root` is canonical; the recorded path is whatever the
+            // install wrote down. Stripping one against the other only worked
+            // when the two happened to agree — and on Windows they never do,
+            // because canonicalize() returns a `\\?\` verbatim path. Every
+            // replaced file was reported "unexpected path" and left as it was,
+            // which is a removal that quietly restores nothing.
+            //
+            // The file exists (checked above), so this cannot fail for the
+            // reason the old code was tripping over.
+            let real_target = match target.canonicalize() {
+                Ok(p) => p,
+                Err(e) => {
+                    report.failed.push(SkippedFile { filename: f.path.clone(), reason: format!("cannot resolve the file: {e}") });
+                    continue;
+                }
+            };
+            let rel = match real_target.strip_prefix(&real_root) {
                 Ok(r) => r,
                 Err(_) => {
                     report.failed.push(SkippedFile { filename: f.path.clone(), reason: "unexpected path".into() });

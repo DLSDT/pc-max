@@ -217,6 +217,33 @@ fn containment_check_sees_through_a_symlinked_directory() {
     assert!(!is_within(&t.root, &target), "symlinked parent must not pass");
 }
 
+#[test]
+fn containment_allows_a_folder_the_install_is_about_to_create() {
+    // canonicalize() fails on a path that does not exist, and this check used
+    // to run it on the immediate parent — so a destination one folder deep was
+    // refused as "outside the game folder" for the sole reason that the folder
+    // had not been created yet.
+    let t = TempTree::new("nested-ok");
+    let target = t.root.join("OptiScaler").join("libxess_fg.dll");
+    assert!(!t.root.join("OptiScaler").exists(), "test setup: the folder is missing");
+    assert!(is_within(&t.root, &target));
+}
+
+#[cfg(unix)]
+#[test]
+fn containment_still_refuses_a_missing_folder_under_a_symlinked_parent() {
+    // The fix walks up to the deepest ancestor that exists. That ancestor is
+    // exactly where a symlink could be hiding, so the escape must still be
+    // caught when the leaf folders are the ones missing.
+    let t = TempTree::new("nested-escape");
+    let outside = TempTree::new("nested-escape-target");
+    fs::create_dir_all(outside.root.join("elsewhere")).unwrap();
+    std::os::unix::fs::symlink(outside.root.join("elsewhere"), t.root.join("evil")).unwrap();
+
+    let target = t.root.join("evil").join("not-created-yet").join("version.dll");
+    assert!(!is_within(&t.root, &target), "a symlinked ancestor must still be caught");
+}
+
 // ---------------------------------------------------------------------------
 // Install
 // ---------------------------------------------------------------------------
@@ -246,6 +273,25 @@ fn replaces_streamline_components_in_place_and_drops_the_unlocker_by_the_exe() {
     // The original is recoverable.
     let backup = PathBuf::from(&report.backup_dir).join("bin/x64/sl.dlss_g.dll");
     assert_eq!(fs::read(&backup).unwrap(), b"shipped version");
+}
+
+#[test]
+fn installs_a_file_into_a_subfolder_the_game_does_not_have_yet() {
+    // OptiScaler drops its payload into its own folder. Nothing had ever
+    // installed into a folder that did not already exist, so the containment
+    // check refused the whole batch: "Refusing to write outside the game
+    // folder: …\OptiScaler/libxess_fg.dll".
+    let t = TempTree::new("subfolder");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+
+    let report = install(
+        &exe,
+        &[payload("libxess_fg.dll", "OptiScaler/libxess_fg.dll", FileRole::Relative, b"fg bytes")],
+    )
+    .expect("a destination one folder deep must install");
+
+    assert_eq!(t.read("OptiScaler/libxess_fg.dll"), b"fg bytes");
+    assert_eq!(report.written.len(), 1);
 }
 
 #[test]
@@ -535,6 +581,37 @@ fn uninstall_restores_the_original_from_the_backup() {
     assert_eq!(t.read("bin/x64/sl.dlss.dll"), b"original".to_vec());
 }
 
+#[cfg(unix)]
+#[test]
+fn uninstall_restores_when_the_recorded_path_is_not_in_canonical_form() {
+    // On Windows canonicalize() hands back a `\\?\` verbatim path while the
+    // install records a plain `F:\…` one. Stripping the record against the
+    // canonical root therefore never matched, and every replaced file came
+    // back "unexpected path" — a removal that restored nothing and told the
+    // user only that something was unexpected.
+    //
+    // A symlinked root reproduces exactly that divergence on a platform CI
+    // runs on: the recorded path and the canonical root name the same file
+    // through different spellings.
+    let (t, _real_exe, _real_backup, _rec) = installed_fixture("uninst-noncanon");
+    let holder = TempTree::new("uninst-noncanon-link");
+    let game = holder.root.join("TheGameInstall");
+    std::os::unix::fs::symlink(&t.root, &game).unwrap();
+
+    let exe = game.join("bin/x64/TheGame.exe");
+    let backup = game.join(".goh-backup/x");
+    let rec = vec![InstalledFile {
+        path: game.join("bin/x64/sl.dlss.dll").to_string_lossy().to_string(),
+        replaced: true,
+    }];
+
+    let report = uninstall(&exe, &backup, &rec).expect("uninstall should succeed");
+
+    assert_eq!(report.restored.len(), 1, "the original must come back: {report:?}");
+    assert!(report.failed.is_empty(), "{report:?}");
+    assert_eq!(t.read("bin/x64/sl.dlss.dll"), b"original".to_vec());
+}
+
 #[test]
 fn uninstall_refuses_a_backup_folder_outside_the_game() {
     // The boundary must not be something the caller can move. A record pointing
@@ -643,3 +720,4 @@ fn posix_still_needs_two_named_components() {
     assert!(!depth_ok(1, false));
     assert!(!depth_ok(0, false));
 }
+
