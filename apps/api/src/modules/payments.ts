@@ -189,7 +189,15 @@ export async function paymentsModule(app: FastifyInstance) {
       const provider = getPaymentProvider(payment.provider);
       const target = payment.providerRef && provider.gatewayUrl ? provider.gatewayUrl(payment.providerRef) : null;
 
-      void reply.header('cache-control', 'no-store').type('text/html; charset=utf-8');
+      // helmet sets `referrer-policy: no-referrer` for every API response,
+      // which would strip the very header this page exists to produce. The
+      // meta tag in the page is specified to override the header, but the
+      // whole payment flow should not rest on that subtlety — so the header is
+      // corrected here too, for this route only.
+      void reply
+        .header('referrer-policy', 'origin')
+        .header('cache-control', 'no-store')
+        .type('text/html; charset=utf-8');
       // Only a payment still waiting to be made gets sent on. Bouncing a paid
       // one to the gateway would show the user a gateway error for a purchase
       // that actually succeeded.

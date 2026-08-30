@@ -1398,6 +1398,55 @@ describe('subscriptions & payments (Phase 5-6)', () => {
     expect(me.isActive).toBe(true);
   });
 
+  it('bounces a pending Zibal payment to the gateway with a referrer the gateway will accept', async () => {
+    // Zibal refuses a navigation whose Referer is empty, and helmet sets
+    // `no-referrer` on every API response — which would strip the one header
+    // this page exists to produce. Nothing about that failure is visible from
+    // our side: the page renders, the redirect happens, and the gateway shows
+    // the user "شما اجازه انجام تراکنش ندارید".
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: userToken,
+      body: { planId, idempotencyKey: `bounce-${Date.now()}` },
+    });
+    const pid = (purchase.json as { paymentId: string }).paymentId;
+
+    const { db } = await import('../db');
+    const { payments } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    await db.update(payments).set({ provider: 'zibal', providerRef: '987654' }).where(eq(payments.id, pid));
+
+    const res = await app.inject({ method: 'GET', url: `/api/v1/payments/go/${pid}` });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toContain('text/html');
+    expect(res.headers['referrer-policy']).not.toBe('no-referrer');
+    expect(res.body).toContain('https://gateway.zibal.ir/start/987654');
+    expect(res.body).toContain('name="referrer" content="origin"');
+  });
+
+  it('does not send an already-settled payment back to the gateway', async () => {
+    // Bouncing a paid payment shows the user a gateway error for a purchase
+    // that actually went through.
+    const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: userToken,
+      body: { planId, idempotencyKey: `bounce-settled-${Date.now()}` },
+    });
+    const pid = (purchase.json as { paymentId: string }).paymentId;
+
+    const { db } = await import('../db');
+    const { payments } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    await db
+      .update(payments)
+      .set({ provider: 'zibal', providerRef: '987654', status: 'paid' })
+      .where(eq(payments.id, pid));
+
+    const res = await app.inject({ method: 'GET', url: `/api/v1/payments/go/${pid}` });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).not.toContain('gateway.zibal.ir');
+  });
+
   it('lists payments in the admin panel with user + plan context', async () => {
     const list = (await inject('GET', '/api/v1/admin/payments', { token: adminToken })).json as {
       data: { userEmail: string; status: string; planName: string }[];
