@@ -36,18 +36,22 @@
 اگر Nginx است:
 
 ```nginx
-location /pay/callback {
-    proxy_pass https://pc-maxapp.rixy.ir/api/v1/payments/zibal/callback$is_args$args;
+location /api/v1/payments/ {
+    proxy_pass https://pc-maxapp.rixy.ir/api/v1/payments/;
     proxy_set_header Host pc-maxapp.rixy.ir;
     proxy_ssl_server_name on;
 }
 ```
 
-`$is_args$args` مهم است: درگاه نتیجه را در query string می‌فرستد
-(`trackId`، `success`، `orderId`) و بدون آن همه‌شان دور ریخته می‌شوند و سرور
-نمی‌فهمد کدام پرداخت را verify کند.
+مسیر عمداً همان مسیر API است. سرور آدرس بازگشت را
+`<PAYMENT_CALLBACK_BASE_URL>/api/v1/payments/<provider>/callback` می‌سازد، پس
+اگر مسیر روی cianet.ir چیز دیگری باشد آدرس سرجمع جور در نمی‌آید. با این شکل
+فقط `PAYMENT_CALLBACK_BASE_URL=https://cianet.ir` لازم است و هر درگاهی
+(zibal یا idpay) بدون تغییر nginx کار می‌کند.
 
-برای آیدی‌پی مسیر آخر را `.../payments/idpay/callback` بگذار.
+`proxy_pass` با اسلش پایانی، مسیر باقی‌مانده و query string را خودش منتقل
+می‌کند — درگاه نتیجه را در query می‌فرستد (`trackId`، `success`، `orderId`) و
+بدون آن سرور نمی‌فهمد کدام پرداخت را verify کند.
 
 اگر Apache یا هاست اشتراکی است، همان کار با یک فایل PHP دو خطی هم می‌شود —
 مهم این است که query string حفظ شود.
@@ -55,7 +59,7 @@ location /pay/callback {
 **بررسی:**
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/pay/callback?trackId=1"
+curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/api/v1/payments/zibal/callback?trackId=1"
 ```
 
 باید `404` بدهد (یعنی به API رسید و پرداختی با آن مشخصه پیدا نکرد) — نه `404`
@@ -70,7 +74,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/pay/callback?trackId
 ```bash
 PAYMENT_PROVIDER=zibal
 ZIBAL_MERCHANT=<کد مرچنت>
-PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pay/callback
+PAYMENT_CALLBACK_BASE_URL=https://cianet.ir
 ```
 
 یا برای آیدی‌پی:
@@ -79,7 +83,7 @@ PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pay/callback
 PAYMENT_PROVIDER=idpay
 IDPAY_API_KEY=<کلید>
 IDPAY_SANDBOX=false
-PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pay/callback
+PAYMENT_CALLBACK_BASE_URL=https://cianet.ir
 ```
 
 بعد `pcmax up`.
@@ -87,9 +91,17 @@ PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pay/callback
 > `PAYMENT_CALLBACK_BASE_URL` تازه اضافه شده. اگر نگذاریش، از
 > `ZARINPAL_CALLBACK_BASE_URL` می‌خواند تا استقرار فعلی نشکند.
 
-⚠️ آدرسی که سرور می‌سازد `<base>/api/v1/payments/<provider>/callback` است. اگر
-روی cianet.ir مسیر را جای دیگری گذاشتی، `PAYMENT_CALLBACK_BASE_URL` را طوری
-تنظیم کن که سرجمع همان آدرس فورواردشده در بیاید.
+### محدودیت IP
+
+زیبال می‌تواند روی مرچنت **IP allowlist** داشته باشد. اگر فعال باشد، تماس از هر
+IP دیگری `result: 115 invalid IP` می‌گیرد — که شبیه خرابی درگاه به نظر می‌رسد
+ولی فقط یعنی سرور در فهرست نیست.
+
+IP خروجی سرور را از خودش بپرس و همان را در پنل زیبال اضافه کن:
+
+```bash
+curl -s ifconfig.me
+```
 
 ---
 
