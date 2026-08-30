@@ -45,3 +45,6 @@ coverage/
 /Untitled Folder/
 /OPTI */
 /NVIDIA MFG */
+
+# Price snapshot written by scripts/set-plan-prices.mjs — real prices, not for the repo.
+plan-prices-backup.json
