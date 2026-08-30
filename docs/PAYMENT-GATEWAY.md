@@ -37,63 +37,39 @@ API برسد.
 
 ---
 
-## گام ۱ — یک مسیر روی cianet.ir به API فوروارد شود
+## گام ۱ — یک زیردامنه روی دامنهٔ تأییدشده
 
-سایت `cianet.ir` دست‌نخورده می‌ماند؛ فقط یک مسیر اضافه می‌شود.
+درگاه فقط دامنه را می‌سنجد، نه اینکه چه چیزی آنجا نشسته — و **زیردامنه را
+قبول می‌کند**. یک `CNAME` که مستقیم به API اشاره کند کافی است؛ نه فورواردی، نه
+کدی روی سایت اصلی.
 
-اگر Nginx است:
+در پنل DNS (اینجا کلادفلر):
 
-```nginx
-location /pcmax/api/v1/payments/ {
-    proxy_pass https://pc-maxapp.rixy.ir/api/v1/payments/;
-    proxy_set_header Host pc-maxapp.rixy.ir;
-    proxy_ssl_server_name on;
-}
-```
+| فیلد | مقدار |
+|---|---|
+| Type | `CNAME` |
+| Name | `pay` |
+| Target | `pc-maxapp.rixy.ir` |
+| Proxy | **روشن** (ابر نارنجی) |
 
-با `PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax`.
-
-**چرا زیر `/pcmax` و نه مستقیم `/api/v1/`:** خود cianet.ir از قبل روی
-`/api/v1/` یک API دارد — یک درخواست آزمایشی آنجا
-`{"ok":false,"error":"API key نامعتبر یا غیرفعال است."}` برگرداند. فوروارد
-گذاشتن روی همان مسیر یا سایت را می‌شکند یا خودش نادیده گرفته می‌شود.
-`/pcmax` آزاد بود (۴۰۴ ساده).
-
-سرور آدرس بازگشت را `<base>/api/v1/payments/<provider>/callback` می‌سازد، پس
-با این base آدرس نهایی
-`https://cianet.ir/pcmax/api/v1/payments/zibal/callback` می‌شود و همان چیزی
-است که قانون بالا می‌گیرد. هر دو درگاه بدون تغییر nginx کار می‌کنند.
-
-`proxy_pass` با اسلش پایانی، مسیر باقی‌مانده و query string را خودش منتقل
-می‌کند — درگاه نتیجه را در query می‌فرستد (`trackId`، `success`، `orderId`) و
-بدون آن سرور نمی‌فهمد کدام پرداخت را verify کند.
-
-### اگر هاست سی‌پنل است (بدون ترمینال)
-
-`infrastructure/cianet-callback.php` همین کار را بدون nginx می‌کند. از File
-Manager آپلودش کن به:
-
-```
-public_html/pcmax/api/v1/payments/zibal/callback/index.php
-```
-
-سرور را هم روی `PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax` بگذار.
-
-فایل به‌جای redirect کردن مرورگر، خودش سمت سرور API را صدا می‌زند — یعنی
-اشتراک حتی اگر کاربر همان لحظه تب را ببندد فعال می‌شود، و کسی JSON خام
-نمی‌بیند. سه حالت را جدا نشان می‌دهد: موفق، تأییدنشده، و «به سرور نرسید» —
-این آخری عمداً «ناموفق» نوشته نشده، چون پول از قبل کسر شده و گفتن «پرداخت
-نشد» کاربر را برای شکایتِ اشتباه می‌فرستد.
+پروکسی باید روشن باشد: کلادفلر آن‌وقت خودش گواهی TLS را برای `pay.cianet.ir`
+صادر می‌کند. با ابر خاکستری، مرورگر گواهی `pc-maxapp.rixy.ir` را می‌بیند و
+پیش از رسیدن به callback خطای امنیتی می‌دهد.
 
 **بررسی:**
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/pcmax/api/v1/payments/zibal/callback?trackId=1"
+curl -s "https://pay.cianet.ir/api/v1/payments/zibal/callback?trackId=1"
 ```
 
-باید یک **JSON** با کد `404` بدهد (به API رسید و پرداختی با آن مشخصه پیدا
-نکرد). اگر `Not found` متنی دیدی یعنی هنوز خود cianet.ir جواب می‌دهد و فوروارد
-برقرار نیست.
+باید JSON بدهد (`Payment not found` — رسید به API و پرداختی با آن مشخصه نبود).
+
+### چرا نه فوروارد روی خود دامنه
+
+اولین طرح این بود که مسیری روی `cianet.ir` به API پروکسی شود. دو چیز جلویش را
+گرفت: `cianet.ir` یک اپ **Next.js** پشت کلادفلر است نه هاست PHP (فایل `.php`
+اصلاً اجرا نمی‌شود)، و مسیر `/api/v1/` از قبل مال API خودِ آن اپ است. زیردامنه
+هر دو مشکل را دور می‌زند.
 
 ---
 
@@ -104,7 +80,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/pcmax/api/v1/payment
 ```bash
 PAYMENT_PROVIDER=zibal
 ZIBAL_MERCHANT=<کد مرچنت>
-PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax
+PAYMENT_CALLBACK_BASE_URL=https://pay.cianet.ir
 ```
 
 یا برای آیدی‌پی:
@@ -113,7 +89,7 @@ PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax
 PAYMENT_PROVIDER=idpay
 IDPAY_API_KEY=<کلید>
 IDPAY_SANDBOX=false
-PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax
+PAYMENT_CALLBACK_BASE_URL=https://pay.cianet.ir
 ```
 
 بعد `pcmax up`.
@@ -188,7 +164,7 @@ curl -s -H "authorization: Bearer $T" \
 
 | نشانه | معنی |
 |---|---|
-| صفحهٔ خطای cianet.ir بعد از پرداخت | فوروارد گام ۱ برقرار نیست |
+| صفحهٔ خطا یا هشدار TLS بعد از پرداخت | رکورد `pay` نیست یا پروکسی‌اش خاموش است |
 | «Payment not found» | query string در فوروارد حذف شده |
 | «Payment verification failed» | درگاه پرداخت را تأیید نکرد — در پنل درگاه ببین |
 | خطای مرچنت موقع شروع خرید | کد مرچنت یا دامنهٔ تأییدشده جور نیست |
