@@ -7,6 +7,7 @@ import { useAuth } from '@/store/auth';
 import { Button, Badge, Skeleton } from '@/components/ui';
 import { formatDateTime } from '@/lib/labels';
 import { invalidateSubscriptionCache, getSubscription } from '@/lib/subscription';
+import { openExternal } from '@/lib/openExternal';
 import { cn } from '@/lib/utils';
 
 interface SupportInfo {
@@ -66,8 +67,17 @@ export default function SubscriptionPage() {
           setSuccess(true);
           await load();
         } else {
-          // Real provider: open the payment page and let the user complete it.
-          window.open(res.redirectUrl, '_blank', 'noopener');
+          // Real provider: hand the payment page to the system browser and let
+          // the user complete it there. This has to go through the opener
+          // plugin — `window.open` is a silent no-op in the Tauri webview, so
+          // the gateway never opened and this screen waited forever.
+          try {
+            await openExternal(res.redirectUrl);
+          } catch {
+            setWaiting(false);
+            setError(t('subscription.openGatewayFailed'));
+            return;
+          }
           pollUntilActive();
         }
       }
@@ -271,6 +281,12 @@ export default function SubscriptionPage() {
             {support.telegram && (
               <a
                 href={support.telegram.startsWith('http') ? support.telegram : `https://t.me/${support.telegram.replace(/^@/, '')}`}
+                // target="_blank" does nothing in the Tauri webview; the link
+                // has to be handed to the OS explicitly.
+                onClick={(e) => {
+                  e.preventDefault();
+                  void openExternal(e.currentTarget.href);
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 dir="ltr"
@@ -283,6 +299,10 @@ export default function SubscriptionPage() {
             {support.website && (
               <a
                 href={support.website}
+                onClick={(e) => {
+                  e.preventDefault();
+                  void openExternal(e.currentTarget.href);
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 dir="ltr"
