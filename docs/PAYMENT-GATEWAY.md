@@ -36,18 +36,25 @@
 اگر Nginx است:
 
 ```nginx
-location /api/v1/payments/ {
+location /pcmax/api/v1/payments/ {
     proxy_pass https://pc-maxapp.rixy.ir/api/v1/payments/;
     proxy_set_header Host pc-maxapp.rixy.ir;
     proxy_ssl_server_name on;
 }
 ```
 
-مسیر عمداً همان مسیر API است. سرور آدرس بازگشت را
-`<PAYMENT_CALLBACK_BASE_URL>/api/v1/payments/<provider>/callback` می‌سازد، پس
-اگر مسیر روی cianet.ir چیز دیگری باشد آدرس سرجمع جور در نمی‌آید. با این شکل
-فقط `PAYMENT_CALLBACK_BASE_URL=https://cianet.ir` لازم است و هر درگاهی
-(zibal یا idpay) بدون تغییر nginx کار می‌کند.
+با `PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax`.
+
+**چرا زیر `/pcmax` و نه مستقیم `/api/v1/`:** خود cianet.ir از قبل روی
+`/api/v1/` یک API دارد — یک درخواست آزمایشی آنجا
+`{"ok":false,"error":"API key نامعتبر یا غیرفعال است."}` برگرداند. فوروارد
+گذاشتن روی همان مسیر یا سایت را می‌شکند یا خودش نادیده گرفته می‌شود.
+`/pcmax` آزاد بود (۴۰۴ ساده).
+
+سرور آدرس بازگشت را `<base>/api/v1/payments/<provider>/callback` می‌سازد، پس
+با این base آدرس نهایی
+`https://cianet.ir/pcmax/api/v1/payments/zibal/callback` می‌شود و همان چیزی
+است که قانون بالا می‌گیرد. هر دو درگاه بدون تغییر nginx کار می‌کنند.
 
 `proxy_pass` با اسلش پایانی، مسیر باقی‌مانده و query string را خودش منتقل
 می‌کند — درگاه نتیجه را در query می‌فرستد (`trackId`، `success`، `orderId`) و
@@ -59,11 +66,12 @@ location /api/v1/payments/ {
 **بررسی:**
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/api/v1/payments/zibal/callback?trackId=1"
+curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/pcmax/api/v1/payments/zibal/callback?trackId=1"
 ```
 
-باید `404` بدهد (یعنی به API رسید و پرداختی با آن مشخصه پیدا نکرد) — نه `404`
-خود سایت. اگر صفحهٔ خطای cianet.ir را دیدی، فوروارد کار نمی‌کند.
+باید یک **JSON** با کد `404` بدهد (به API رسید و پرداختی با آن مشخصه پیدا
+نکرد). اگر `Not found` متنی دیدی یعنی هنوز خود cianet.ir جواب می‌دهد و فوروارد
+برقرار نیست.
 
 ---
 
@@ -74,7 +82,7 @@ curl -s -o /dev/null -w "%{http_code}\n" "https://cianet.ir/api/v1/payments/ziba
 ```bash
 PAYMENT_PROVIDER=zibal
 ZIBAL_MERCHANT=<کد مرچنت>
-PAYMENT_CALLBACK_BASE_URL=https://cianet.ir
+PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax
 ```
 
 یا برای آیدی‌پی:
@@ -83,7 +91,7 @@ PAYMENT_CALLBACK_BASE_URL=https://cianet.ir
 PAYMENT_PROVIDER=idpay
 IDPAY_API_KEY=<کلید>
 IDPAY_SANDBOX=false
-PAYMENT_CALLBACK_BASE_URL=https://cianet.ir
+PAYMENT_CALLBACK_BASE_URL=https://cianet.ir/pcmax
 ```
 
 بعد `pcmax up`.
