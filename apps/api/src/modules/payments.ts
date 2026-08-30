@@ -153,24 +153,82 @@ function bouncePage(target: string): string {
 }
 
 function unavailablePage(): string {
+  return statusPage('closed');
+}
+
+/**
+ * Where the gateway drops the user when the payment is over.
+ *
+ * Until now this route answered the browser with the raw verification JSON,
+ * which is the last thing a paying customer sees. The outcome is the same —
+ * the subscription was already activated (or not) by verifyAndActivate before
+ * this renders; the page only reports it.
+ *
+ * The app is polling /me/subscription in the background, so there is nothing
+ * to click: by the time the user switches back, the subscription is live.
+ */
+type PageKind = 'paid' | 'failed' | 'missing' | 'closed';
+
+const PAGE_TEXT: Record<PageKind, { title: string; mark: string; tone: string; heading: string; body: string }> = {
+  paid: {
+    title: 'پرداخت موفق',
+    mark: '✓',
+    tone: '#22c55e',
+    heading: 'پرداخت با موفقیت انجام شد',
+    body: 'اشتراک شما فعال شد. به برنامه برگردید — خودش به‌روز می‌شود.',
+  },
+  failed: {
+    title: 'پرداخت ناموفق',
+    mark: '✕',
+    tone: '#ef4444',
+    heading: 'پرداخت تأیید نشد',
+    body: 'مبلغی از حساب شما کم نشده است. اگر کم شده، تا ۷۲ ساعت برمی‌گردد. می‌توانید از برنامه دوباره تلاش کنید.',
+  },
+  missing: {
+    title: 'پرداخت پیدا نشد',
+    mark: '?',
+    tone: '#9a9aa5',
+    heading: 'این پرداخت پیدا نشد',
+    body: 'آدرس بازگشت ناقص است یا این پرداخت مال این سامانه نیست. به برنامه برگردید و دوباره تلاش کنید.',
+  },
+  closed: {
+    title: 'پرداخت در دسترس نیست',
+    mark: '!',
+    tone: '#9a9aa5',
+    heading: 'این پرداخت دیگر باز نیست',
+    body: 'یا قبلاً تکمیل شده یا منقضی شده است. به برنامه برگردید و دوباره تلاش کنید.',
+  },
+};
+
+function statusPage(kind: PageKind): string {
+  const t = PAGE_TEXT[kind];
   return `<!doctype html>
 <html lang="fa" dir="rtl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>پرداخت در دسترس نیست</title>
+<title>${t.title}</title>
 <style>
   :root { color-scheme: dark light; }
   body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
          background:#0b0b0f; color:#e7e7ea; font-family:Vazirmatn,Tahoma,system-ui,sans-serif; }
-  .card { text-align:center; padding:2.5rem 2rem; max-width:22rem; }
+  .card { text-align:center; padding:2.5rem 2rem; max-width:23rem; }
+  .mark { width:3.25rem; height:3.25rem; margin:0 auto 1.25rem; border-radius:50%;
+          display:flex; align-items:center; justify-content:center; font-size:1.6rem; line-height:1;
+          color:${t.tone}; border:2px solid ${t.tone}33; background:${t.tone}1a; }
   h1 { font-size:1.05rem; font-weight:600; margin:0 0 .5rem; }
-  p { font-size:.85rem; color:#9a9aa5; margin:0; line-height:1.7; }
+  p { font-size:.85rem; color:#9a9aa5; margin:0; line-height:1.8; }
 </style>
 </head>
 <body><div class="card">
-  <h1>این پرداخت دیگر باز نیست</h1>
-  <p>یا قبلاً تکمیل شده یا منقضی شده است. به برنامه برگردید و دوباره تلاش کنید.</p>
+  <div class="mark">${t.mark}</div>
+  <h1>${t.heading}</h1>
+  <p>${t.body}</p>
 </div></body>
 </html>`;
+}
+
+/** A browser gets the page; anything else (the app, curl, the e2e suite) gets JSON. */
+function wantsHtml(accept: string | undefined): boolean {
+  return typeof accept === 'string' && accept.includes('text/html');
 }
 
 export async function paymentsModule(app: FastifyInstance) {
@@ -222,13 +280,36 @@ export async function paymentsModule(app: FastifyInstance) {
           status: z.union([z.string(), z.number()]).optional(),
           success: z.union([z.string(), z.number()]).optional(),
         }),
-        response: { 200: VerifySchema },
+        // No response schema: a browser lands here after paying and gets a
+        // page, while the app and the e2e suite still get the JSON.
       },
     },
-    async (request) => {
-      const payment = await resolvePayment(request.query as Record<string, unknown>);
-      if (!payment) throw notFound('Payment');
-      return verifyAndActivate(payment.id);
+    async (request, reply) => {
+      const html = wantsHtml(request.headers.accept);
+      void reply.header('cache-control', 'no-store');
+
+      let payment: Awaited<ReturnType<typeof resolvePayment>>;
+      try {
+        payment = await resolvePayment(request.query as Record<string, unknown>);
+      } catch (err) {
+        // A gateway that came back without a usable reference is a bad request,
+        // but the person reading it is a customer who just paid, not a client
+        // developer — so they get a page saying so rather than an error body.
+        if (!html) throw err;
+        void reply.type('text/html; charset=utf-8');
+        return statusPage('missing');
+      }
+
+      if (!payment) {
+        if (!html) throw notFound('Payment');
+        void reply.type('text/html; charset=utf-8');
+        return statusPage('missing');
+      }
+
+      const result = await verifyAndActivate(payment.id);
+      if (!html) return result;
+      void reply.type('text/html; charset=utf-8');
+      return statusPage(result.ok ? 'paid' : 'failed');
     },
   );
 

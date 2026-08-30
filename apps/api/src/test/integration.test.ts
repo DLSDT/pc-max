@@ -1447,6 +1447,54 @@ describe('subscriptions & payments (Phase 5-6)', () => {
     expect(res.body).not.toContain('gateway.zibal.ir');
   });
 
+  it('shows a browser a page after paying, and still answers clients with JSON', async () => {
+    // The gateway drops a paying customer on this route. Answering them with a
+    // raw verification body is the last thing they see of the purchase, so a
+    // browser gets a page — while the app and the e2e suite, which both read
+    // the JSON, must keep getting it.
+    const buy = async (key: string) => {
+      const p = await inject('POST', '/api/v1/subscriptions/purchase', {
+        token: userToken,
+        body: { planId, idempotencyKey: key },
+      });
+      return (p.json as { paymentId: string }).paymentId;
+    };
+
+    const forBrowser = await app.inject({
+      method: 'GET',
+      url: `/api/v1/payments/mock/callback?paymentId=${await buy(`cb-html-${Date.now()}`)}`,
+      headers: { accept: 'text/html,application/xhtml+xml' },
+    });
+    expect(forBrowser.headers['content-type']).toContain('text/html');
+    expect(forBrowser.body).toContain('پرداخت با موفقیت انجام شد');
+
+    const forClient = await app.inject({
+      method: 'GET',
+      url: `/api/v1/payments/mock/callback?paymentId=${await buy(`cb-json-${Date.now()}`)}`,
+      headers: { accept: '*/*' },
+    });
+    expect(forClient.headers['content-type']).toContain('application/json');
+    expect(forClient.json()).toMatchObject({ ok: true });
+  });
+
+  it('tells a browser the payment was not found instead of handing it an error body', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/v1/payments/zibal/callback?trackId=999999999',
+      headers: { accept: 'text/html' },
+    });
+    expect(res.headers['content-type']).toContain('text/html');
+    expect(res.body).toContain('این پرداخت پیدا نشد');
+    // The same request from a client is still a plain 404, so the e2e suite and
+    // any integration keep the machine-readable answer.
+    const asClient = await app.inject({
+      method: 'GET',
+      url: '/api/v1/payments/zibal/callback?trackId=999999999',
+      headers: { accept: '*/*' },
+    });
+    expect(asClient.statusCode).toBe(404);
+  });
+
   it('lists payments in the admin panel with user + plan context', async () => {
     const list = (await inject('GET', '/api/v1/admin/payments', { token: adminToken })).json as {
       data: { userEmail: string; status: string; planName: string }[];
