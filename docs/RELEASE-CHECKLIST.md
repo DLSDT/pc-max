@@ -90,6 +90,9 @@ CI مقدار `VITE_API_URL` را از secret مخزن می‌گیرد و اگر
 > منتشر کرد در حالی که هر نصب موجود همچنان `0.4.1` را آخرین نسخه می‌دید و بیلد
 > هم سبز بود. حالا آن حالت مرحله را fail می‌کند، ولی اگر با بیلدی از قبل از این
 > اصلاح روبه‌رو شدی، دستی ثبتش کن:
+>
+> یک‌بار `./scripts/github-setup.sh` را بزن تا secret تنظیم شود و این مرحله
+> دیگر لازم نشود.
 
 ```bash
 read -rsp 'admin password: ' P && PCMAX_ADMIN_PASSWORD="$P" node apps/api/scripts/register-release.mjs \
