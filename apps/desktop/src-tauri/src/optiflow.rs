@@ -313,7 +313,7 @@ pub fn find_components(root: &Path, wanted: &[String]) -> (BTreeMap<String, Vec<
 /// then report which of `wanted` the install actually ships.
 pub fn scan(exe_path: &Path, wanted: &[String]) -> Result<ScanReport, String> {
     if !exe_path.is_file() {
-        return Err(format!("Not a file: {}", exe_path.display()));
+        return Err(format!("not_a_file|{}", exe_path.display()));
     }
     let is_exe = exe_path
         .extension()
@@ -321,17 +321,17 @@ pub fn scan(exe_path: &Path, wanted: &[String]) -> Result<ScanReport, String> {
         .map(|e| e.eq_ignore_ascii_case("exe"))
         .unwrap_or(false);
     if !is_exe {
-        return Err("Select the game's .exe file".to_string());
+        return Err("not_an_exe|".to_string());
     }
     let launcher_dir = exe_path
         .parent()
-        .ok_or_else(|| "Executable has no parent directory".to_string())?
+        .ok_or_else(|| "exe_no_parent|".to_string())?
         .to_path_buf();
     if !launcher_dir.is_dir() {
-        return Err("Executable's folder could not be read".to_string());
+        return Err("exe_folder_unreadable|".to_string());
     }
     let game_dir = resolve_game_root(&launcher_dir)
-        .ok_or_else(|| "That executable is not inside a game folder".to_string())?;
+        .ok_or_else(|| "not_in_game_folder|".to_string())?;
 
     let (hits, truncated) = find_components(&game_dir, wanted);
     let found: Vec<FoundComponent> = hits
@@ -384,19 +384,19 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
 
     for f in files {
         if safe_component_name(&f.filename).is_none() {
-            return Err(format!("Unsafe filename: {}", f.filename));
+            return Err(format!("unsafe_filename|{}", f.filename));
         }
 
         // Decode and hash before deciding anything about the filesystem, so a
         // checksum mismatch aborts the batch rather than half-applying it.
         let bytes = base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &f.content_base64)
-            .map_err(|_| format!("Invalid data for {}", f.filename))?;
+            .map_err(|_| format!("invalid_data|{}", f.filename))?;
         let mut hasher = Sha256::new();
         hasher.update(&bytes);
         let actual = format!("{:x}", hasher.finalize());
         if !actual.eq_ignore_ascii_case(&f.sha256) {
             return Err(format!(
-                "Checksum mismatch for {} — expected {}, got {}",
+                "checksum_mismatch|{} (expected {}, got {})",
                 f.filename, f.sha256, actual
             ));
         }
@@ -404,12 +404,12 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
         let targets: Vec<PathBuf> = match f.role {
             FileRole::Launcher => {
                 let name = safe_component_name(&f.destination)
-                    .ok_or_else(|| format!("Unsafe destination: {}", f.destination))?;
+                    .ok_or_else(|| format!("unsafe_destination|{}", f.destination))?;
                 vec![launcher_dir.join(name)]
             }
             FileRole::Streamline => {
                 if safe_component_name(&f.destination).is_none() {
-                    return Err(format!("Unsafe destination: {}", f.destination));
+                    return Err(format!("unsafe_destination|{}", f.destination));
                 }
                 let locations = report
                     .found
@@ -430,17 +430,17 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
             }
             FileRole::Relative => {
                 let target = crate::safe_destination(&game_dir, &f.destination)
-                    .ok_or_else(|| format!("Unsafe destination: {}", f.destination))?;
+                    .ok_or_else(|| format!("unsafe_destination|{}", f.destination))?;
                 vec![target]
             }
         };
 
         for target in targets {
             if !is_within(&game_dir, &target) {
-                return Err(format!("Refusing to write outside the game folder: {}", target.display()));
+                return Err(format!("outside_game_folder|{}", target.display()));
             }
             if !seen_targets.insert(target.clone()) {
-                return Err(format!("Two files both want to write {}", target.display()));
+                return Err(format!("duplicate_target|{}", target.display()));
             }
             staged.push(Staged {
                 filename: f.filename.clone(),
@@ -452,7 +452,7 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
     }
 
     if staged.is_empty() {
-        return Err("Nothing to install — none of the package's files apply to this game".to_string());
+        return Err("nothing_applies|".to_string());
     }
 
     // ---- Phase 2: snapshot originals ----
@@ -469,12 +469,12 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
             if let Some(parent) = backup.parent() {
                 if let Err(e) = fs::create_dir_all(parent) {
                     let _ = fs::remove_dir_all(&backup_root);
-                    return Err(format!("Cannot create backup folder: {e}"));
+                    return Err(format!("backup_folder_failed|{e}"));
                 }
             }
             if let Err(e) = fs::copy(&s.target, &backup) {
                 let _ = fs::remove_dir_all(&backup_root);
-                return Err(format!("Cannot back up {}: {e}", s.target.display()));
+                return Err(format!("backup_failed|{}: {e}", s.target.display()));
             }
             originals.push((s.target.clone(), backup));
         }
@@ -488,18 +488,18 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
         if let Some(parent) = s.target.parent() {
             if let Err(e) = fs::create_dir_all(parent) {
                 rollback(&originals, &applied, &backup_root);
-                return Err(format!("Cannot create {}: {e}", parent.display()));
+                return Err(format!("mkdir_failed|{}: {e}", parent.display()));
             }
         }
         let tmp = s.target.with_extension(format!("goh-tmp-{i}"));
         if let Err(e) = fs::write(&tmp, &s.bytes) {
             rollback(&originals, &applied, &backup_root);
-            return Err(format!("Cannot write {}: {e}", s.target.display()));
+            return Err(format!("write_failed|{}: {e}", s.target.display()));
         }
         if let Err(e) = fs::rename(&tmp, &s.target) {
             let _ = fs::remove_file(&tmp);
             rollback(&originals, &applied, &backup_root);
-            return Err(format!("Cannot replace {}: {e}", s.target.display()));
+            return Err(format!("replace_failed|{}: {e}", s.target.display()));
         }
         applied.push(s.target.clone());
         written.push(WrittenFile {
@@ -515,7 +515,7 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
     for s in &staged {
         if !s.target.is_file() {
             rollback(&originals, &applied, &backup_root);
-            return Err(format!("{} did not survive the install", s.target.display()));
+            return Err(format!("write_vanished|{}", s.target.display()));
         }
     }
 
@@ -598,11 +598,11 @@ pub fn uninstall(exe_path: &Path, backup_dir: &Path, files: &[InstalledFile]) ->
     // record being acted on.
     let launcher_dir = exe_path
         .parent()
-        .ok_or_else(|| "The recorded executable has no folder".to_string())?;
+        .ok_or_else(|| "record_no_folder|".to_string())?;
     let real_root = resolve_game_root(launcher_dir)
-        .ok_or_else(|| "That executable is not inside a game folder".to_string())?
+        .ok_or_else(|| "not_in_game_folder|".to_string())?
         .canonicalize()
-        .map_err(|e| format!("Cannot resolve the game folder: {e}"))?;
+        .map_err(|e| format!("game_folder_unresolvable|{e}"))?;
 
     // The backup is read from and copied over live game files, so it has to be
     // inside the same install — otherwise a crafted record could restore
@@ -615,7 +615,7 @@ pub fn uninstall(exe_path: &Path, backup_dir: &Path, files: &[InstalledFile]) ->
     // already reports "the original backup is missing" per file.
     let real_backup = match backup_dir.canonicalize() {
         Ok(p) if p.starts_with(&real_root) => Some(p),
-        Ok(_) => return Err("The backup folder is outside the game folder — refused".to_string()),
+        Ok(_) => return Err("backup_outside|".to_string()),
         Err(_) => None,
     };
 

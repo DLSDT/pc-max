@@ -6,7 +6,7 @@ import type { HardwareProfileInput, MfgTool, MfgToolStatusResponse, PackageCompo
 import ChoiceGrid from '@/components/ChoiceGrid';
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { useFeatureAccess } from '@/hooks/useFeatureAccess';
-import { api, ApiError } from '@/lib/api';
+import { api } from '@/lib/api';
 import { isTauriShell } from '@/lib/optimizer';
 import { gpuLabel } from '@/lib/hardware';
 
@@ -23,6 +23,7 @@ import {
   type UninstallReport,
 } from '@/lib/optiflow';
 import { clearInstall, getInstall, listInstalls, recordInstall, type MfgInstall } from '@/lib/mfgInstalls';
+import { installErrorMessage } from '@/lib/installErrors';
 import { cn } from '@/lib/utils';
 
 type Stage = 'idle' | 'scanning' | 'installing' | 'removing';
@@ -254,7 +255,7 @@ export default function MfgToolPage({
     } catch (err) {
       setScan(null);
       setExisting(null);
-      setError(err instanceof Error ? err.message : String(err));
+      setError(installErrorMessage(err, t));
     } finally {
       setStage('idle');
       setStep(null);
@@ -308,7 +309,7 @@ export default function MfgToolPage({
       setExisting(entry);
       setResult(report);
     } catch (err) {
-      setError(err instanceof ApiError || err instanceof Error ? err.message : String(err));
+      setError(installErrorMessage(err, t));
     } finally {
       setStage('idle');
       setStep(null);
@@ -336,7 +337,7 @@ export default function MfgToolPage({
       }
       refreshInstalls();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(installErrorMessage(err, t));
     } finally {
       setStage('idle');
       setStep(null);

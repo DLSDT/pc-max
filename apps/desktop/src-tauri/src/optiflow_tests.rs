@@ -350,7 +350,7 @@ fn a_bad_checksum_aborts_before_anything_is_written() {
     )
     .expect_err("a checksum mismatch must fail the install");
 
-    assert!(err.contains("Checksum mismatch"), "unexpected error: {err}");
+    assert!(err.starts_with("checksum_mismatch|"), "unexpected error: {err}");
     assert_eq!(t.read("bin/x64/sl.dlss.dll"), b"shipped", "original must be intact");
     assert!(!t.exists("bin/x64/version.dll"), "no file from the batch may land");
     assert!(!t.exists(".goh-backup"), "a rejected payload must not even create a backup dir");
@@ -364,7 +364,7 @@ fn refuses_a_payload_whose_destination_tries_to_escape() {
     for dest in ["../../evil.dll", "..\\evil.dll", "evil.exe"] {
         let err = install(&exe, &[payload("version.dll", dest, FileRole::Launcher, b"x")])
             .expect_err("must refuse {dest}");
-        assert!(err.contains("Unsafe"), "unexpected error for {dest}: {err}");
+        assert!(err.starts_with("unsafe_"), "unexpected error for {dest}: {err}");
     }
 }
 
@@ -383,7 +383,7 @@ fn refuses_two_payloads_that_target_the_same_file() {
         ],
     )
     .expect_err("a target collision must fail");
-    assert!(err.contains("both want to write"), "unexpected error: {err}");
+    assert!(err.starts_with("duplicate_target|"), "unexpected error: {err}");
 }
 
 #[test]
@@ -623,7 +623,7 @@ fn uninstall_refuses_a_backup_folder_outside_the_game() {
     fs::write(elsewhere.root.join("bin/x64/sl.dlss.dll"), b"attacker bytes").unwrap();
 
     let err = uninstall(&exe, &elsewhere.root, &rec).expect_err("must refuse an outside backup");
-    assert!(err.contains("outside the game folder"), "unexpected: {err}");
+    assert!(err.starts_with("backup_outside|"), "unexpected: {err}");
 }
 
 #[test]
@@ -665,7 +665,10 @@ fn uninstall_derives_the_root_from_the_exe_not_from_the_caller() {
     let report = uninstall(&other_exe, &backup, &rec);
     // Either the backup is rejected as outside that game, or the recorded path is.
     match report {
-        Err(e) => assert!(e.contains("outside the game folder"), "unexpected: {e}"),
+        Err(e) => assert!(
+            e.starts_with("backup_outside|") || e.starts_with("not_in_game_folder|"),
+            "unexpected: {e}"
+        ),
         Ok(r) => assert_eq!(r.restored.len(), 0, "restored across two different games: {r:?}"),
     }
 }
