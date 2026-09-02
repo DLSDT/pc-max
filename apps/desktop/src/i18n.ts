@@ -505,6 +505,17 @@ void i18n.use(initReactI18next).init({
           waitingForPayment: 'Waiting for payment confirmation…',
           paymentWindowHint: 'Complete the payment in the opened window, then check back here.',
           openGatewayFailed: 'Could not open the payment page in your browser. Check your default browser and try again.',
+          // Prices are stored in rial and quoted to the customer in toman.
+          toman: 'toman',
+          // Keyed by plan slug. The server's own names are English, which read
+          // backwards inside a right-to-left layout; an unknown slug falls back
+          // to whatever the server called it.
+          plan: {
+            '1-month': '1 month',
+            '3-months': '3 months',
+            '6-months': '6 months',
+            '12-months': '12 months',
+          },
           myDevices: 'My devices',
           noDevices: 'No registered devices yet.',
           removeDevice: 'Remove device',
@@ -1363,6 +1374,13 @@ void i18n.use(initReactI18next).init({
           waitingForPayment: 'در انتظار تأیید پرداخت…',
           paymentWindowHint: 'پرداخت را در پنجره بازشده تکمیل کنید و به اینجا برگردید.',
           openGatewayFailed: 'صفحهٔ پرداخت در مرورگر باز نشد. مرورگر پیش‌فرض سیستم را بررسی کنید و دوباره تلاش کنید.',
+          toman: 'تومان',
+          plan: {
+            '1-month': '۱ ماهه',
+            '3-months': '۳ ماهه',
+            '6-months': '۶ ماهه',
+            '12-months': '۱۲ ماهه',
+          },
           myDevices: 'دستگاه‌های من',
           noDevices: 'هنوز دستگاهی ثبت نشده است.',
           removeDevice: 'حذف دستگاه',

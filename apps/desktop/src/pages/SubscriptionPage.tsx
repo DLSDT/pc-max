@@ -8,6 +8,7 @@ import { Button, Badge, Skeleton } from '@/components/ui';
 import { formatDateTime } from '@/lib/labels';
 import { invalidateSubscriptionCache, getSubscription } from '@/lib/subscription';
 import { openExternal } from '@/lib/openExternal';
+import { displayAmount, isToman, planNameKey } from '@/lib/plans';
 import { cn } from '@/lib/utils';
 
 interface SupportInfo {
@@ -133,7 +134,7 @@ export default function SubscriptionPage() {
             <Badge variant={expired ? 'warning' : 'success'}>
               {expired ? t('subscription.expired') : mine.isActive ? t('subscription.active') : activePlan.status}
             </Badge>
-            <span className="font-medium">{activePlan.plan.name}</span>
+            <span className="font-medium">{t(planNameKey(activePlan.plan.slug), { defaultValue: activePlan.plan.name })}</span>
             <span className="text-muted-foreground">
               {t('subscription.expiresOn', { date: formatDateTime(activePlan.expirationDate) })}
             </span>
@@ -177,12 +178,14 @@ export default function SubscriptionPage() {
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">{plan.name}</h3>
+                  <h3 className="font-semibold">{t(planNameKey(plan.slug), { defaultValue: plan.name })}</h3>
                   {mine?.subscription?.plan.id === plan.id && <Badge variant="default">{t('subscription.currentPlan')}</Badge>}
                 </div>
                 <div className="mt-2 text-2xl font-bold">
-                  {plan.price.toLocaleString('en-US')}
-                  <span className="ml-1 text-sm font-normal text-muted-foreground">{plan.currency}</span>
+                  {displayAmount(plan.price, plan.currency).toLocaleString('en-US')}
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">
+                    {isToman(plan.currency) ? t('subscription.toman') : plan.currency}
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground">{plan.durationDays} {t('subscription.days')}</p>
 
