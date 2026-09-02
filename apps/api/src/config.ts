@@ -150,6 +150,18 @@ const envSchema = z.object({
   RATE_LIMIT_VIEWS: z.coerce.number().int().min(1).max(10_000).default(120),
   /** Device registration inserts a users row; kept well under the global cap. */
   RATE_LIMIT_DEVICE: z.coerce.number().int().min(1).max(10_000).default(30),
+  /**
+   * Ceiling for the auth routes that carry an identifier (send code, register,
+   * sign in, forgot password).
+   *
+   * These were 30/minute per IP, which assumes an IP is roughly a person. Iran's
+   * mobile carriers put thousands of subscribers behind one address, so a launch
+   * spike locked out real users who had done nothing. Per-IP is a blunt flood
+   * guard, not the account protection — that is the OTP resend cooldown and the
+   * failed-login lockout, both already counted per identifier in the database
+   * and both unaffected by how many people share an address.
+   */
+  RATE_LIMIT_AUTH: z.coerce.number().int().min(1).max(10_000).default(300),
 
   // Caching / performance (Phase 16). Shared Redis is optional — without it a
   // per-instance in-memory TTL cache is used. TTLs are kept short so admin

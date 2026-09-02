@@ -9,6 +9,7 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { jsonSchemaTransform, serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod';
 import { config } from './config';
+import { createRateLimitStore } from './lib/rate-limit-store';
 import { errorHandler, AppError, notFound as notFoundError } from './lib/errors';
 import { authModule } from './modules/auth';
 import { authUserModule } from './modules/auth-user';
@@ -65,9 +66,13 @@ export async function buildApp(): Promise<FastifyInstance> {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   });
 
+  // Counters live in Redis when it is available, so the configured ceiling
+  // means the same thing whether one process is serving or several. Without
+  // Redis it falls back to per-process memory rather than refusing to boot.
   await app.register(rateLimit, {
     max: config.RATE_LIMIT_MAX,
     timeWindow: '1 minute',
+    redis: await createRateLimitStore(),
   });
 
   await app.register(cookie);

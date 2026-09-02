@@ -152,7 +152,7 @@ export async function authUserModule(app: FastifyInstance) {
   typed.post(
     '/auth/otp/send',
     {
-      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+      config: { rateLimit: { max: config.RATE_LIMIT_AUTH, timeWindow: '1 minute' } },
       schema: { body: OtpSendInput, response: { 200: OtpSendResponse } },
     },
     async (request) => {
@@ -165,7 +165,7 @@ export async function authUserModule(app: FastifyInstance) {
   typed.post(
     '/auth/register',
     {
-      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+      config: { rateLimit: { max: config.RATE_LIMIT_AUTH, timeWindow: '1 minute' } },
       schema: { body: RegisterInput, response: { 201: UserAuthResponse } },
     },
     async (request, reply) => {
@@ -212,7 +212,7 @@ export async function authUserModule(app: FastifyInstance) {
   typed.post(
     '/auth/login',
     {
-      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+      config: { rateLimit: { max: config.RATE_LIMIT_AUTH, timeWindow: '1 minute' } },
       schema: { body: UserLoginInput, response: { 200: UserAuthResponse } },
     },
     async (request, reply) => {
@@ -299,7 +299,7 @@ export async function authUserModule(app: FastifyInstance) {
   typed.post(
     '/auth/password/forgot',
     {
-      config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+      config: { rateLimit: { max: config.RATE_LIMIT_AUTH, timeWindow: '1 minute' } },
       schema: { body: PasswordForgotInput, response: { 200: OtpSendResponse } },
     },
     async (request) => {

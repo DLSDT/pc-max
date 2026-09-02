@@ -88,6 +88,11 @@ services:
       # a single client's offline-first sync alone fires 2 requests per changed
       # game, so a full sync trips the default limit on its own.
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-1500}
+      # Auth routes were 30/min per IP. Iran's carriers put thousands of
+      # subscribers behind one address, so that locked out real users during a
+      # spike. The per-account protections (OTP cooldown, login lockout) are
+      # counted per identifier and are unaffected by a shared address.
+      RATE_LIMIT_AUTH: ${RATE_LIMIT_AUTH:-300}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-console}
       EMAIL_FROM: ${EMAIL_FROM:-PC MAX <noreply@pcmax.rixy.ir>}
       SMTP_HOST: ${SMTP_HOST:-}
