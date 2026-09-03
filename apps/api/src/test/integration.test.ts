@@ -816,6 +816,24 @@ describe('user accounts & auth (email + OTP)', () => {
     expect(dup.status).toBe(409);
   });
 
+  it('a code that could not be delivered does not strand the user behind the cooldown', async () => {
+    // The resend cooldown looks at the newest code whatever its state, so a
+    // code whose email never arrived would otherwise make the user wait it out
+    // before they could ask for another. When delivery finally gives up, the
+    // queue worker discards the code for exactly this reason.
+    const email = 'undelivered@example.test';
+    await requestOtp(email, 'register');
+
+    const tooSoon = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: email, purpose: 'register' } });
+    expect(tooSoon.status).toBe(429);
+
+    const { discardOtp } = await import('../lib/otp');
+    await discardOtp(email, 'register');
+
+    const again = await inject('POST', '/api/v1/auth/otp/send', { body: { identifier: email, purpose: 'register' } });
+    expect(again.status).toBe(200);
+  });
+
   it('rejects registration with a wrong OTP', async () => {
     await requestOtp('badotp@example.test', 'register');
     const bad = await inject('POST', '/api/v1/auth/register', {

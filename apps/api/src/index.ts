@@ -2,14 +2,22 @@ import { buildApp } from './app';
 import { config } from './config';
 import { pool } from './db';
 import { initMonitoring } from './lib/monitoring';
+import { startMailWorker } from './lib/mail-queue';
 import { formatRetention, runRetention } from './lib/retention';
 
 async function main() {
   initMonitoring();
   const app = await buildApp();
 
+  // Drains the verification-mail queue. Every process runs one; BRPOP hands a
+  // job to exactly one of them, so replicas add throughput rather than
+  // duplicate mail. Without REDIS_URL this returns immediately and delivery
+  // stays inline, which is what tests and single-container installs get.
+  const stopMailWorker = startMailWorker(app.log);
+
   const shutdown = async (signal: string) => {
     app.log.info(`Received ${signal}, shutting down…`);
+    stopMailWorker();
     await app.close();
     await pool.end();
     process.exit(0);

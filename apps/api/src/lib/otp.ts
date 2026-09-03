@@ -55,6 +55,20 @@ export async function issueOtp(identifier: string, purpose: OtpPurpose): Promise
   return { devCode: code };
 }
 
+/**
+ * Delete the unused codes for an identifier+purpose.
+ *
+ * For a code whose email could not be delivered. Marking it used would not be
+ * enough: the resend cooldown looks at the newest row whatever its state, so
+ * the user would have to wait out a code they never received before they could
+ * ask for another.
+ */
+export async function discardOtp(identifier: string, purpose: OtpPurpose): Promise<void> {
+  await db
+    .delete(otpCodes)
+    .where(and(byIdentifier(identifier), eq(otpCodes.purpose, purpose), isNull(otpCodes.usedAt)));
+}
+
 /** Verify a code. Single-use: success marks it used; failures count attempts. */
 export async function verifyOtp(identifier: string, purpose: OtpPurpose, code: string): Promise<boolean> {
   const row = await db.query.otpCodes.findFirst({

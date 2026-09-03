@@ -14,6 +14,7 @@ import {
   UserPublic,
 } from '@goh/validation';
 import { config } from '../config';
+import { enqueueOtpMail, setOtpDeliverer } from '../lib/mail-queue';
 import { clearRefreshCookieOptions, refreshCookieOptions } from '../lib/refresh-cookie';
 import { db } from '../db';
 import { loginAttempts, passwordResets, userSessions, users } from '../db/schema';
@@ -135,11 +136,16 @@ async function deliverOtp(identifier: string, code: string, purpose: OtpPurpose,
 async function sendOtp(identifier: string, purpose: OtpPurpose, resetLink?: string) {
   const { devCode } = await issueOtp(identifier, purpose);
   if (devCode) {
-    const delivered = await deliverOtp(identifier, devCode, purpose, resetLink);
-    // Surfacing this leaks nothing: a transport failure is the same whether or
-    // not an account exists, so the decoy path fails identically. Reporting
-    // success when the mail bounced just strands the user.
-    if (!delivered) {
+    const { queued, delivered } = await enqueueOtpMail({ identifier, code: devCode, purpose, resetLink });
+    // A queued job has not been attempted yet, so there is no outcome to
+    // report and the worker owns what happens next — including dropping the
+    // code if it never gets through, so the user can ask again immediately.
+    //
+    // Delivered inline (no queue configured), a transport failure is still
+    // surfaced. Reporting success when the mail bounced strands the user in
+    // front of a "code sent" message, and it leaks nothing: the decoy path for
+    // an address with no account fails in exactly the same way.
+    if (!queued && !delivered) {
       throw new AppError(502, 'DELIVERY_FAILED', 'Could not send the verification code right now. Please try again in a moment.');
     }
   }
@@ -148,6 +154,11 @@ async function sendOtp(identifier: string, purpose: OtpPurpose, resetLink?: stri
 
 export async function authUserModule(app: FastifyInstance) {
   const typed = app.withTypeProvider<ZodTypeProvider>();
+
+  // The queue holds jobs, not templates. Handing it the delivery function here
+  // keeps the branded mail with the routes that own it and avoids an import
+  // cycle back into this module.
+  setOtpDeliverer((job) => deliverOtp(job.identifier, job.code, job.purpose, job.resetLink));
 
   typed.post(
     '/auth/otp/send',
