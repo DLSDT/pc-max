@@ -145,6 +145,13 @@ const envSchema = z.object({
   /** How often the API runs the trim. 0 disables the in-process schedule. */
   RETENTION_INTERVAL_HOURS: z.coerce.number().int().min(0).max(24 * 30).default(24),
 
+  /**
+   * Postgres connections this process may hold. Every replica opens its own
+   * pool, so replicas x DB_POOL_MAX must stay under the server's
+   * max_connections (100 by default).
+   */
+  DB_POOL_MAX: z.coerce.number().int().min(1).max(200).default(10),
+
   RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(10_000).default(300),
   /** Per-IP bound for the anonymous /views endpoint (abuse/analytics inflation). */
   RATE_LIMIT_VIEWS: z.coerce.number().int().min(1).max(10_000).default(120),

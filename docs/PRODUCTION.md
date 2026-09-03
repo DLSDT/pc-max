@@ -135,3 +135,54 @@ on: tag v* →
   - sign updater manifest, upload release artifacts
   - publish app_versions row (release notes, checksum, download URL)
 ```
+
+## 11. Running more than one API process
+
+The API is a single-threaded Node process. Two things had to be true before a
+second one could be added, and both now are:
+
+- **rate-limit counters live in Redis** (`lib/rate-limit-store.ts`). In memory
+  each process keeps its own tally, so three replicas would enforce three times
+  the configured limit and which one you landed on would decide whether you were
+  refused.
+- **verification mail is taken with `BRPOP`** (`lib/mail-queue.ts`), so a job
+  goes to exactly one process however many are draining the queue.
+
+`DB_POOL_MAX` (default 10) is per process. Postgres allows 100 connections by
+default, so replicas x `DB_POOL_MAX` has to stay comfortably under that.
+
+### Why there is no compose overlay for this yet
+
+The obvious shape — several replicas of one service behind a small nginx that
+finds them through Docker's DNS — does not work on this server. Production runs
+with `docker-compose.hostnet.yml` because Docker's bridge networking is broken
+on it (see that file). On the host network there are no container hostnames to
+resolve and `ports:` does nothing, so replicas cannot be told apart by name and
+would all try to bind `127.0.0.1:4000`.
+
+What fits this host instead:
+
+1. Define `api2`, `api3` as their own services extending `api`, each with
+   `PORT: 4001`, `4002`, still bound to `127.0.0.1`.
+2. Load-balance in the nginx that is already there — aaPanel's, not a new
+   container:
+
+   ```nginx
+   upstream pcmax_api {
+       least_conn;
+       server 127.0.0.1:4000;
+       server 127.0.0.1:4001;
+       server 127.0.0.1:4002;
+   }
+   # in the site's proxy conf: proxy_pass http://pcmax_api;
+   ```
+
+3. Lower `RETENTION_INTERVAL_HOURS` to `0` on every replica but one, or the
+   nightly trim runs once per process. The deletes are keyed on
+   `expires_at < now()` and scan in the same order, so the repeats find nothing
+   and cannot deadlock — wasteful rather than harmful, but there is no reason
+   to pay it three times.
+
+Worth doing when traffic asks for it. It is a change to the live topology and
+wants its own deploy window, not one shared with a release the client is
+testing.
