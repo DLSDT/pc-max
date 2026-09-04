@@ -156,6 +156,8 @@ export async function publicGamesModule(app: FastifyInstance) {
       return {
         ...summary,
         description: game.description,
+        descriptionEn: game.descriptionEn,
+        descriptionFa: game.descriptionFa,
         developer: game.developer,
         publisher: game.publisher,
         releaseDate: game.releaseDate ? game.releaseDate.toISOString() : null,

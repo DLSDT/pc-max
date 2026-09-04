@@ -209,6 +209,8 @@ export async function adminGamesModule(app: FastifyInstance) {
       return {
         ...toSummary(enriched),
         description: game.description,
+        descriptionEn: game.descriptionEn,
+        descriptionFa: game.descriptionFa,
         developer: game.developer,
         publisher: game.publisher,
         releaseDate: game.releaseDate ? game.releaseDate.toISOString() : null,
@@ -264,6 +266,8 @@ export async function adminGamesModule(app: FastifyInstance) {
           slug: input.slug,
           tagline: input.tagline ?? null,
           description: input.description ?? null,
+          descriptionEn: input.descriptionEn ?? null,
+          descriptionFa: input.descriptionFa ?? null,
           developer: input.developer ?? null,
           publisher: input.publisher ?? null,
           releaseDate: parseDate(input.releaseDate),
@@ -309,7 +313,7 @@ export async function adminGamesModule(app: FastifyInstance) {
 
       const patch: Record<string, unknown> = {};
       for (const key of [
-        'name', 'slug', 'tagline', 'description', 'developer', 'publisher',
+        'name', 'slug', 'tagline', 'description', 'descriptionEn', 'descriptionFa', 'developer', 'publisher',
         'engine', 'api', 'performanceRating', 'executables', 'steamAppId',
         'epicAppId', 'launcher', 'featured', 'status',
       ] as const) {
@@ -474,6 +478,8 @@ async function getDetail(id: string) {
   return {
     ...toSummary(enriched!),
     description: game.description,
+    descriptionEn: game.descriptionEn,
+    descriptionFa: game.descriptionFa,
     developer: game.developer,
     publisher: game.publisher,
     releaseDate: game.releaseDate ? game.releaseDate.toISOString() : null,

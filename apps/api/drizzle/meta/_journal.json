@@ -148,6 +148,13 @@
       "when": 1787340065148,
       "tag": "0020_aof_components",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1787426465148,
+      "tag": "0021_game_descriptions_bilingual",
+      "breakpoints": true
     }
   ]
 }

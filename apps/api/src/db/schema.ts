@@ -180,7 +180,11 @@ export const games = pgTable(
     slug: text('slug').notNull().unique(),
     name: text('name').notNull(),
     tagline: text('tagline'),
+    /** Legacy single-language column, kept so an older API can still read it. */
     description: text('description'),
+    /** Shown to the player, in whichever language they are reading. */
+    descriptionEn: text('description_en'),
+    descriptionFa: text('description_fa'),
     developer: text('developer'),
     publisher: text('publisher'),
     releaseDate: timestamp('release_date', { withTimezone: true, mode: 'date' }),

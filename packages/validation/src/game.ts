@@ -94,6 +94,9 @@ export type GameSummary = z.infer<typeof GameSummary>;
 /** Full game detail. */
 export const GameDetail = GameSummary.extend({
   description: z.string().nullable(),
+  /** Per-language. The client picks by locale and falls back to the other. */
+  descriptionEn: z.string().nullable(),
+  descriptionFa: z.string().nullable(),
   developer: z.string().nullable(),
   publisher: z.string().nullable(),
   releaseDate: z.string().nullable(),
@@ -161,6 +164,8 @@ export const GameCreateInput = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase kebab-case'),
   tagline: z.string().trim().max(300).optional().nullable(),
   description: z.string().trim().max(20_000).optional().nullable(),
+  descriptionEn: z.string().trim().max(20_000).optional().nullable(),
+  descriptionFa: z.string().trim().max(20_000).optional().nullable(),
   developer: z.string().trim().max(200).optional().nullable(),
   publisher: z.string().trim().max(200).optional().nullable(),
   releaseDate: z.string().trim().optional().nullable(),
