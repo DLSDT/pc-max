@@ -1513,6 +1513,58 @@ describe('subscriptions & payments (Phase 5-6)', () => {
     expect(asClient.statusCode).toBe(404);
   });
 
+  it('adds a renewal to the time already paid for instead of replacing it', async () => {
+    // Buying again while a subscription is still running used to restart the
+    // clock from today, so a user with time left silently lost it.
+    const buy = async (key: string) => {
+      const p = await inject('POST', '/api/v1/subscriptions/purchase', {
+        token: userToken,
+        body: { planId, idempotencyKey: key },
+      });
+      const pid = (p.json as { paymentId: string }).paymentId;
+      await inject('POST', '/api/v1/payments/mock/callback', { body: { paymentId: pid } });
+    };
+
+    // The length of the plan being bought, not of whatever plan the user's
+    // current subscription happens to be on — earlier cases in this block
+    // leave one behind.
+    const plans = (await inject('GET', '/api/v1/subscriptions/plans')).json as {
+      data: { id: string; durationDays: number }[];
+    };
+    const days = plans.data.find((p) => p.id === planId)!.durationDays;
+
+    await buy(`renew-first-${Date.now()}`);
+    const first = (await inject('GET', '/api/v1/me/subscription', { token: userToken })).json as {
+      subscription: { expirationDate: string };
+    };
+    const firstEnd = new Date(first.subscription.expirationDate).getTime();
+
+    await buy(`renew-second-${Date.now()}`);
+    const second = (await inject('GET', '/api/v1/me/subscription', { token: userToken })).json as {
+      subscription: { expirationDate: string };
+    };
+    const secondEnd = new Date(second.subscription.expirationDate).getTime();
+
+    // The second term starts where the first ended, so the gap is one full
+    // plan length — not zero, which is what restarting from today would give.
+    const added = (secondEnd - firstEnd) / 86_400_000;
+    expect(added).toBeGreaterThan(days - 0.1);
+    expect(added).toBeLessThan(days + 0.1);
+  });
+
+  it('leaves exactly one active subscription after a renewal', async () => {
+    // Two active rows would make the plan shown and the device limit depend on
+    // whichever the query happened to find first.
+    const { db } = await import('../db');
+    const { subscriptions } = await import('../db/schema');
+    const { and, eq } = await import('drizzle-orm');
+    const rows = await db
+      .select()
+      .from(subscriptions)
+      .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')));
+    expect(rows).toHaveLength(1);
+  });
+
   it('lists payments in the admin panel with user + plan context', async () => {
     const list = (await inject('GET', '/api/v1/admin/payments', { token: adminToken })).json as {
       data: { userEmail: string; status: string; planName: string }[];

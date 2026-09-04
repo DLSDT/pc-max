@@ -85,7 +85,17 @@ export async function activatePayment(paymentId: string) {
 
   return db.transaction(async (tx) => {
     const now = new Date();
-    const expiration = new Date(now.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
+
+    // Renewing adds to what is left rather than replacing it. Counting from
+    // `now` meant a user with twenty days still on the clock who bought thirty
+    // more ended up with thirty — the twenty they had already paid for were
+    // quietly taken back, and nothing told them.
+    const current = await tx.query.subscriptions.findFirst({
+      where: and(eq(subscriptions.userId, payment.userId), eq(subscriptions.status, 'active')),
+      orderBy: desc(subscriptions.expirationDate),
+    });
+    const startFrom = current && current.expirationDate > now ? current.expirationDate : now;
+    const expiration = new Date(startFrom.getTime() + plan.durationDays * 24 * 60 * 60 * 1000);
 
     const [updated] = await tx
       .update(subscriptions)
@@ -93,6 +103,16 @@ export async function activatePayment(paymentId: string) {
       .where(and(eq(subscriptions.paymentId, payment.id), eq(subscriptions.status, 'pending')))
       .returning();
     if (!updated) throw conflict('Subscription is not in a pending state');
+
+    // The superseded row is retired in the same transaction, so exactly one
+    // subscription is ever active for a user. Two would make "which plan am I
+    // on" and the device limit depend on which row a query happened to find.
+    if (current && current.id !== updated.id) {
+      await tx
+        .update(subscriptions)
+        .set({ status: 'expired', updatedAt: now })
+        .where(eq(subscriptions.id, current.id));
+    }
 
     await tx.update(payments).set({ status: 'paid', updatedAt: now }).where(eq(payments.id, payment.id));
 
