@@ -1,3 +1,11 @@
-# Nightly database backup, keeping 30 days.
+# Nightly full backup — database, uploaded package files, and the env secrets.
+#
+# `backup` alone (database only) was what ran here for a long time, which meant
+# the package payloads had no second copy anywhere. backup-all covers all three.
+#
 # Install:  crontab -l 2>/dev/null | cat - infrastructure/backup.cron | crontab -
-0 3 * * * /www/pcmax/infrastructure/pcmax backup >/var/log/pcmax-backup.log 2>&1 && find /www/pcmax-backups -name 'db-*.json' -mtime +30 -delete
+# Verify:   crontab -l          # in the repo is not the same as installed
+#
+# NOTE: this writes to the same disk it protects. Copying the archive off the
+# machine is still a separate job — see docs/DISASTER-RECOVERY.md.
+0 3 * * * /www/pcmax/infrastructure/pcmax backup-all >/var/log/pcmax-backup.log 2>&1 && find /www/pcmax-backups -name 'pcmax-full-*.tar.gz' -mtime +14 -delete

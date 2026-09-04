@@ -74,10 +74,49 @@ case "${1:-help}" in
     unset PW
     ;;
 
+  # Everything needed to rebuild this deployment somewhere else, in one file.
+  #
+  # `backup` alone is the database. Restoring only that onto a fresh box gives
+  # you an API that starts, users who can sign in, and not one downloadable
+  # file: the package payloads live in a docker volume nothing was copying, and
+  # every package row would point at a storage key that no longer exists.
+  # The secrets matter just as much — lose DOWNLOAD_SIGNING_SECRET and
+  # JWT_ACCESS_SECRET and every issued link and session dies with them.
+  backup-all)
+    OUT_DIR="${2:-/www/pcmax-backups}"
+    STAMP="$(date +%F-%H%M)"
+    STAGE="$(mktemp -d)"
+    trap 'rm -rf "$STAGE"' EXIT
+    mkdir -p "$OUT_DIR"
+
+    echo "→ database"
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/backup-db.js /tmp/b.json >/dev/null
+    docker cp goh-api:/tmp/b.json "$STAGE/db.json"
+
+    # The volume is named by compose, which prefixes it with the project name.
+    # Finding it beats hardcoding a name that changes with the directory.
+    echo "→ uploaded package files"
+    VOL="$(docker volume ls -q | grep -E 'uploads$' | head -1)"
+    [ -n "$VOL" ] || { echo "could not find the uploads volume; is the stack up?"; exit 1; }
+    docker run --rm -v "$VOL":/data:ro -v "$STAGE":/out alpine \
+      tar czf /out/uploads.tgz -C /data .
+
+    echo "→ secrets and compose env"
+    cp "$DIR/.env" "$STAGE/env" 2>/dev/null || echo "(no infrastructure/.env found)"
+
+    ARCHIVE="$OUT_DIR/pcmax-full-$STAMP.tar.gz"
+    tar czf "$ARCHIVE" -C "$STAGE" .
+    echo
+    echo "✅ $ARCHIVE  ($(du -h "$ARCHIVE" | cut -f1))"
+    echo
+    echo "This is still on the machine it protects. Copy it off:"
+    echo "    scp root@<this-server>:$ARCHIVE ."
+    ;;
+
   health)
     echo -n "local:  "; curl -fsS localhost:4000/api/v1/health || echo "DOWN"
     echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
     ;;
 
-  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|fix-sequences|backup|restore <f>|health}" ;;
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|fix-sequences|backup|backup-all [dir]|restore <f>|health}" ;;
 esac
