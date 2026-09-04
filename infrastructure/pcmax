@@ -113,15 +113,34 @@ case "${1:-help}" in
     # to fail so a machine without one can still be backed up — which is fine
     # until it is the machine that had one.
     echo "→ verifying"
-    FILES="$(tar tzf "$STAGE/uploads.tgz" | grep -c . || true)"
-    DB_ROWS="$(python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(sum(len(v) for v in d.values() if isinstance(v,list)))" "$STAGE/db.json" 2>/dev/null || echo 0)"
-    [ "$FILES" -gt 0 ]   || { echo "❌ the uploads archive is empty — refusing to call this a backup"; exit 1; }
-    [ "$DB_ROWS" -gt 0 ] || { echo "❌ the database dump has no rows — refusing to call this a backup"; exit 1; }
-    [ -s "$STAGE/env" ]  || echo "⚠️  no .env captured: a restore would need the secrets from somewhere else"
+    python3 - "$STAGE" <<'PY' || exit 1
+import json, sys, tarfile
+
+stage = sys.argv[1]
+tables = json.load(open(f"{stage}/db.json")).get("tables", {})
+rows = sum(len(v) for v in tables.values())
+if rows == 0:
+    sys.exit("❌ the database dump has no rows — refusing to call this a backup")
+
+names = {m.name.lstrip("./") for m in tarfile.open(f"{stage}/uploads.tgz") if m.isfile()}
+if not names:
+    sys.exit("❌ the uploads archive is empty — refusing to call this a backup")
+
+# The halves have to agree. Each can be fine alone and still restore to a
+# catalogue pointing at files that are not there — which is exactly what the
+# database-only backup would have produced.
+keys = {r.get("storage_key") or r.get("storageKey") for r in tables.get("package_files", [])}
+keys.discard(None)
+missing = sorted(k for k in keys if k not in names)
+if missing:
+    sys.exit(f"❌ {len(missing)} package file(s) the database references are not in the archive, e.g. {missing[0]}")
+
+print(f"   {rows} database rows · {len(names)} files · all {len(keys)} package payloads accounted for")
+PY
+    [ -s "$STAGE/env" ] || echo "⚠️  no .env captured: a restore would need the secrets from somewhere else"
 
     echo
     echo "✅ $ARCHIVE  ($(du -h "$ARCHIVE" | cut -f1))"
-    echo "   $FILES uploaded files, $DB_ROWS database rows"
     echo
     echo "This is still on the machine it protects. Copy it off:"
     echo "    scp root@<this-server>:$ARCHIVE ."
