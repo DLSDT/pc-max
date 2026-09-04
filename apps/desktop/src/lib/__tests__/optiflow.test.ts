@@ -88,9 +88,57 @@ describe('installTool', () => {
     expect(authorizeFeature).toHaveBeenCalledWith('multi_frame_generation');
     expect(invoke).toHaveBeenCalledWith('optiflow_install', expect.objectContaining({ exePath: 'C:/g/bin/game.exe' }));
     const [, args] = invoke.mock.calls[0]!;
-    const file = (args as { files: { contentBase64: string; role: string }[] }).files[0]!;
-    expect(atob(file.contentBase64)).toBe('the real dll bytes');
-    expect(file.role).toBe('streamline');
+    const payload = args as {
+      files: { role: string; sha256: string }[];
+      blobs: { sha256: string; contentBase64: string }[];
+    };
+    // Bytes travel once, in the blob table; the file list refers to them by hash.
+    expect(atob(payload.blobs[0]!.contentBase64)).toBe('the real dll bytes');
+    expect(payload.files[0]!.role).toBe('streamline');
+    expect(payload.files[0]!.sha256).toBe(payload.blobs[0]!.sha256);
+  });
+
+  it('downloads a payload once when several files share it', async () => {
+    // OptiScaler ships one 24 MB binary under eight proxy-DLL names so a game
+    // loads whichever it looks for. Fetching it per name was 171 MB of a 424 MB
+    // install, and put the same base64 through the IPC channel eight times.
+    const sha = await hashOf(BYTES);
+    const base = manifest(sha);
+    const names = ['dxgi.dll', 'version.dll', 'winmm.dll'];
+    mfgToolDownload.mockResolvedValue({
+      ...base,
+      files: names.map((filename) => ({ ...base.files[0]!, filename, destination: filename })),
+    });
+    const fetchMock = vi.fn(async () => new Response(BYTES));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, args] = invoke.mock.calls[0]!;
+    const payload = args as { files: { destination: string }[]; blobs: unknown[] };
+    expect(payload.blobs).toHaveLength(1);
+    // Every destination is still installed — the saving is in the download,
+    // not in what lands in the game folder.
+    expect(payload.files.map((f) => f.destination).sort()).toEqual([...names].sort());
+  });
+
+  it('asks the server to sign again when a link expires mid-download', async () => {
+    // All the URLs are signed at once, so their shared TTL is really a deadline
+    // for the whole transfer. On a link too slow for 424 MB in fifteen minutes
+    // the files at the back used to 403 and take the install down with them.
+    const sha = await hashOf(BYTES);
+    mfgToolDownload.mockResolvedValue(manifest(sha));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('expired', { status: 403 }))
+      .mockResolvedValue(new Response(BYTES));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await installTool({ tool: 'optiflow', exePath: 'C:/g/bin/game.exe' });
+
+    expect(mfgToolDownload).toHaveBeenCalledTimes(2);
+    expect(invoke).toHaveBeenCalled();
   });
 
   it('refuses a download that does not match the published hash', async () => {

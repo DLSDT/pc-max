@@ -90,6 +90,15 @@ pub struct OptiFlowFile {
     pub filename: String,
     pub destination: String,
     pub role: FileRole,
+    /// Empty when the bytes arrive in the command's blob table instead.
+    ///
+    /// A package ships the same payload under several names — OptiScaler puts
+    /// one 24 MB binary behind eight proxy-DLL names so a game finds whichever
+    /// it looks for. Carrying the base64 on every entry meant that binary
+    /// crossed the IPC boundary eight times. The command fills this in from
+    /// `sha256` before anything here runs, so the installer still sees a
+    /// complete file list.
+    #[serde(default)]
     pub content_base64: String,
     pub sha256: String,
 }

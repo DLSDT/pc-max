@@ -671,11 +671,42 @@ fn optiflow_scan(exe_path: String, components: Vec<String>) -> Result<optiflow::
 /// Install an OptiFlow payload against a selected executable. The manifest
 /// comes from the entitlement-gated server endpoint; every destination is
 /// resolved and bounds-checked here.
+/// One payload, addressed by content hash, for the files that share it.
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptiFlowBlob {
+    pub sha256: String,
+    pub content_base64: String,
+}
+
 #[tauri::command]
 fn optiflow_install(
     exe_path: String,
-    files: Vec<optiflow::OptiFlowFile>,
+    mut files: Vec<optiflow::OptiFlowFile>,
+    blobs: Option<Vec<OptiFlowBlob>>,
 ) -> Result<optiflow::InstallReport, String> {
+    // The client sends each distinct payload once and lets the file list refer
+    // to it by hash. OptiScaler's manifest is 31 files but only 23 distinct
+    // payloads: one 24 MB binary answers to eight different DLL names, and
+    // repeating its base64 per entry put ~200 MB of duplicate string through
+    // the IPC channel for a single install.
+    if let Some(blobs) = blobs {
+        let table: std::collections::HashMap<String, String> = blobs
+            .into_iter()
+            .map(|b| (b.sha256.to_ascii_lowercase(), b.content_base64))
+            .collect();
+        for f in &mut files {
+            if f.content_base64.is_empty() {
+                f.content_base64 = table
+                    .get(&f.sha256.to_ascii_lowercase())
+                    .cloned()
+                    // Not reachable from our own client, but a file whose bytes
+                    // never arrived must stop the install rather than be
+                    // written as nothing.
+                    .ok_or_else(|| format!("missing_blob|{}", f.filename))?;
+            }
+        }
+    }
     optiflow::install(Path::new(&exe_path), &files)
 }
 

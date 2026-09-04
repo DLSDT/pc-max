@@ -89,8 +89,11 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 
 export interface FetchProgress {
   filename: string;
+  /** Distinct payloads fetched so far, not manifest entries. */
   index: number;
   total: number;
+  bytesDone: number;
+  bytesTotal: number;
 }
 
 /**
@@ -102,30 +105,113 @@ export interface FetchProgress {
  * side checks again before writing, but failing here means nothing has been
  * staged toward a game folder at all.
  */
+type ManifestFile = MfgToolPackageResponse['files'][number];
+
+/**
+ * Manifest entries grouped by the bytes they actually contain.
+ *
+ * A package names the same payload several times on purpose: OptiScaler ships
+ * one binary as `dxgi.dll`, `version.dll`, `winmm.dll` and five more, so a game
+ * loads whichever proxy it looks for. They are separate destinations and every
+ * one of them has to be written — but they are one download.
+ */
+export function groupByPayload<T extends { sha256: string }>(files: T[]): Map<string, T[]> {
+  const groups = new Map<string, T[]>();
+  for (const f of files) {
+    const key = f.sha256.toLowerCase();
+    const group = groups.get(key);
+    if (group) group.push(f);
+    else groups.set(key, [f]);
+  }
+  return groups;
+}
+/** What the native installer is handed: the list, plus each payload once. */
+interface StagedPayload {
+  files: { filename: string; destination: string; role: PackageFileRole; sha256: string }[];
+  blobs: { sha256: string; contentBase64: string }[];
+}
+
+/**
+ * Fetch one copy of each distinct payload, re-signing links that expire.
+ *
+ * Two things were wrong with fetching the manifest entry by entry. OptiScaler's
+ * 31 entries are only 23 distinct payloads — one 24 MB binary answers to eight
+ * DLL names so a game loads whichever it looks for — so 171 MB of a 424 MB
+ * install was the same bytes over and over.
+ *
+ * And every URL is signed at the same instant with one TTL, which quietly makes
+ * that TTL a deadline for the whole download: on a link too slow to finish
+ * 424 MB inside fifteen minutes, the URLs for the files at the back expire
+ * before their turn and the install dies partway with a 403. Asking the server
+ * to sign again costs one request and keeps everything already fetched.
+ */
 async function fetchManifest(
   pkg: MfgToolPackageResponse,
   onProgress?: (p: FetchProgress) => void,
-): Promise<{ filename: string; destination: string; role: PackageFileRole; contentBase64: string; sha256: string }[]> {
-  const out: { filename: string; destination: string; role: PackageFileRole; contentBase64: string; sha256: string }[] = [];
-  for (let i = 0; i < pkg.files.length; i += 1) {
-    const file = pkg.files[i]!;
-    onProgress?.({ filename: file.filename, index: i, total: pkg.files.length });
-    const res = await fetch(file.url);
-    if (!res.ok) throw new OptiFlowError(`Could not download ${file.filename} (${res.status})`);
-    const bytes = new Uint8Array(await res.arrayBuffer());
+  resign?: () => Promise<MfgToolPackageResponse>,
+): Promise<StagedPayload> {
+  const groups = groupByPayload(pkg.files);
+  const distinct = [...groups.values()];
+  const bytesTotal = distinct.reduce((n, g) => n + (g[0]!.size || 0), 0);
+  let bytesDone = 0;
+
+  const blobs: StagedPayload['blobs'] = [];
+  const files: StagedPayload['files'] = [];
+
+  for (let i = 0; i < distinct.length; i += 1) {
+    const group = distinct[i]!;
+    const file = group[0]!;
+    onProgress?.({ filename: file.filename, index: i, total: distinct.length, bytesDone, bytesTotal });
+
+    const bytes = await fetchWithResign(file, groups, resign);
     const actual = await sha256Hex(bytes);
     if (actual.toLowerCase() !== file.sha256.toLowerCase()) {
       throw new OptiFlowError(`${file.filename} failed its integrity check — the download was not what the server published.`);
     }
-    out.push({
-      filename: file.filename,
-      destination: file.destination,
-      role: file.role,
-      contentBase64: toBase64(bytes),
-      sha256: file.sha256,
-    });
+
+    blobs.push({ sha256: file.sha256, contentBase64: toBase64(bytes) });
+    for (const f of group) {
+      files.push({ filename: f.filename, destination: f.destination, role: f.role, sha256: f.sha256 });
+    }
+
+    bytesDone += file.size || bytes.length;
+    onProgress?.({ filename: file.filename, index: i + 1, total: distinct.length, bytesDone, bytesTotal });
   }
-  return out;
+
+  return { files, blobs };
+}
+
+/**
+ * One payload, with a second attempt on a freshly signed link.
+ *
+ * 403 is what an expired signature looks like from here. It is retried once and
+ * only once: a link that is still refused after being re-signed is refused for
+ * some other reason, and retrying that forever would hang the install instead
+ * of failing it.
+ */
+async function fetchWithResign(
+  file: ManifestFile,
+  groups: Map<string, ManifestFile[]>,
+  resign?: () => Promise<MfgToolPackageResponse>,
+): Promise<Uint8Array> {
+  let url = file.url;
+  for (let attempt = 0; ; attempt += 1) {
+    const res = await fetch(url);
+    if (res.ok) return new Uint8Array(await res.arrayBuffer());
+    if (res.status !== 403 || attempt > 0 || !resign) {
+      throw new OptiFlowError(`Could not download ${file.filename} (${res.status})`);
+    }
+    const fresh = await resign();
+    const match = fresh.files.find((f) => f.sha256.toLowerCase() === file.sha256.toLowerCase());
+    if (!match) throw new OptiFlowError(`Could not download ${file.filename} (${res.status})`);
+    url = match.url;
+    // Keep the rest of the batch on fresh links too, so the next expiry does
+    // not cost another round trip.
+    for (const [key, group] of groups) {
+      const updated = fresh.files.find((f) => f.sha256.toLowerCase() === key);
+      if (updated) for (const g of group) g.url = updated.url;
+    }
+  }
 }
 
 /** The Streamline component names in a manifest — what `scanGame` looks for. */
@@ -163,9 +249,9 @@ export async function installTool({ tool, exePath, variant, onProgress }: Instal
   const pkg = await api.mfgToolDownload(tool, variant ?? null);
   if (pkg.files.length === 0) throw new OptiFlowError('This package has no files yet.');
 
-  const files = await fetchManifest(pkg, onProgress);
+  const { files, blobs } = await fetchManifest(pkg, onProgress, () => api.mfgToolDownload(tool, variant ?? null));
   const { invoke } = await import('@tauri-apps/api/core');
-  return (await invoke('optiflow_install', { exePath, files })) as InstallReport;
+  return (await invoke('optiflow_install', { exePath, files, blobs })) as InstallReport;
 }
 
 /**

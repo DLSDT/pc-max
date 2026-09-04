@@ -87,6 +87,11 @@ function Notice({
   );
 }
 
+/** Bytes as whole megabytes — the unit a 250 MB download is read in. */
+function formatMb(bytes: number): string {
+  return (bytes / 1_048_576).toFixed(1);
+}
+
 /**
  * AI Optical Flow — choose an Unlocker, choose a Streamline package, choose the
  * game, install.
@@ -494,10 +499,36 @@ export default function MfgToolPage({
         </button>
 
         {step && (
-          <p className="mt-3 text-xs text-muted-foreground">
-            {step}
-            {progress && ` — ${progress.filename} (${progress.index + 1}/${progress.total})`}
-          </p>
+          <div className="mt-3 space-y-1.5">
+            <p className="text-xs text-muted-foreground">
+              {step}
+              {progress && ` — ${progress.filename}`}
+            </p>
+            {progress && progress.bytesTotal > 0 && (
+              <>
+                {/* A quarter of a gigabyte over an Iranian connection is minutes,
+                    not seconds. A file counter alone leaves the user unable to
+                    tell a slow download from a stuck one. */}
+                <div
+                  className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                  role="progressbar"
+                  aria-valuenow={Math.round((progress.bytesDone / progress.bytesTotal) * 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width] duration-300"
+                    style={{ width: `${Math.min(100, (progress.bytesDone / progress.bytesTotal) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground" dir="ltr">
+                  {formatMb(progress.bytesDone)} / {formatMb(progress.bytesTotal)} MB
+                  {' · '}
+                  {progress.index}/{progress.total}
+                </p>
+              </>
+            )}
+          </div>
         )}
       </section>
 
