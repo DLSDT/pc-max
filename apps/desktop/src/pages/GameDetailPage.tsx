@@ -316,7 +316,7 @@ function PackageCard({
           {done ? `${t('optimize.applied')} v${done}` : t('optimize.optimize')}
         </Button>
         {gameDir && !askingPath && !done && (
-          <span className="ml-2 text-[10px] text-muted-foreground">{gameDir}</span>
+          <span className="ml-2 text-[10px] text-muted-foreground" dir="ltr">{gameDir}</span>
         )}
       </div>
     </div>

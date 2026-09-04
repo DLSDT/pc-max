@@ -414,18 +414,18 @@ export default function MfgToolPage({
           {exePath ? t('mfg.chooseAnother') : t('mfg.chooseExe')}
         </button>
 
-        {exePath && <p className="mt-3 break-all font-mono text-xs text-muted-foreground">{exePath}</p>}
+        {exePath && <p className="mt-3 break-all font-mono text-xs text-muted-foreground" dir="ltr">{exePath}</p>}
 
         {scan && (
           <>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <div className="min-w-0">
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('mfg.gameFolder')}</dt>
-                <dd className="mt-0.5 break-all font-mono text-xs text-foreground">{scan.gameDir}</dd>
+                <dd className="mt-0.5 break-all font-mono text-xs text-foreground" dir="ltr">{scan.gameDir}</dd>
               </div>
               <div className="min-w-0">
                 <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t('mfg.launcherFolder')}</dt>
-                <dd className="mt-0.5 break-all font-mono text-xs text-foreground">{scan.launcherDir}</dd>
+                <dd className="mt-0.5 break-all font-mono text-xs text-foreground" dir="ltr">{scan.launcherDir}</dd>
               </div>
             </dl>
 
