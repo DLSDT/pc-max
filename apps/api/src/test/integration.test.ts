@@ -22,6 +22,9 @@ process.env.ADMIN_BOOTSTRAP_PASSWORD = 'TestPass123!';
 // default 1-minute window. Raise the per-IP ceiling for tests only — the
 // security suite still explicitly asserts that route limits return 429.
 process.env.RATE_LIMIT_MAX = '10000';
+// The auth routes carry their own ceiling, and this suite registers dozens of
+// users; without raising it too the later cases 429 instead of testing anything.
+process.env.RATE_LIMIT_AUTH = '10000';
 
 let pg: EmbeddedPostgres;
 let app: FastifyInstance;
@@ -1563,6 +1566,57 @@ describe('subscriptions & payments (Phase 5-6)', () => {
       .from(subscriptions)
       .where(and(eq(subscriptions.userId, userId), eq(subscriptions.status, 'active')));
     expect(rows).toHaveLength(1);
+  });
+
+  it('closes an account: identifiers freed, tokens dead, payments kept', async () => {
+    // A real user, bought a plan, then asks to leave — the sequence that has to
+    // work, not a bare row.
+    const reg = await registerUser('closer@example.test', 'ClosePass123!', 'closer');
+    const token = (reg.json as { accessToken: string }).accessToken;
+    const id = (reg.json as { user: { id: string } }).user.id;
+
+    const p = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token,
+      body: { planId, idempotencyKey: `close-${Date.now()}` },
+    });
+    const pid = (p.json as { paymentId: string }).paymentId;
+    await inject('POST', '/api/v1/payments/mock/callback', { body: { paymentId: pid } });
+
+    // The password is what authorises it — a token alone must not be enough.
+    const wrong = await inject('DELETE', '/api/v1/me', { token, body: { password: 'not-it' } });
+    expect(wrong.status).toBe(400);
+
+    const gone = await inject('DELETE', '/api/v1/me', { token, body: { password: 'ClosePass123!' } });
+    expect(gone.status).toBe(200);
+
+    // Every token issued for the account is dead, not just the session.
+    expect([401, 403]).toContain((await inject('GET', '/api/v1/me', { token })).status);
+
+    // The payment survives — it is a financial record, not personal data.
+    const { db } = await import('../db');
+    const { payments, users } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    const kept = await db.select().from(payments).where(eq(payments.id, pid));
+    expect(kept).toHaveLength(1);
+
+    // Nothing personal is left on the row.
+    const [row] = await db.select().from(users).where(eq(users.id, id));
+    expect(row!.email).toBeNull();
+    expect(row!.username).toBeNull();
+    expect(row!.passwordHash).toBeNull();
+  });
+
+  it('frees the address so the same person can sign up again', async () => {
+    // The resend cooldown is per identifier and would refuse a second code for
+    // this address within the window — correct behaviour, and not what is
+    // under test here, so the previous code is cleared first.
+    const { db } = await import('../db');
+    const { otpCodes } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    await db.delete(otpCodes).where(eq(otpCodes.email, 'closer@example.test'));
+
+    const again = await registerUser('closer@example.test', 'FreshPass123!', 'closer2');
+    expect(again.status).toBe(201);
   });
 
   it('lists payments in the admin panel with user + plan context', async () => {

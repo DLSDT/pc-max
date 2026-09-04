@@ -11,9 +11,10 @@ import {
   SubscriptionPlanPublic,
 } from '@goh/validation';
 import { db } from '../db';
-import { devices, users } from '../db/schema';
-import { conflict, notFound } from '../lib/errors';
+import { devices, favorites, userSessions, users } from '../db/schema';
+import { badRequest, conflict, notFound } from '../lib/errors';
 import { authenticateUser } from '../lib/auth-middleware';
+import { verifyPasswordOrDecoy } from '../lib/password';
 import { activeSubscriptionFor, entitlementFeaturesFor, hasEntitlement } from '../lib/entitlements';
 import { GATED_FEATURES, GATED_FEATURE_KEYS, requireFeature, type GatedFeature } from '../lib/feature-gate';
 import { deviceLimitFor } from '../services/subscriptions';
@@ -262,6 +263,72 @@ export async function usersModule(app: FastifyInstance) {
         lastSeenAt: row!.lastSeenAt ? row!.lastSeenAt.toISOString() : null,
         createdAt: row!.createdAt.toISOString(),
       };
+    },
+  );
+
+  /**
+   * Close the account.
+   *
+   * The row survives, scrubbed. Payments and subscriptions reference it and
+   * are financial records — deleting the user would either orphan them or take
+   * them with it, and neither is acceptable for something a customer paid for.
+   * What actually leaves is everything personal: the email, phone, username and
+   * password hash, plus the devices and favourites that describe the person's
+   * machines and taste.
+   *
+   * The identifiers are set to null rather than blanked, so the unique index
+   * frees the address and the same person can sign up again later.
+   *
+   * The password is required. An access token is enough to read the account;
+   * ending it should need something only the account holder knows, because a
+   * borrowed laptop with the app open otherwise closes the account.
+   */
+  typed.delete(
+    '/me',
+    {
+      preHandler: [authenticateUser],
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+      schema: {
+        body: z.object({ password: z.string().min(1) }),
+        response: { 200: z.object({ ok: z.boolean() }) },
+      },
+    },
+    async (request) => {
+      const userId = request.user!.id;
+      const user = await db.query.users.findFirst({ where: eq(users.id, userId) });
+      if (!user) throw notFound('User');
+
+      // An account with no password was created by device registration and has
+      // no secret to confirm with; refusing is safer than deleting on a token
+      // alone.
+      if (!user.passwordHash) throw badRequest('This account has no password set, so it cannot be closed from here');
+      if (!(await verifyPasswordOrDecoy(request.body.password, user.passwordHash))) {
+        throw badRequest('That password is not correct');
+      }
+
+      await db.transaction(async (tx) => {
+        await tx.delete(devices).where(eq(devices.userId, userId));
+        await tx.delete(favorites).where(eq(favorites.userId, userId));
+        await tx.update(userSessions).set({ revokedAt: new Date() }).where(eq(userSessions.userId, userId));
+        await tx
+          .update(users)
+          .set({
+            email: null,
+            phone: null,
+            username: null,
+            passwordHash: null,
+            emailVerified: false,
+            phoneVerified: false,
+            deviceId: null,
+            status: 'suspended',
+            // Kills every access token already issued, not just the sessions.
+            tokenVersion: user.tokenVersion + 1,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId));
+      });
+
+      return { ok: true };
     },
   );
 
