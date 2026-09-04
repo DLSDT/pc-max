@@ -106,8 +106,22 @@ case "${1:-help}" in
 
     ARCHIVE="$OUT_DIR/pcmax-full-$STAMP.tar.gz"
     tar czf "$ARCHIVE" -C "$STAGE" .
+
+    # A backup nobody has opened is a guess. Each of these has a way of going
+    # quietly wrong: the volume lookup could match an empty volume, the db dump
+    # could be a truncated file that still exists, and the .env copy is allowed
+    # to fail so a machine without one can still be backed up — which is fine
+    # until it is the machine that had one.
+    echo "→ verifying"
+    FILES="$(tar tzf "$STAGE/uploads.tgz" | grep -c . || true)"
+    DB_ROWS="$(python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(sum(len(v) for v in d.values() if isinstance(v,list)))" "$STAGE/db.json" 2>/dev/null || echo 0)"
+    [ "$FILES" -gt 0 ]   || { echo "❌ the uploads archive is empty — refusing to call this a backup"; exit 1; }
+    [ "$DB_ROWS" -gt 0 ] || { echo "❌ the database dump has no rows — refusing to call this a backup"; exit 1; }
+    [ -s "$STAGE/env" ]  || echo "⚠️  no .env captured: a restore would need the secrets from somewhere else"
+
     echo
     echo "✅ $ARCHIVE  ($(du -h "$ARCHIVE" | cut -f1))"
+    echo "   $FILES uploaded files, $DB_ROWS database rows"
     echo
     echo "This is still on the machine it protects. Copy it off:"
     echo "    scp root@<this-server>:$ARCHIVE ."
