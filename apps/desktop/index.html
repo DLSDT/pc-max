@@ -7,6 +7,20 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" href="/icon.png" />
     <title>PC MAX</title>
+    <!--
+      Start the TLS handshake to the API while the bundle is still downloading.
+
+      A cold connection to the API costs about 0.63s in handshake before a byte
+      of response comes back, and without this the handshake does not begin
+      until the JavaScript has loaded and made its first call — so that cost is
+      paid in series after the app boots rather than in parallel with it.
+
+      Harmless when unused: the browser drops an unused preconnect after a few
+      seconds. The host is the production API; a dev build talking to a proxy
+      simply never uses it.
+    -->
+    <link rel="preconnect" href="https://pc-maxapp.rixy.ir" crossorigin />
+    <link rel="dns-prefetch" href="https://pc-maxapp.rixy.ir" />
   </head>
   <body>
     <div id="root"></div>

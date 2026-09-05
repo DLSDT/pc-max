@@ -25,21 +25,22 @@ import RegisterPage from './pages/RegisterPage';
 import SettingsPage from './pages/SettingsPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import { useAuth } from './store/auth';
-import { useAdminAuth } from './store/adminAuth';
 import { api } from './lib/api';
 import { applyBranding, brandingFromConfig, loadCachedBranding } from './lib/branding';
 
 export default function App() {
   const restore = useAuth((s) => s.restore);
-  const restoreAdmin = useAdminAuth((s) => s.restore);
 
-  // Try to restore the session from the httpOnly refresh cookie on boot —
-  // both the regular user session and, separately, an admin session (the
-  // unified login form can put either one, or neither, in effect).
+  // Restore the user session from the httpOnly refresh cookie on boot.
+  //
+  // The admin session is deliberately not restored here. AdminPage already
+  // restores it when it mounts, so doing it on boot only added two requests —
+  // /admin/auth/me and the refresh its 401 triggers — to every launch by every
+  // ordinary user, neither of which could ever succeed for them. A deep link
+  // straight to /admin still works, because that is the page that asks.
   useEffect(() => {
     void restore();
-    void restoreAdmin();
-  }, [restore, restoreAdmin]);
+  }, [restore]);
 
   // Remote branding/theme (Phase 15): paint the last-known brand immediately,
   // then fetch the live config (cached server-side) and re-apply.

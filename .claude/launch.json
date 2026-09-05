@@ -3,8 +3,11 @@
   "configurations": [
     {
       "name": "pcmax-desktop",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "-w", "@goh/desktop"],
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "VITE_API_URL=/api/v1 npm run dev -w @goh/desktop"
+      ],
       "port": 1420
     }
   ]

@@ -241,6 +241,8 @@ async function adminList<T>(path: string): Promise<{ data: T[]; total: number }>
   return { data: res.data, total: res.meta?.total ?? res.data.length };
 }
 
+let inFlightConfig: Promise<{ data: Record<string, unknown> }> | null = null;
+
 export const api = {
   home: (signal?: AbortSignal) => request<HomeResponse>('/home/cached', { signal }),
   games: (params: Record<string, string | undefined>, signal?: AbortSignal) => {
@@ -348,7 +350,18 @@ export const api = {
       body: {},
       authed: true,
     }),
-  remoteConfig: () => request<{ data: Record<string, unknown> }>('/config'),
+  /**
+   * Shared between the branding boot and the version check, which both run on
+   * startup and were each paying a full round trip for the same 348 bytes.
+   * One in-flight request is reused; once it settles the next caller starts a
+   * fresh one, so this is request coalescing rather than a cache.
+   */
+  remoteConfig: () => {
+    inFlightConfig ??= request<{ data: Record<string, unknown> }>('/config').finally(() => {
+      inFlightConfig = null;
+    });
+    return inFlightConfig;
+  },
 
   // ------------------------------------------------------------ admin auth
   // Entirely separate credential from the end-user session above — backed by

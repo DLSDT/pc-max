@@ -60,6 +60,16 @@ export const useAuth = create<AuthState>()(
         if (useAuth.persist && !useAuth.persist.hasHydrated()) {
           await useAuth.persist.rehydrate();
         }
+        // Nobody has ever signed in on this machine: there is no refresh cookie
+        // to trade and no last-known user to fall back to, so /auth/me can only
+        // 401 — and the 401 then costs a second round trip when the client tries
+        // to refresh. Two requests, both certain to fail, in front of a login
+        // screen that needs neither.
+        if (!useAuth.getState().user) {
+          set({ ready: true, restoring: false, offline: false });
+          return;
+        }
+
         set({ restoring: true });
         try {
           const me = await api.me();
