@@ -191,6 +191,8 @@ function GameEditor({ id, onBack }: { id: string; onBack: () => void }) {
           slug: res.slug ?? '',
           tagline: res.tagline ?? '',
           description: res.description ?? '',
+          descriptionFa: res.descriptionFa ?? '',
+          descriptionEn: res.descriptionEn ?? '',
           developer: res.developer ?? '',
           publisher: res.publisher ?? '',
           engine: res.engine ?? '',
@@ -221,7 +223,7 @@ function GameEditor({ id, onBack }: { id: string; onBack: () => void }) {
     setSaveMsg(null);
     try {
       const patch: Record<string, unknown> = { ...form };
-      for (const k of ['tagline', 'description', 'developer', 'publisher', 'engine', 'api', 'steamAppId', 'epicAppId']) {
+      for (const k of ['tagline', 'description', 'descriptionFa', 'descriptionEn', 'developer', 'publisher', 'engine', 'api', 'steamAppId', 'epicAppId']) {
         if (patch[k] === '') patch[k] = null;
       }
       if (patch.launcher === '') patch.launcher = null;
@@ -278,8 +280,26 @@ function GameEditor({ id, onBack }: { id: string; onBack: () => void }) {
           </Field>
         </div>
         <Field label={t('admin.tagline')}><input value={String(form.tagline ?? '')} onChange={(e) => setField('tagline', e.target.value)} className={`${inputClass} w-full`} /></Field>
-        <Field label={t('admin.description')}>
-          <textarea value={String(form.description ?? '')} onChange={(e) => setField('description', e.target.value)} rows={4} className={`${inputClass} w-full`} />
+        {/* Two boxes rather than one: the player is shown the language they
+            read, falling back to the other, so leaving one empty is a normal
+            state rather than a half-finished one. */}
+        <Field label={t('admin.descriptionFa')}>
+          <textarea
+            value={String(form.descriptionFa ?? '')}
+            onChange={(e) => setField('descriptionFa', e.target.value)}
+            rows={4}
+            dir="rtl"
+            className={`${inputClass} w-full`}
+          />
+        </Field>
+        <Field label={t('admin.descriptionEn')}>
+          <textarea
+            value={String(form.descriptionEn ?? '')}
+            onChange={(e) => setField('descriptionEn', e.target.value)}
+            rows={4}
+            dir="ltr"
+            className={`${inputClass} w-full`}
+          />
         </Field>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => void handleSave()} disabled={saving} className={primaryBtnClass}>
