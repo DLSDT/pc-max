@@ -98,5 +98,105 @@
   "dying-light": {
     "en": "Techland's first-person zombie game built on parkour: the city is safe enough by day and lethal after dark. Runs well on modest hardware, and the day-night cycle is the main thing that moves the frame rate.",
     "fa": "بازی زامبی اول‌شخص از Techland بر پایهٔ پارکور: شهر در روز نسبتاً امن است و بعد از تاریکی مرگبار. روی سخت‌افزار متوسط خوب اجرا می‌شود و چرخهٔ شب و روز مهم‌ترین عامل تغییر نرخ فریم است."
+  },
+  "spider-man-remastered": {
+    "en": "Insomniac's open-world superhero game, remastered for PC. Peter Parker swings across a compact, dense Manhattan. Traversal is the load here: the city streams in constantly, so storage speed and CPU matter as much as the GPU.",
+    "fa": "بازی ابرقهرمانی جهان‌باز از Insomniac با نسخهٔ بازسازی‌شده برای رایانه. پیتر پارکر در منهتنی فشرده و پرجزئیات تاب می‌خورد. بار اصلی از جابه‌جایی می‌آید: شهر پیوسته بارگذاری می‌شود، پس سرعت حافظه و پردازنده به اندازهٔ کارت گرافیک اهمیت دارد."
+  },
+  "spider-man-miles-morales": {
+    "en": "The standalone follow-up to Marvel's Spider-Man, with Miles defending a wintry Harlem. Same engine and the same streaming-heavy behaviour, in a shorter, denser story.",
+    "fa": "دنبالهٔ مستقل Marvel's Spider-Man، با مایلز که از هارلمِ زمستانی دفاع می‌کند. همان موتور و همان رفتار وابسته به بارگذاری پیوسته، در داستانی کوتاه‌تر و فشرده‌تر."
+  },
+  "star-wars-jedi-survivor": {
+    "en": "Respawn's action-adventure sequel, following Cal Kestis five years after Fallen Order. Known for a rough PC launch: it leans hard on the CPU, and upscaling helps less here than a faster processor does.",
+    "fa": "دنبالهٔ اکشن-ماجراجویی از Respawn، دربارهٔ کال کستیس پنج سال پس از Fallen Order. به عرضهٔ پرمشکلش روی رایانه شناخته می‌شود: فشار زیادی به پردازنده می‌آورد و ارتقای تصویر کمتر از یک پردازندهٔ سریع‌تر به آن کمک می‌کند."
+  },
+  "a-plague-tale-requiem": {
+    "en": "Asobo Studio's story-driven adventure, following Amicia and Hugo through 14th-century France. The rat swarms are simulated in their thousands and are the single heaviest thing in the game.",
+    "fa": "ماجراجویی داستان‌محور از Asobo Studio، دربارهٔ آمیسیا و هوگو در فرانسهٔ قرن چهاردهم. انبوه موش‌ها به‌صورت هزاران واحد شبیه‌سازی می‌شوند و سنگین‌ترین بخش بازی‌اند."
+  },
+  "returnal": {
+    "en": "Housemarque's roguelike third-person shooter: Selene crashes on an alien world and relives her death in a loop. Dense particle effects and a high enemy count keep the GPU busy even at modest resolutions.",
+    "fa": "شوتر سوم‌شخص روگ‌لایک از Housemarque: سلن روی سیاره‌ای بیگانه سقوط می‌کند و مرگش را در حلقه‌ای تکرار می‌کند. جلوه‌های ذره‌ای انبوه و تعداد بالای دشمن، کارت گرافیک را حتی در رزولوشن‌های پایین هم مشغول نگه می‌دارد."
+  },
+  "resident-evil-2": {
+    "en": "Capcom's remake of the 1998 survival horror, on the RE Engine. Leon and Claire work through a Raccoon City police station that folds back on itself. Efficient enough to run well on older hardware.",
+    "fa": "بازسازی بازی ترسناک بقای ۱۹۹۸ کپکام روی موتور RE Engine. لئون و کلر در ادارهٔ پلیس راکون‌سیتی که مدام به خودش برمی‌گردد پیش می‌روند. آن‌قدر بهینه هست که روی سخت‌افزار قدیمی‌تر هم خوب اجرا شود."
+  },
+  "resident-evil-7-biohazard": {
+    "en": "The entry that moved the series to first person, set in a Louisiana plantation house. Light by modern standards and one of the better-optimised horror games on PC.",
+    "fa": "نسخه‌ای که مجموعه را به اول‌شخص برد، در خانه‌ای مزرعه‌ای در لوئیزیانا. با معیارهای امروزی سبک است و یکی از بهینه‌ترین بازی‌های ترسناک روی رایانه."
+  },
+  "devil-may-cry-5": {
+    "en": "Capcom's stylish action game on the RE Engine, built around combo scoring across three playable hunters. Very well optimised — high frame rates are achievable on modest cards, which matters for its timing-based combat.",
+    "fa": "بازی اکشن پرزرق‌وبرق کپکام روی موتور RE Engine، بر پایهٔ امتیازدهی به کمبوها با سه شخصیت قابل بازی. بسیار بهینه است و نرخ فریم بالا روی کارت‌های متوسط هم به دست می‌آید — که برای مبارزهٔ مبتنی بر زمان‌بندی‌اش مهم است."
+  },
+  "metal-gear-solid-v-the-phantom-pain": {
+    "en": "Kojima Productions' open-world stealth game on the Fox Engine, following Venom Snake through 1980s Afghanistan and Africa. Famously well optimised: it holds high frame rates on hardware a decade old.",
+    "fa": "بازی مخفی‌کاری جهان‌باز از Kojima Productions روی موتور Fox، دربارهٔ ونوم اسنیک در افغانستان و آفریقای دههٔ ۱۹۸۰. به بهینگی‌اش مشهور است و روی سخت‌افزار ده‌ساله هم نرخ فریم بالا نگه می‌دارد."
+  },
+  "warhammer-40000-space-marine-2": {
+    "en": "A third-person action game putting the player in Space Marine armour against Tyranid swarms rendered in the thousands. Those crowds are CPU work, so the processor is usually the limit before the GPU is.",
+    "fa": "بازی اکشن سوم‌شخص که بازیکن را در زرهِ Space Marine مقابل انبوه Tyranidها قرار می‌دهد که به تعداد هزاران رندر می‌شوند. آن جمعیت کار پردازنده است، پس معمولاً پردازنده زودتر از کارت گرافیک به سقف می‌رسد."
+  },
+  "microsoft-flight-simulator": {
+    "en": "Asobo's flight simulator, streaming real-world terrain and weather from the cloud. Bound by CPU and network far more than by GPU — an internet connection is part of the system requirement.",
+    "fa": "شبیه‌ساز پرواز از Asobo که زمین و آب‌وهوای واقعی را از فضای ابری بارگذاری می‌کند. بسیار بیشتر از کارت گرافیک به پردازنده و شبکه وابسته است — اتصال اینترنت بخشی از نیازمندی سیستم است."
+  },
+  "avatar-frontiers-of-pandora": {
+    "en": "Ubisoft Massive's first-person open world set on Pandora, on the Snowdrop engine. Dense bioluminescent foliage makes it one of the more GPU-bound games of its year.",
+    "fa": "جهان باز اول‌شخص از Ubisoft Massive در سیارهٔ پاندورا روی موتور Snowdrop. پوشش گیاهی انبوه و درخشان آن را به یکی از وابسته‌ترین بازی‌های سال خود به کارت گرافیک تبدیل کرده."
+  },
+  "star-wars-outlaws": {
+    "en": "An open-world Star Wars game from Ubisoft Massive, following the scoundrel Kay Vess between the Empire's criminal syndicates. Snowdrop again, with ray-traced global illumination that is not fully optional.",
+    "fa": "بازی جهان‌باز جنگ ستارگان از Ubisoft Massive، دربارهٔ کی وس در میان سندیکاهای جنایی امپراتوری. باز هم موتور Snowdrop، با نورپردازی سراسری رهگیری‌پرتو که کاملاً اختیاری نیست."
+  },
+  "call-of-duty-modern-warfare-ii": {
+    "en": "Infinity Ward's 2022 military shooter. The campaign is heavier than multiplayer, where players usually trade visual settings for the lowest possible input latency.",
+    "fa": "شوتر نظامی ۲۰۲۲ از Infinity Ward. بخش داستانی از چندنفره سنگین‌تر است؛ در چندنفره بازیکنان معمولاً کیفیت تصویر را فدای کمترین تأخیر ورودی می‌کنند."
+  },
+  "call-of-duty-black-ops-6": {
+    "en": "The 2024 entry in the Black Ops line, with a Cold War campaign and the series' usual multiplayer. Scales widely, and frame generation is common in multiplayer despite the latency it adds.",
+    "fa": "نسخهٔ ۲۰۲۴ از مجموعهٔ Black Ops، با داستانی در جنگ سرد و بخش چندنفرهٔ همیشگی. مقیاس‌پذیری وسیعی دارد و استفاده از تولید فریم در چندنفره رایج است، با وجود تأخیری که اضافه می‌کند."
+  },
+  "battlefield-1": {
+    "en": "DICE's First World War shooter on Frostbite, with 64-player maps and destructible terrain. The player count makes it CPU-bound in a way the campaign never is.",
+    "fa": "شوتر جنگ جهانی اول از DICE روی موتور Frostbite، با نقشه‌های ۶۴ نفره و زمین تخریب‌پذیر. تعداد بازیکنان آن را به شکلی وابسته به پردازنده می‌کند که بخش داستانی هرگز نیست."
+  },
+  "pubg-battlegrounds": {
+    "en": "The battle royale that defined the genre. Performance is dominated by player count and render distance, not by texture quality — most competitive players run low settings on purpose.",
+    "fa": "بتل‌رویالی که این ژانر را تعریف کرد. کارایی‌اش را تعداد بازیکن و فاصلهٔ دید تعیین می‌کند نه کیفیت بافت — بیشتر بازیکنان رقابتی عمداً تنظیمات پایین اجرا می‌کنند."
+  },
+  "rust": {
+    "en": "A multiplayer survival game where the whole map is player-built. Server population and nearby construction drive performance far more than graphics settings do.",
+    "fa": "بازی بقای چندنفره که کل نقشه‌اش را بازیکنان می‌سازند. جمعیت سرور و ساخت‌وسازهای اطراف، بسیار بیشتر از تنظیمات گرافیکی روی کارایی اثر می‌گذارند."
+  },
+  "mortal-kombat-1": {
+    "en": "NetherRealm's fighting game reboot on Unreal Engine 4. Fighting games need a locked frame rate above all else — the visual ceiling matters less than never dropping a frame.",
+    "fa": "بازآغاز بازی مبارزه‌ای از NetherRealm روی Unreal Engine 4. بازی‌های مبارزه‌ای بیش از هر چیز به نرخ فریم ثابت نیاز دارند — سقف کیفیت تصویر کم‌اهمیت‌تر از نیفتادن حتی یک فریم است."
+  },
+  "dark-souls": {
+    "en": "FromSoftware's action role-playing game and the origin of the form. Old enough to run on nearly anything, though the original PC release needs community fixes to behave.",
+    "fa": "بازی نقش‌آفرینی اکشن فرام‌سافتور و سرآغاز این سبک. آن‌قدر قدیمی است که تقریباً روی هر چیزی اجرا شود، هرچند نسخهٔ اصلی رایانه برای درست کار کردن به اصلاحیه‌های جامعهٔ کاربری نیاز دارد."
+  },
+  "ghostwire-tokyo": {
+    "en": "Tango Gameworks' first-person action game in a Tokyo emptied of people. Wet streets and neon make its ray-traced reflections unusually visible, and unusually expensive.",
+    "fa": "بازی اکشن اول‌شخص از Tango Gameworks در توکیویی خالی از آدم. خیابان‌های خیس و نئون، بازتاب‌های رهگیری‌پرتو را غیرمعمول برجسته — و غیرمعمول گران — می‌کند."
+  },
+  "dead-island-2": {
+    "en": "Dambuster's first-person zombie action game in a stylised Los Angeles, built around a detailed damage system. Well optimised, with a locked but stable visual target.",
+    "fa": "بازی اکشن زامبی اول‌شخص از Dambuster در لس‌آنجلسی سبک‌پردازی‌شده، بر پایهٔ سیستم آسیب‌دیدگی پرجزئیات. بهینه است، با هدف بصری ثابت ولی پایدار."
+  },
+  "age-of-empires-iv": {
+    "en": "Relic and World's Edge's historical real-time strategy game. Like all RTS, it is CPU-bound in late-game battles where unit counts climb, not GPU-bound.",
+    "fa": "بازی استراتژی بلادرنگ تاریخی از Relic و World's Edge. مثل همهٔ بازی‌های این سبک، در نبردهای پایانی که تعداد واحدها بالا می‌رود به پردازنده وابسته است نه کارت گرافیک."
+  },
+  "final-fantasy-vii-remake-intergrade": {
+    "en": "Square Enix's reimagining of the Midgar chapter of Final Fantasy VII, on Unreal Engine 4. The PC port is VRAM-hungry for what it draws, and benefits clearly from upscaling.",
+    "fa": "بازآفرینی فصل میدگار از Final Fantasy VII توسط اسکوئر انیکس روی Unreal Engine 4. نسخهٔ رایانه نسبت به آنچه رسم می‌کند حافظهٔ گرافیکی زیادی می‌خواهد و از ارتقای تصویر سود آشکاری می‌برد."
+  },
+  "days-gone-remastered": {
+    "en": "Bend Studio's open-world survival game, following drifter Deacon St. John through post-outbreak Oregon. The hordes are hundreds of individually simulated enemies and are what the hardware is actually being asked to do.",
+    "fa": "بازی بقای جهان‌باز از Bend Studio، دربارهٔ دیکن سنت‌جان در اورگانِ پس از شیوع. دسته‌های زامبی صدها دشمنِ جداگانه شبیه‌سازی‌شده‌اند و همان چیزی‌اند که واقعاً از سخت‌افزار خواسته می‌شود."
   }
 }
