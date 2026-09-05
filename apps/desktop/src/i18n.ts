@@ -602,6 +602,10 @@ void i18n.use(initReactI18next).init({
           confirmRemoveImage: 'Remove this image?',
           imageTypeError: 'Only JPEG, PNG or WebP images are allowed.',
           uploadFailed: 'Upload failed.',
+          uploadingCount: 'Uploading… {{done}} of {{total}}',
+          uploadedCount: '{{count}} file(s) uploaded.',
+          oneDestinationManyFiles:
+            'A destination can only name one file. Clear it to use each file\u2019s own name, or end it with / to use it as a folder.',
           requirements: 'System requirements',
           minimum: 'Minimum',
           recommended: 'Recommended',
@@ -1500,6 +1504,10 @@ void i18n.use(initReactI18next).init({
           confirmRemoveImage: 'این تصویر حذف شود؟',
           imageTypeError: 'فقط تصاویر JPEG، PNG یا WebP مجاز هستند.',
           uploadFailed: 'بارگذاری ناموفق بود.',
+          uploadingCount: 'در حال آپلود… {{done}} از {{total}}',
+          uploadedCount: '{{count}} فایل آپلود شد.',
+          oneDestinationManyFiles:
+            'مقصد فقط می‌تواند نام یک فایل باشد. خالی بگذارید تا نام خود فایل‌ها استفاده شود، یا آخرش / بگذارید تا پوشه حساب شود.',
           requirements: 'حداقل سیستم مورد نیاز',
           minimum: 'حداقل',
           recommended: 'پیشنهادی',

@@ -352,34 +352,67 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const picked = Array.from(e.target.files ?? []);
     e.target.value = '';
-    if (!file || !destination.trim()) return;
+    if (picked.length === 0) return;
+
+    const typed = destination.trim();
+    // One file with a destination typed is the old behaviour and still the
+    // right one when the name on disk is not the name in the game folder.
+    // For a batch, each file's own name is its destination — a 31-file package
+    // was 31 rounds of typing a filename that was already on screen. A typed
+    // value ending in / is kept as the folder they all go into.
+    const isPrefix = typed.endsWith('/');
+    if (picked.length > 1 && typed && !isPrefix) {
+      setMsg(t('admin.oneDestinationManyFiles'));
+      return;
+    }
+    if (picked.length === 1 && !typed) {
+      // Nothing typed for a single file still means "same name as the file".
+    }
+
+    const destinationFor = (file: File) => {
+      if (picked.length === 1 && typed && !isPrefix) return typed;
+      return isPrefix ? `${typed}${file.name}` : file.name;
+    };
+
     // The server refuses a path for these roles; catching it here names the
     // problem next to the field instead of as a generic 400.
-    if (role !== 'relative' && /[\\/]/.test(destination)) {
+    if (role !== 'relative' && picked.some((f) => /[\\/]/.test(destinationFor(f)))) {
       setMsg(t('admin.roleNeedsBareName'));
       return;
     }
+
     setUploading(true);
     setMsg(null);
+    let done = 0;
     try {
-      const { uploadUrl, objectKey } = await api.adminPresignPackageUpload(id, file.name, file.size);
-      await api.adminUploadPackageFile(uploadUrl, file);
-      await api.adminCompletePackageFile(id, {
-        storageKey: objectKey,
-        filename: file.name,
-        size: file.size,
-        destination: destination.trim(),
-        operation,
-        role,
-        variant: variant.trim() || undefined,
-        component,
-      });
+      for (const file of picked) {
+        if (picked.length > 1) setMsg(t('admin.uploadingCount', { done, total: picked.length }));
+        const { uploadUrl, objectKey } = await api.adminPresignPackageUpload(id, file.name, file.size);
+        await api.adminUploadPackageFile(uploadUrl, file);
+        await api.adminCompletePackageFile(id, {
+          storageKey: objectKey,
+          filename: file.name,
+          size: file.size,
+          destination: destinationFor(file),
+          operation,
+          role,
+          variant: variant.trim() || undefined,
+          component,
+        });
+        done += 1;
+      }
       setDestination('');
+      // Say how many landed. A silent return after twenty files leaves the
+      // admin counting rows to find out whether it worked.
+      setMsg(picked.length > 1 ? t('admin.uploadedCount', { count: done }) : null);
       load();
     } catch (err) {
-      setMsg(errMessage(err, t('admin.uploadFailed')));
+      // Whatever already uploaded is on the server and in the list; saying how
+      // far it got is the difference between retrying the rest and starting over.
+      setMsg(`${errMessage(err, t('admin.uploadFailed'))} — ${t('admin.uploadedCount', { count: done })}`);
+      load();
     } finally {
       setUploading(false);
     }
@@ -505,10 +538,10 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
             className={`${inputClass} max-w-44`}
             title={t('admin.variantHint')}
           />
-          <label className={`${primaryBtnClass} cursor-pointer ${!destination.trim() || uploading ? 'pointer-events-none opacity-50' : ''}`}>
+          <label className={`${primaryBtnClass} cursor-pointer ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
             {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
             {t('admin.upload')}
-            <input type="file" onChange={(e) => void handleUpload(e)} disabled={!destination.trim() || uploading} className="hidden" />
+            <input type="file" multiple onChange={(e) => void handleUpload(e)} disabled={uploading} className="hidden" />
           </label>
         </div>
         {files.length === 0 ? (
