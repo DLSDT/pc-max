@@ -598,5 +598,657 @@
   "resident-evil-village": {
     "en": "Capcom's follow-up to RE7, moving Ethan Winters to a European village of four houses. RE Engine again, and one of the best-performing modern horror games on PC.",
     "fa": "دنبالهٔ RE7 از کپکام که ایتان وینترز را به دهکده‌ای اروپایی با چهار خانه می‌برد. باز هم موتور RE، و یکی از خوش‌کارکردترین بازی‌های ترسناک امروزی روی رایانه."
+  },
+  "the-elder-scrolls-v-skyrim": {
+    "en": "Bethesda's open-world role-playing game in the province of Skyrim, and one of the most modded games ever released. The base game is light; a heavy mod list is what turns it into a hardware question.",
+    "fa": "بازی نقش‌آفرینی جهان‌باز Bethesda در ایالت اسکایریم، و یکی از پرمادترین بازی‌های تاریخ. بازی پایه سبک است؛ این فهرست سنگین مادها است که آن را به مسئلهٔ سخت‌افزاری تبدیل می‌کند."
+  },
+  "ghost-of-tsushima": {
+    "en": "Sucker Punch's open-world samurai game on Tsushima island during the Mongol invasion. The PC port is unusually clean and scales down well.",
+    "fa": "بازی سامورایی جهان‌باز Sucker Punch در جزیرهٔ تسوشیما هنگام حملهٔ مغول. نسخهٔ رایانه‌اش غیرمعمول تمیز است و خوب پایین می‌آید."
+  },
+  "death-stranding": {
+    "en": "Kojima Productions' delivery game across a fractured America, on the Decima engine. Very well optimised and one of the first games to ship DLSS 2.",
+    "fa": "بازی پیک‌رسانی Kojima Productions در آمریکایی تکه‌تکه، روی موتور Decima. بسیار بهینه است و از اولین بازی‌هایی بود که با DLSS 2 عرضه شد."
+  },
+  "alien-isolation": {
+    "en": "Creative Assembly's survival horror aboard Sevastopol station, with a single unscripted alien hunting you. Runs well on old hardware and still looks deliberate.",
+    "fa": "بازی ترسناک بقای Creative Assembly در ایستگاه سواستوپل، با یک بیگانهٔ بدون اسکریپت که شکارت می‌کند. روی سخت‌افزار قدیمی خوب اجرا می‌شود و هنوز ظاهری سنجیده دارد."
+  },
+  "prey": {
+    "en": "Arkane's immersive sim aboard the Talos I station, where any object might be a mimic. Light for what it does, and an unusually clean PC release.",
+    "fa": "شبیه‌ساز فراگیر Arkane در ایستگاه Talos I، جایی که هر شیئی ممکن است یک mimic باشد. برای کاری که می‌کند سبک است، و عرضهٔ رایانه‌ای غیرمعمول تمیزی داشت."
+  },
+  "dishonored": {
+    "en": "Arkane's stealth game in the plague city of Dunwall, where the whole level can be finished without killing anyone. Old, light, and still the reference for the form.",
+    "fa": "بازی مخفی‌کاری Arkane در شهر طاعون‌زدهٔ دانوال، جایی که کل مرحله را می‌شود بدون کشتن کسی تمام کرد. قدیمی، سبک، و هنوز معیار این سبک."
+  },
+  "hollow-knight": {
+    "en": "Team Cherry's hand-drawn metroidvania beneath the ruined kingdom of Hallownest. Runs on anything, including handhelds.",
+    "fa": "متروidvania دست‌کشیده‌شدهٔ Team Cherry زیر پادشاهی ویرانهٔ Hallownest. روی هر چیزی اجرا می‌شود، از جمله کنسول‌های دستی."
+  },
+  "inside": {
+    "en": "Playdead's wordless side-scrolling puzzle game. Short, precise, and effectively free to run.",
+    "fa": "بازی معمایی افقی و بی‌کلام Playdead. کوتاه، دقیق، و از نظر منابع تقریباً رایگان."
+  },
+  "stray": {
+    "en": "BlueTwelve's adventure through a walled city as a cat. Small in scale and gentle on hardware, with lighting doing most of the visual work.",
+    "fa": "ماجراجویی BlueTwelve در شهری محصور، در نقش یک گربه. مقیاس کوچک و ملایم با سخت‌افزار، جایی که بیشتر کار بصری را نورپردازی انجام می‌دهد."
+  },
+  "half-life-alyx": {
+    "en": "Valve's VR-only Half-Life. The requirement that matters is a headset; frame rate here is a comfort and safety issue, not a preference.",
+    "fa": "هاف-لایف فقط واقعیت مجازی از Valve. نیازمندی اصلی یک هدست است؛ نرخ فریم اینجا مسئلهٔ آسایش و ایمنی است نه سلیقه."
+  },
+  "titanfall-2": {
+    "en": "Respawn's shooter pairing wall-running pilots with mechs, on the Source engine. Exceptionally well optimised and widely held to have one of the best campaigns in the genre.",
+    "fa": "شوتر Respawn که خلبانان دیواردو را با مِک‌ها جفت می‌کند، روی موتور Source. به‌شدت بهینه است و بسیاری بخش داستانی‌اش را یکی از بهترین‌های ژانر می‌دانند."
+  },
+  "apex-legends": {
+    "en": "Respawn's battle royale on the Titanfall engine. Light and built for high frame rates; most players cap settings low for latency.",
+    "fa": "بتل‌رویال Respawn روی موتور تایتان‌فال. سبک و ساخته‌شده برای نرخ فریم بالا؛ بیشتر بازیکنان تنظیمات را برای تأخیر پایین می‌آورند."
+  },
+  "rocket-league": {
+    "en": "Psyonix's car football game. Extremely light, and the only real requirement is a frame rate that never wavers.",
+    "fa": "بازی فوتبال با ماشین از Psyonix. بی‌نهایت سبک، و تنها نیاز واقعی‌اش نرخ فریمی است که هیچ‌وقت نلرزد."
+  },
+  "grand-theft-auto-online": {
+    "en": "The persistent multiplayer half of GTA V. Load times and session stability depend on the connection and on storage speed far more than on the graphics card.",
+    "fa": "نیمهٔ چندنفرهٔ دائمی GTA V. زمان بارگذاری و پایداری نشست بسیار بیشتر از کارت گرافیک به اتصال و سرعت حافظه بستگی دارد."
+  },
+  "gta-san-andreas": {
+    "en": "Rockstar's 2004 open world across three cities. Ancient hardware-wise; the work on modern Windows is compatibility, not performance.",
+    "fa": "جهان باز ۲۰۰۴ راک‌استار در سه شهر. از نظر سخت‌افزاری باستانی؛ کار روی ویندوز امروزی سازگاری است نه کارایی."
+  },
+  "grand-theft-auto-vice-city": {
+    "en": "Rockstar's 1980s Miami. Same story as San Andreas: it runs on anything, and the effort goes into making it stable on a modern system.",
+    "fa": "میامیِ دههٔ ۸۰ راک‌استار. همان داستان San Andreas: روی هر چیزی اجرا می‌شود و تلاش صرف پایدار کردنش روی سیستم امروزی می‌شود."
+  },
+  "mafia-definitive-edition": {
+    "en": "Hangar 13's ground-up remake of the 2002 original, in 1930s Lost Heaven. Modern engine and modern requirements, unlike the game it remakes.",
+    "fa": "بازسازی کامل Hangar 13 از نسخهٔ اصلی ۲۰۰۲، در لاست‌هون دههٔ ۱۹۳۰. برخلاف بازی‌ای که بازسازی‌اش می‌کند، موتور و نیازمندی‌های امروزی دارد."
+  },
+  "mafia-ii": {
+    "en": "The 1940s and 50s Empire Bay story. Its PhysX cloth and debris were the expensive part at launch and still are on cards without hardware PhysX.",
+    "fa": "داستان دههٔ ۴۰ و ۵۰ در امپایر بی. پارچه و خرده‌ریزهای PhysX آن هنگام عرضه بخش گران بودند و روی کارت‌های بدون PhysX سخت‌افزاری هنوز هم هستند."
+  },
+  "watch-dogs": {
+    "en": "Ubisoft's first hacking open world, in Chicago. Its launch build was heavier than it looked; the later patches and community fixes matter.",
+    "fa": "اولین جهان باز هک یوبی‌سافت، در شیکاگو. نسخهٔ عرضه از آنچه به نظر می‌رسید سنگین‌تر بود؛ وصله‌های بعدی و اصلاحیه‌های جامعهٔ کاربری مهم‌اند."
+  },
+  "far-cry-3": {
+    "en": "Ubisoft's open-world shooter on the Rook Islands, the entry that set the series' template. Old and comfortable on modern hardware.",
+    "fa": "شوتر جهان‌باز یوبی‌سافت در جزایر روک، نسخه‌ای که الگوی مجموعه را ساخت. قدیمی و راحت روی سخت‌افزار امروزی."
+  },
+  "far-cry-new-dawn": {
+    "en": "The post-apocalyptic follow-up to Far Cry 5, reusing its Montana map seventeen years later. Same Dunia engine and same modest requirements.",
+    "fa": "دنبالهٔ پساآخرالزمانی Far Cry 5 که نقشهٔ مونتانای آن را هفده سال بعد بازاستفاده می‌کند. همان موتور Dunia و همان نیازمندی متوسط."
+  },
+  "assassins-creed-odyssey": {
+    "en": "The Peloponnesian War entry, the largest of the RPG-era Assassin's Creeds. Heavier than Origins, with the same anti-tamper CPU cost.",
+    "fa": "نسخهٔ جنگ پلوپونز، بزرگ‌ترین اساسینز کریدِ دوران نقش‌آفرینی. از Origins سنگین‌تر است، با همان هزینهٔ پردازنده‌ای ضدتقلب."
+  },
+  "assassins-creed-valhalla": {
+    "en": "The Viking entry, moving between Norway and England. Large and long; performance is steady rather than spiky, and it is well suited to upscaling.",
+    "fa": "نسخهٔ وایکینگ، میان نروژ و انگلستان. بزرگ و طولانی؛ کارایی‌اش یکنواخت است نه ناگهانی، و برای ارتقای تصویر مناسب است."
+  },
+  "assassin-s-creed-shadows": {
+    "en": "The feudal Japan entry with two playable protagonists and seasonal world changes. The newest engine revision, and the heaviest the series has been.",
+    "fa": "نسخهٔ ژاپن فئودالی با دو شخصیت قابل بازی و تغییر فصلی جهان. تازه‌ترین بازنگری موتور، و سنگین‌ترین حالت این مجموعه تا امروز."
+  },
+  "assassin-s-creed-syndicate": {
+    "en": "Victorian London, and the last entry before the series became a role-playing game. Lighter than Unity despite the same era of engine.",
+    "fa": "لندن ویکتوریایی، و آخرین نسخه پیش از تبدیل شدن مجموعه به نقش‌آفرینی. با وجود موتور هم‌دوره، از Unity سبک‌تر است."
+  },
+  "middle-earth-shadow-of-mordor": {
+    "en": "Monolith's open-world action game and the debut of the Nemesis system, where orcs remember you. Well optimised for its year.",
+    "fa": "بازی اکشن جهان‌باز Monolith و نخستین ظهور سیستم Nemesis، جایی که اورک‌ها تو را به یاد می‌آورند. برای سال خودش بهینه بود."
+  },
+  "middle-earth-shadow-of-war": {
+    "en": "The sequel, widening the Nemesis system to fortress sieges. Larger battles mean more CPU work than the first game asked for.",
+    "fa": "دنباله‌ای که سیستم Nemesis را به محاصرهٔ قلعه‌ها گسترش می‌دهد. نبردهای بزرگ‌تر یعنی کار بیشتر برای پردازنده نسبت به بازی اول."
+  },
+  "batman-arkham-origins": {
+    "en": "WB Montréal's prequel on Christmas Eve in Gotham. Same Unreal 3 lineage as Arkham City, with heavier PhysX snow effects.",
+    "fa": "پیش‌درآمد WB Montréal در شب کریسمس گاتهام. از همان خانوادهٔ Unreal 3 مثل Arkham City، با جلوه‌های برفی PhysX سنگین‌تر."
+  },
+  "tomb-raider-goty-edition": {
+    "en": "Crystal Dynamics' 2013 reboot on Lara's first island. Its TressFX hair was the demanding feature; everything else runs easily now.",
+    "fa": "بازآغاز ۲۰۱۳ از Crystal Dynamics در اولین جزیرهٔ لارا. موی TressFX ویژگی سنگینش بود؛ بقیه‌اش امروز راحت اجرا می‌شود."
+  },
+  "rise-of-the-tomb-raider": {
+    "en": "The Siberian sequel, and one of the earliest games with a proper built-in benchmark. Scales widely and remains a good tuning reference.",
+    "fa": "دنبالهٔ سیبری، و یکی از اولین بازی‌هایی با ابزار محک داخلی درست‌وحسابی. مقیاس‌پذیری وسیعی دارد و هنوز مرجع خوبی برای تنظیم کردن است."
+  },
+  "shadow-of-the-tomb-raider-definitive-edition": {
+    "en": "The third entry, in Peru and the Amazon, with ray-traced shadows added later. The definitive edition bundles every expansion.",
+    "fa": "نسخهٔ سوم، در پرو و آمازون، با سایه‌های رهگیری‌پرتو که بعداً اضافه شدند. نسخهٔ Definitive همهٔ بسته‌های الحاقی را دارد."
+  },
+  "detroit-become-human": {
+    "en": "Quantic Dream's branching story about three androids in a near-future Detroit. Heavy on the GPU for a narrative game, and the PC port is a good one.",
+    "fa": "داستان شاخه‌ای Quantic Dream دربارهٔ سه اندروید در دیترویت آینده‌ای نزدیک. برای یک بازی روایی به کارت گرافیک فشار می‌آورد، و نسخهٔ رایانه‌اش خوب است."
+  },
+  "until-dawn": {
+    "en": "Supermassive's branching horror on Blackwood Mountain, remade on Unreal Engine 5 for PC. The remake is far heavier than the original ever was.",
+    "fa": "بازی ترسناک شاخه‌ای Supermassive در کوه بلک‌وود، برای رایانه روی Unreal Engine 5 بازسازی شده. نسخهٔ بازسازی‌شده بسیار سنگین‌تر از اصل آن است."
+  },
+  "a-plague-tale-innocence": {
+    "en": "The first Plague Tale, following Amicia and Hugo out of a burning Aquitaine. Lighter than Requiem, with smaller rat swarms.",
+    "fa": "اولین Plague Tale، دربارهٔ آمیسیا و هوگو در فرار از آکیتنِ در آتش. از Requiem سبک‌تر است، با انبوه موش‌های کوچک‌تر."
+  },
+  "outlast": {
+    "en": "Red Barrels' first-person horror inside Mount Massive Asylum, armed with nothing but a camcorder. Very light and built around darkness.",
+    "fa": "بازی ترسناک اول‌شخص Red Barrels در تیمارستان مانت مسیو، بدون هیچ سلاحی جز یک دوربین فیلم‌برداری. بسیار سبک و ساخته‌شده حول تاریکی."
+  },
+  "gears-5": {
+    "en": "The Coalition's entry on Unreal Engine 4, with one of the most thorough settings menus and benchmarks on PC. A good game to learn tuning on.",
+    "fa": "نسخهٔ The Coalition روی Unreal Engine 4، با یکی از کامل‌ترین منوهای تنظیمات و ابزارهای محک روی رایانه. بازی خوبی برای یاد گرفتن تنظیم کردن."
+  },
+  "total-war-warhammer-iii": {
+    "en": "Creative Assembly's strategy game mixing turn-based empire play with real-time battles. Battle size is a CPU question; the campaign map is its own separate load.",
+    "fa": "بازی استراتژی Creative Assembly که ادارهٔ نوبتی امپراتوری را با نبردهای بلادرنگ ترکیب می‌کند. اندازهٔ نبرد مسئلهٔ پردازنده است؛ نقشهٔ کارزار بار جداگانهٔ خودش را دارد."
+  },
+  "age-of-empires-iii": {
+    "en": "The gunpowder-era entry in the series, with the Definitive Edition as the version to install. Light, and CPU-bound in large battles like every RTS.",
+    "fa": "نسخهٔ دوران باروت این مجموعه، که نسخهٔ Definitive همانی است که باید نصب کرد. سبک، و مثل هر بازی استراتژی بلادرنگ در نبردهای بزرگ وابسته به پردازنده."
+  },
+  "age-of-mythology-retold": {
+    "en": "The remake of the 2002 strategy game, with gods and myth units alongside ordinary armies. Modernised visuals on the same CPU-bound foundation.",
+    "fa": "بازسازی بازی استراتژی ۲۰۰۲، با خدایان و واحدهای اسطوره‌ای در کنار ارتش‌های معمولی. تصاویر امروزی روی همان پایهٔ وابسته به پردازنده."
+  },
+  "manor-lords": {
+    "en": "A medieval city-builder and battle game by a very small team. Simulation-bound: a large settlement is a CPU problem long before it is a graphics one.",
+    "fa": "بازی شهرسازی و نبرد قرون‌وسطایی از تیمی بسیار کوچک. وابسته به شبیه‌سازی: یک سکونتگاه بزرگ خیلی پیش از آنکه مسئلهٔ گرافیک شود، مسئلهٔ پردازنده است."
+  },
+  "the-sims-4": {
+    "en": "The life simulator, whose performance is decided by how many packs and mods are installed rather than by the graphics settings.",
+    "fa": "شبیه‌ساز زندگی، که کارایی‌اش را تعداد بسته‌ها و مادهای نصب‌شده تعیین می‌کند نه تنظیمات گرافیکی."
+  },
+  "kingdom-come-deliverance": {
+    "en": "Warhorse's realistic role-playing game in 1403 Bohemia, on CryEngine. Heavy on the CPU in towns, and famously demanding at launch.",
+    "fa": "بازی نقش‌آفرینی واقع‌گرایانهٔ Warhorse در بوهمیای ۱۴۰۳، روی CryEngine. در شهرها به پردازنده فشار می‌آورد و هنگام عرضه به سنگینی مشهور بود."
+  },
+  "kingdom-come-deliverance-2": {
+    "en": "The sequel, larger and better optimised than the first. Still CPU-led in crowded settlements, which is where to look if the frame rate drops.",
+    "fa": "دنباله‌ای بزرگ‌تر و بهینه‌تر از نسخهٔ اول. هنوز در سکونتگاه‌های شلوغ پردازنده حرف اول را می‌زند، و اگر نرخ فریم افتاد باید همان‌جا را نگاه کرد."
+  },
+  "dragons-dogma-2": {
+    "en": "Capcom's open-world role-playing game on the RE Engine, with AI companions called pawns. Unusually CPU-bound for an RE Engine title because of the NPC simulation in cities.",
+    "fa": "بازی نقش‌آفرینی جهان‌باز کپکام روی موتور RE، با همراهان هوش مصنوعی به نام pawn. برای یک بازی RE Engine به‌طور غیرمعمول وابسته به پردازنده است، به‌خاطر شبیه‌سازی شخصیت‌ها در شهرها."
+  },
+  "final-fantasy-xvi": {
+    "en": "Square Enix's action-focused Final Fantasy, closer to a character-action game than to the series' turn-based past. Demanding, and upscaling is expected rather than optional.",
+    "fa": "فاینال فانتزی اکشن‌محور اسکوئر انیکس، نزدیک‌تر به بازی‌های اکشن شخصیت‌محور تا گذشتهٔ نوبتی این مجموعه. سنگین است و ارتقای تصویر در آن انتظار می‌رود نه اختیار."
+  },
+  "lies-of-p": {
+    "en": "Neowiz's soulslike retelling of Pinocchio in a fallen city. Unreal Engine 4, well optimised, and easier to run than most of the genre.",
+    "fa": "بازخوانی soulslike از پینوکیو توسط Neowiz در شهری سقوط‌کرده. روی Unreal Engine 4، بهینه، و برای اجرا ساده‌تر از بیشتر بازی‌های این ژانر."
+  },
+  "lords-of-the-fallen-2023": {
+    "en": "Hexworks' soulslike with two overlapping worlds you shift between. Unreal Engine 5, and heavy — the dual-world rendering is the reason.",
+    "fa": "بازی soulslike از Hexworks با دو جهان هم‌پوشان که میانشان جابه‌جا می‌شوی. روی Unreal Engine 5 و سنگین — رندر همزمان دو جهان دلیلش است."
+  },
+  "stellar-blade": {
+    "en": "Shift Up's action game following Eve on a reclaimed Earth. Built on Unreal Engine 4 and comfortably optimised for its visual target.",
+    "fa": "بازی اکشن Shift Up دربارهٔ ایو در زمینی بازپس‌گرفته‌شده. روی Unreal Engine 4 ساخته شده و برای هدف بصری‌اش بهینه است."
+  },
+  "biomutant": {
+    "en": "Experiment 101's open-world action role-playing game with a customisable mammal protagonist. Modest requirements and a wide settings range.",
+    "fa": "بازی نقش‌آفرینی اکشن جهان‌باز Experiment 101 با شخصیتی پستاندار و قابل شخصی‌سازی. نیازمندی متوسط و طیف تنظیمات وسیع."
+  },
+  "rage-2": {
+    "en": "Avalanche and id's open-world shooter in a colourful wasteland. Uses the Apex engine rather than id Tech, and runs well across a wide range of cards.",
+    "fa": "شوتر جهان‌باز Avalanche و id در بیابانی رنگارنگ. به‌جای id Tech از موتور Apex استفاده می‌کند و روی طیف وسیعی از کارت‌ها خوب اجرا می‌شود."
+  },
+  "mad-max": {
+    "en": "Avalanche's open-world car combat game in the wasteland. Well optimised on PC and one of the better-running open worlds of its year.",
+    "fa": "بازی نبرد ماشین در جهان باز بیابانی از Avalanche. روی رایانه بهینه است و یکی از خوش‌اجراترین جهان‌های باز سال خودش."
+  },
+  "saints-row": {
+    "en": "Volition's 2022 reboot in the south-western city of Santo Ileso. Modest requirements; its launch build had stability issues that later patches addressed.",
+    "fa": "بازآغاز ۲۰۲۲ از Volition در شهر جنوب‌غربی سانتو ایلسو. نیازمندی متوسط؛ نسخهٔ عرضه‌اش مشکلات پایداری داشت که وصله‌های بعدی برطرفشان کردند."
+  },
+  "gotham-knights": {
+    "en": "WB Montréal's co-operative Gotham game after Batman's death. Locked to 30 frames in co-op at launch and heavier than it looks.",
+    "fa": "بازی مشارکتی WB Montréal در گاتهام پس از مرگ بتمن. هنگام عرضه در حالت مشارکتی روی ۳۰ فریم قفل بود و از آنچه به نظر می‌رسد سنگین‌تر است."
+  },
+  "prototype": {
+    "en": "Radical's open-world action game about a shapeshifter in an infected Manhattan. Old and light, though it needs compatibility care on modern Windows.",
+    "fa": "بازی اکشن جهان‌باز Radical دربارهٔ یک شکل‌عوض‌کن در منهتنِ آلوده. قدیمی و سبک، هرچند روی ویندوز امروزی به مراقبت سازگاری نیاز دارد."
+  },
+  "prototype-2": {
+    "en": "The sequel, with a new protagonist hunting the first game's. Same engine lineage and the same modest demands.",
+    "fa": "دنباله، با شخصیتی تازه که شخصیت بازی اول را شکار می‌کند. همان خانوادهٔ موتور و همان توقع متوسط."
+  },
+  "forza-motorsport": {
+    "en": "Turn 10's circuit racing simulator, rebuilt in 2023 with ray-traced track reflections. Wheel and triple-screen setups are where the hardware budget goes.",
+    "fa": "شبیه‌ساز مسابقهٔ پیست از Turn 10، بازساخته در ۲۰۲۳ با بازتاب‌های رهگیری‌پرتو روی پیست. بودجهٔ سخت‌افزاری صرف فرمان و چیدمان سه‌نمایشگری می‌شود."
+  },
+  "forza-horizon-3": {
+    "en": "The Australian entry in the open-world Horizon series. Well optimised, though its launch build had frame-pacing problems that patches fixed.",
+    "fa": "نسخهٔ استرالیایی مجموعهٔ جهان‌باز Horizon. بهینه است، هرچند نسخهٔ عرضه‌اش مشکل زمان‌بندی فریم داشت که با وصله‌ها درست شد."
+  },
+  "forza-horizon-2": {
+    "en": "The southern-Europe entry, and a console-era Horizon rather than a PC release. Included here for the catalogue's sake.",
+    "fa": "نسخهٔ جنوب اروپا، و یک Horizon دوران کنسول نه عرضهٔ رایانه‌ای. برای کامل بودن کاتالوگ اینجا آمده."
+  },
+  "the-crew-2": {
+    "en": "Ivory Tower's open-world racer across a compressed United States, with cars, boats and planes. Always online, so the connection is part of the experience.",
+    "fa": "بازی مسابقهٔ جهان‌باز Ivory Tower در آمریکایی فشرده‌شده، با ماشین، قایق و هواپیما. همیشه آنلاین است، پس اتصال بخشی از تجربه است."
+  },
+  "the-crew-motorfest": {
+    "en": "The follow-up, set on O'ahu and organised around themed playlists. Same always-online requirement and the same engine lineage.",
+    "fa": "دنباله، در جزیرهٔ اوآهو و سازمان‌یافته حول فهرست‌های موضوعی. همان الزام همیشه‌آنلاین و همان خانوادهٔ موتور."
+  },
+  "dirt-5": {
+    "en": "Codemasters' off-road racer with a heavy visual style and dynamic weather. Supports high frame-rate modes and scales down well.",
+    "fa": "بازی مسابقهٔ آفرود Codemasters با سبک بصری پررنگ و آب‌وهوای پویا. از حالت‌های نرخ فریم بالا پشتیبانی می‌کند و خوب پایین می‌آید."
+  },
+  "dirt-rally-2-0": {
+    "en": "Codemasters' rally simulator, built for wheel users and stage memorisation rather than spectacle. Well optimised and VR-capable.",
+    "fa": "شبیه‌ساز رالی Codemasters، ساخته‌شده برای کاربران فرمان و حفظ کردن مسیرها نه جلوهٔ بصری. بهینه است و از واقعیت مجازی پشتیبانی می‌کند."
+  },
+  "dirt-3": {
+    "en": "The 2011 rally game with the Gymkhana events. Trivially light on modern hardware.",
+    "fa": "بازی رالی ۲۰۱۱ با رویدادهای Gymkhana. روی سخت‌افزار امروزی به‌شدت سبک."
+  },
+  "colin-mcrae-dirt-2": {
+    "en": "The 2009 entry, an early DirectX 11 showcase. Old, light, and still fondly regarded for its handling.",
+    "fa": "نسخهٔ ۲۰۰۹، از نخستین ویترین‌های DirectX 11. قدیمی، سبک، و هنوز به‌خاطر حس رانندگی‌اش محبوب."
+  },
+  "colin-mcrae-rally-and-dirt": {
+    "en": "The bridge between the Colin McRae Rally line and the Dirt series. A period piece technically; light on anything modern.",
+    "fa": "پل میان مجموعهٔ Colin McRae Rally و سری Dirt. از نظر فنی متعلق به دوران خودش؛ روی هر سخت‌افزار امروزی سبک."
+  },
+  "grid-2": {
+    "en": "Codemasters' arcade-leaning circuit racer. Old and undemanding, with handling tuned for accessibility over simulation.",
+    "fa": "بازی مسابقهٔ پیست با گرایش آرکید از Codemasters. قدیمی و کم‌توقع، با حس رانندگی تنظیم‌شده برای سادگی نه شبیه‌سازی."
+  },
+  "grid-autosport": {
+    "en": "The more simulation-minded Grid, covering several racing disciplines. Light, and one of the better-scaling racers for older machines.",
+    "fa": "گریدِ شبیه‌سازی‌گراتر، شامل چند رشتهٔ مسابقه. سبک، و از خوش‌مقیاس‌ترین بازی‌های مسابقه‌ای برای ماشین‌های قدیمی."
+  },
+  "shift-2-unleashed": {
+    "en": "The 2011 Need for Speed Shift sequel, aiming at simulation with a cockpit-heavy presentation. Old and light.",
+    "fa": "دنبالهٔ ۲۰۱۱ نید فور اسپید Shift، با هدف شبیه‌سازی و تمرکز بر نمای داخل کابین. قدیمی و سبک."
+  },
+  "need-for-speed-shift": {
+    "en": "The first Shift, moving Need for Speed toward circuit racing. A period piece that runs on anything.",
+    "fa": "اولین Shift که نید فور اسپید را به سمت مسابقهٔ پیست برد. اثری متعلق به دوران خودش که روی هر چیزی اجرا می‌شود."
+  },
+  "need-for-speed-hot-pursuit": {
+    "en": "Criterion's 2010 police-chase racer, remastered later. Light in both versions and built around pursuit rather than tuning.",
+    "fa": "بازی تعقیب پلیس ۲۰۱۰ از Criterion که بعداً بازسازی شد. هر دو نسخه سبک‌اند و حول تعقیب ساخته شده‌اند نه تیونینگ."
+  },
+  "need-for-speed-rivals": {
+    "en": "The 2013 entry on Frostbite, locked to 30 frames on PC at launch — a widely reported problem with a community fix.",
+    "fa": "نسخهٔ ۲۰۱۳ روی Frostbite که هنگام عرضه روی رایانه به ۳۰ فریم قفل بود — مشکلی شناخته‌شده با اصلاحیهٔ جامعهٔ کاربری."
+  },
+  "need-for-speed-payback": {
+    "en": "The 2017 entry in Fortune Valley, built around heist set pieces. Frostbite again, and comfortable on mid-range hardware.",
+    "fa": "نسخهٔ ۲۰۱۷ در فورچون ولی، ساخته‌شده حول صحنه‌های سرقت. باز هم Frostbite، و راحت روی سخت‌افزار میان‌رده."
+  },
+  "need-for-speed-heat": {
+    "en": "The day-and-night Palm City entry, where police pressure builds after dark. Runs well and scales cleanly.",
+    "fa": "نسخهٔ روز و شب در پالم سیتی، جایی که فشار پلیس بعد از تاریکی بالا می‌رود. خوب اجرا می‌شود و تمیز مقیاس می‌گیرد."
+  },
+  "need-for-speed-the-run": {
+    "en": "The 2011 cross-country race from San Francisco to New York, on Frostbite 2. Short and linear by series standards.",
+    "fa": "مسابقهٔ سراسری ۲۰۱۱ از سان‌فرانسیسکو تا نیویورک، روی Frostbite 2. با معیارهای این مجموعه کوتاه و خطی است."
+  },
+  "project-cars-3": {
+    "en": "The entry that moved the series toward arcade handling, away from the simulation of the first two. Modest requirements.",
+    "fa": "نسخه‌ای که مجموعه را از شبیه‌سازی دو بازی اول به سمت حس رانندگی آرکید برد. نیازمندی متوسط."
+  },
+  "beamng-drive": {
+    "en": "A soft-body physics driving sandbox where every crash is simulated rather than animated. Almost entirely CPU-bound — the graphics card is rarely the limit.",
+    "fa": "جعبه‌شن رانندگی با فیزیک جسم نرم، جایی که هر تصادف شبیه‌سازی می‌شود نه متحرک‌سازی. تقریباً به‌طور کامل وابسته به پردازنده — کارت گرافیک به‌ندرت سقف است."
+  },
+  "wrc-8-fia-world-rally-championship": {
+    "en": "The 2019 official rally game, with a career mode built around team management between stages. Modest requirements.",
+    "fa": "بازی رسمی رالی ۲۰۱۹، با حالت حرفه‌ای ساخته‌شده حول مدیریت تیم میان مراحل. نیازمندی متوسط."
+  },
+  "mx-vs-atv-legends": {
+    "en": "An off-road motocross and ATV racer with an open career. Undemanding, and built for controller play.",
+    "fa": "بازی مسابقهٔ موتوکراس و ATV آفرود با حالت حرفه‌ای باز. کم‌توقع، و ساخته‌شده برای بازی با دسته."
+  },
+  "ride-6": {
+    "en": "Milestone's motorcycle racing simulator, with a large licensed bike roster. Modest requirements and Unreal-based like the rest of the series.",
+    "fa": "شبیه‌ساز مسابقهٔ موتورسیکلت از Milestone، با فهرست بزرگی از موتورهای دارای مجوز. نیازمندی متوسط و مثل بقیهٔ مجموعه بر پایهٔ Unreal."
+  },
+  "battlefield-4": {
+    "en": "DICE's 2013 Frostbite 3 shooter, with Levolution set pieces that reshape maps mid-round. 64-player servers make it CPU-led.",
+    "fa": "شوتر ۲۰۱۳ از DICE روی Frostbite 3، با صحنه‌های Levolution که وسط راند نقشه را تغییر می‌دهند. سرورهای ۶۴ نفره آن را پردازنده‌محور می‌کنند."
+  },
+  "battlefield-v": {
+    "en": "The Second World War entry, and the first Battlefield with ray tracing and DLSS. Both were early implementations and cost more than they do today.",
+    "fa": "نسخهٔ جنگ جهانی دوم، و اولین بتلفیلد با رهگیری پرتو و DLSS. هر دو پیاده‌سازی‌های اولیه بودند و هزینه‌شان بیشتر از امروز بود."
+  },
+  "battlefield-2042": {
+    "en": "The 128-player entry with dynamic weather. The player count is the load: the CPU is the limit long before the graphics card is.",
+    "fa": "نسخهٔ ۱۲۸ نفره با آب‌وهوای پویا. بار اصلی همان تعداد بازیکن است: پردازنده خیلی پیش از کارت گرافیک به سقف می‌رسد."
+  },
+  "call-of-duty-modern-warfare": {
+    "en": "The 2019 reboot that introduced the current engine and Warzone. Scales widely and set the template the later entries follow.",
+    "fa": "بازآغاز ۲۰۱۹ که موتور فعلی و Warzone را معرفی کرد. مقیاس‌پذیری وسیعی دارد و الگویی ساخت که نسخه‌های بعدی دنبالش کردند."
+  },
+  "call-of-duty-modern-warfare-3": {
+    "en": "The 2011 entry closing the original Modern Warfare trilogy. Trivial for modern hardware.",
+    "fa": "نسخهٔ ۲۰۱۱ که سه‌گانهٔ اصلی Modern Warfare را می‌بندد. برای سخت‌افزار امروزی ناچیز است."
+  },
+  "call-of-duty-warzone": {
+    "en": "The free battle royale built on the Modern Warfare engine. Storage and connection matter as much as the graphics card, and the install is very large.",
+    "fa": "بتل‌رویال رایگان ساخته‌شده روی موتور Modern Warfare. حافظه و اتصال به اندازهٔ کارت گرافیک اهمیت دارند، و حجم نصبش بسیار بزرگ است."
+  },
+  "call-of-duty-advanced-warfare": {
+    "en": "The 2014 entry with exoskeleton movement. Old and light by current standards.",
+    "fa": "نسخهٔ ۲۰۱۴ با حرکت مبتنی بر اسکلت بیرونی. با معیارهای امروزی قدیمی و سبک."
+  },
+  "call-of-duty-vanguard": {
+    "en": "The 2021 Second World War entry on the Modern Warfare engine. Heavier than its setting suggests, and the install size is substantial.",
+    "fa": "نسخهٔ جنگ جهانی دوم ۲۰۲۱ روی موتور Modern Warfare. از آنچه فضایش نشان می‌دهد سنگین‌تر است و حجم نصبش قابل توجه."
+  },
+  "call-of-duty-wwii": {
+    "en": "The 2017 return to the Second World War, on the older Call of Duty engine. Comfortable on mid-range hardware.",
+    "fa": "بازگشت ۲۰۱۷ به جنگ جهانی دوم، روی موتور قدیمی‌تر کال آو دیوتی. روی سخت‌افزار میان‌رده راحت است."
+  },
+  "tom-clancy-s-ghost-recon": {
+    "en": "The 2001 original that started the tactical squad shooter line. A period piece, kept playable by community patches.",
+    "fa": "نسخهٔ اصلی ۲۰۰۱ که خط شوترهای تاکتیکی جوخه‌ای را آغاز کرد. اثری متعلق به دوران خودش که با وصله‌های جامعهٔ کاربری قابل بازی مانده."
+  },
+  "tom-clancy-s-ghost-recon-future-soldier": {
+    "en": "The 2012 entry with optical camouflage and a heavy gunsmith system. Modest requirements.",
+    "fa": "نسخهٔ ۲۰۱۲ با استتار نوری و سیستم مفصل ساخت سلاح. نیازمندی متوسط."
+  },
+  "tom-clancy-s-splinter-cell": {
+    "en": "The 2002 original that defined light-and-shadow stealth. Very old; the work is compatibility on modern Windows.",
+    "fa": "نسخهٔ اصلی ۲۰۰۲ که مخفی‌کاری مبتنی بر نور و سایه را تعریف کرد. بسیار قدیمی؛ کار اصلی سازگاری روی ویندوز امروزی است."
+  },
+  "tom-clancy-s-splinter-cell-conviction": {
+    "en": "The 2010 entry that traded patient stealth for momentum and mark-and-execute. Light on modern hardware.",
+    "fa": "نسخهٔ ۲۰۱۰ که مخفی‌کاری صبورانه را با شتاب و mark-and-execute عوض کرد. روی سخت‌افزار امروزی سبک."
+  },
+  "thief-definitive-edition": {
+    "en": "Eidos Montréal's 2014 reboot of the stealth series. Modest requirements; it was an early Mantle and TrueAudio showcase.",
+    "fa": "بازآغاز ۲۰۱۴ مجموعهٔ مخفی‌کاری از Eidos Montréal. نیازمندی متوسط؛ از نخستین ویترین‌های Mantle و TrueAudio بود."
+  },
+  "sniper-ghost-warrior-contracts": {
+    "en": "CI Games' sniping game built around contract objectives in open maps. Modest requirements and a wide settings range.",
+    "fa": "بازی تک‌تیراندازی CI Games بر پایهٔ اهداف قراردادی در نقشه‌های باز. نیازمندی متوسط و طیف تنظیمات وسیع."
+  },
+  "sniper-elite-iii": {
+    "en": "The North Africa entry, with larger maps than its predecessors. Old enough now to be comfortable anywhere.",
+    "fa": "نسخهٔ شمال آفریقا، با نقشه‌هایی بزرگ‌تر از نسخه‌های پیشین. حالا آن‌قدر قدیمی هست که همه‌جا راحت باشد."
+  },
+  "ready-or-not": {
+    "en": "VOID Interactive's tactical police shooter, deliberate and slow. Unreal Engine 4 and reasonably demanding for a small-team release.",
+    "fa": "شوتر تاکتیکی پلیسی VOID Interactive، سنجیده و کند. روی Unreal Engine 4 و برای عرضه‌ای از تیمی کوچک نسبتاً سنگین."
+  },
+  "delta-force": {
+    "en": "Team Jade's free tactical shooter reviving the Delta Force name, with large-scale and extraction modes. Scales broadly and is built for wide hardware support.",
+    "fa": "شوتر تاکتیکی رایگان Team Jade که نام Delta Force را احیا می‌کند، با حالت‌های مقیاس‌بزرگ و استخراج. مقیاس‌پذیری وسیعی دارد و برای پشتیبانی از سخت‌افزار گسترده ساخته شده."
+  },
+  "fallout-76": {
+    "en": "Bethesda's online Fallout in West Virginia. Same engine family as Fallout 4, so it is CPU-led, and it is always online.",
+    "fa": "فال‌اوت آنلاین Bethesda در ویرجینیای غربی. از همان خانوادهٔ موتور Fallout 4، پس پردازنده‌محور است، و همیشه آنلاین."
+  },
+  "ark-scorched-earth": {
+    "en": "The desert expansion to ARK: Survival Evolved. ARK is famously heavy on both VRAM and CPU, and the expansions do not change that.",
+    "fa": "بستهٔ الحاقی بیابانی ARK: Survival Evolved. ARK به سنگینی روی حافظهٔ گرافیکی و پردازنده مشهور است و بسته‌های الحاقی این را تغییر نمی‌دهند."
+  },
+  "marvels-guardians-of-the-galaxy": {
+    "en": "Eidos Montréal's single-player Guardians game. Well optimised, with an early and effective ray-tracing implementation.",
+    "fa": "بازی تک‌نفرهٔ Guardians از Eidos Montréal. بهینه است، با پیاده‌سازی اولیه و مؤثری از رهگیری پرتو."
+  },
+  "marvels-spiderman-remastered": {
+    "en": "The PC release of the first Marvel's Spider-Man. Same streaming-heavy city as the sequel, and it rewards fast storage.",
+    "fa": "نسخهٔ رایانه‌ای اولین Marvel's Spider-Man. همان شهر با بارگذاری پیوستهٔ سنگین مثل دنباله، و از حافظهٔ سریع سود می‌برد."
+  },
+  "marvels-spiderman-miles-morales": {
+    "en": "The PC release of the Miles Morales story. Shorter than the first game, on the same engine and with the same storage sensitivity.",
+    "fa": "نسخهٔ رایانه‌ای داستان مایلز مورالس. کوتاه‌تر از بازی اول، روی همان موتور و با همان حساسیت به حافظه."
+  },
+  "marvels-spiderman-2": {
+    "en": "The sequel with both Peter and Miles across a widened New York. The heaviest of the three on PC, and the one that most benefits from upscaling.",
+    "fa": "دنباله با هر دو شخصیت پیتر و مایلز در نیویورکی گسترده‌تر. سنگین‌ترین بازی از این سه روی رایانه، و بیشترین بهره را از ارتقای تصویر می‌برد."
+  },
+  "days-gone": {
+    "en": "The original release of Bend Studio's open-world survival game. The hordes are the load; the remaster refines rather than replaces it.",
+    "fa": "نسخهٔ اصلی بازی بقای جهان‌باز Bend Studio. دسته‌های زامبی بار اصلی‌اند؛ نسخهٔ بازسازی‌شده آن را بهبود می‌دهد نه جایگزین."
+  },
+  "uncharted-legacy-of-thieves": {
+    "en": "The PC collection pairing Uncharted 4 with The Lost Legacy. A clean port with good scaling and support for the major upscalers.",
+    "fa": "مجموعهٔ رایانه‌ای که Uncharted 4 را با The Lost Legacy کنار هم می‌آورد. نسخه‌ای تمیز با مقیاس‌پذیری خوب و پشتیبانی از فناوری‌های اصلی ارتقای تصویر."
+  },
+  "sony-uncharted-legacy-of-thieves-collection": {
+    "en": "The same Uncharted collection as listed by its full store name. One install, two games.",
+    "fa": "همان مجموعهٔ Uncharted، با نام کامل فروشگاهی‌اش. یک نصب، دو بازی."
+  },
+  "metal-gear-solid-master-collection-version": {
+    "en": "Konami's bundle of the earlier Metal Gear Solid games, presented close to their original form rather than remade. Trivial to run.",
+    "fa": "بستهٔ Konami از بازی‌های اولیهٔ متال گیر سالید، نزدیک به شکل اصلی‌شان و نه بازسازی‌شده. اجرایش ناچیز است."
+  },
+  "metal-gear-solid-3-snake-eater": {
+    "en": "The 1964 jungle infiltration, the original version. Available on PC through the Master Collection.",
+    "fa": "نفوذ در جنگل سال ۱۹۶۴، نسخهٔ اصلی. روی رایانه از طریق Master Collection در دسترس است."
+  },
+  "god-of-war-ii": {
+    "en": "The PlayStation 2 sequel closing much of the Greek saga. Played on PC through emulation, where it upscales well beyond its original resolution.",
+    "fa": "دنبالهٔ پلی‌استیشن ۲ که بخش زیادی از حماسهٔ یونانی را می‌بندد. روی رایانه از راه شبیه‌سازی، جایی که بسیار فراتر از رزولوشن اصلی‌اش بالا می‌رود."
+  },
+  "bloodborne": {
+    "en": "FromSoftware's gothic action role-playing game in Yharnam, built on aggression rather than defence. A PlayStation exclusive — PC play means emulation, at 30 frames.",
+    "fa": "بازی نقش‌آفرینی اکشن گوتیک فرام‌سافتور در یارنام، بر پایهٔ تهاجم نه دفاع. انحصاری پلی‌استیشن است — اجرای رایانه‌ای یعنی شبیه‌سازی، با ۳۰ فریم."
+  },
+  "mortal-kombat-11": {
+    "en": "NetherRealm's 2019 fighting game with a time-travel story. Runs well on modest hardware; a locked frame rate matters more than any visual setting.",
+    "fa": "بازی مبارزه‌ای ۲۰۱۹ از NetherRealm با داستان سفر در زمان. روی سخت‌افزار متوسط خوب اجرا می‌شود؛ نرخ فریم قفل‌شده مهم‌تر از هر تنظیم تصویری است."
+  },
+  "mortal-kombat-xl": {
+    "en": "The expanded edition of Mortal Kombat X, bundling the added fighters. Old and light.",
+    "fa": "نسخهٔ گسترش‌یافتهٔ Mortal Kombat X با مبارزان افزوده. قدیمی و سبک."
+  },
+  "dragon-age-ii": {
+    "en": "BioWare's second Dragon Age, confined to the city of Kirkwall across a decade. Old and light, and its high-resolution texture pack is a separate download.",
+    "fa": "دومین Dragon Age از BioWare، محدود به شهر کرک‌وال در طول یک دهه. قدیمی و سبک، و بستهٔ بافت با کیفیت بالای آن دانلود جداگانه‌ای است."
+  },
+  "shadow-of-war": {
+    "en": "The second Middle-earth game and its fortress sieges. The same entry as Middle-earth: Shadow of War, listed under its short name.",
+    "fa": "دومین بازی سرزمین میانه و محاصره‌های قلعه‌اش. همان Middle-earth: Shadow of War، فهرست‌شده با نام کوتاهش."
+  },
+  "lords-of-the-fallen": {
+    "en": "The 2014 soulslike from Deck13 and CI Games, slower and heavier-hitting than its inspirations. Modest requirements.",
+    "fa": "بازی soulslike سال ۲۰۱۴ از Deck13 و CI Games، کندتر و پرضربه‌تر از الگوهایش. نیازمندی متوسط."
+  },
+  "castlevania-lords-of-shadow-ue": {
+    "en": "MercurySteam's action reimagining of Castlevania, Ultimate Edition on PC. Old, light, and built on a modified Havok-driven engine.",
+    "fa": "بازآفرینی اکشن Castlevania از MercurySteam، نسخهٔ Ultimate روی رایانه. قدیمی، سبک، و بر پایهٔ موتوری اصلاح‌شده با Havok."
+  },
+  "life-is-strange": {
+    "en": "Dontnod's episodic story about a student who can rewind time. Dialogue and choice driven, so the hardware is almost irrelevant.",
+    "fa": "داستان اپیزودیک Dontnod دربارهٔ دانش‌آموزی که می‌تواند زمان را به عقب برگرداند. گفت‌وگو و انتخاب‌محور است، پس سخت‌افزار تقریباً بی‌اهمیت است."
+  },
+  "unravel-two": {
+    "en": "Coldwood's co-operative puzzle platformer with two yarn characters tied together. Small, warm and very light.",
+    "fa": "بازی سکوبازی معمایی مشارکتی Coldwood با دو شخصیت کاموایی که به هم بسته‌اند. کوچک، گرم و بسیار سبک."
+  },
+  "somerville": {
+    "en": "Jumpship's wordless science-fiction adventure about a family during an invasion. Short, stylised, and undemanding.",
+    "fa": "ماجراجویی علمی-تخیلی بی‌کلام Jumpship دربارهٔ خانواده‌ای در میانهٔ یک تهاجم. کوتاه، سبک‌پردازی‌شده و کم‌توقع."
+  },
+  "trek-to-yomi": {
+    "en": "Flying Wild Hog's black-and-white samurai game, framed like a 1950s film. Side-scrolling, short, and light.",
+    "fa": "بازی سامورایی سیاه‌وسفید Flying Wild Hog، قاب‌بندی‌شده مثل فیلم‌های دههٔ ۱۹۵۰. افقی، کوتاه و سبک."
+  },
+  "recore": {
+    "en": "Armature and Comcept's action platformer on a terraformed desert world with robot companions. Modest requirements.",
+    "fa": "بازی سکوبازی اکشن Armature و Comcept در جهانی بیابانی و زمین‌سازی‌شده با همراهان رباتیک. نیازمندی متوسط."
+  },
+  "lego-batman-legacy-of-the-dark-knight": {
+    "en": "TT Games' Lego Batman entry, built for co-operative play and a young audience. Very light on hardware.",
+    "fa": "نسخهٔ لگو بتمن از TT Games، ساخته‌شده برای بازی مشارکتی و مخاطب نوجوان. برای سخت‌افزار بسیار سبک."
+  },
+  "plants-vs-zombies-garden-warfare-2": {
+    "en": "PopCap's third-person shooter spin-off on Frostbite. Always online, colourful, and modest in its demands.",
+    "fa": "اسپین‌آف شوتر سوم‌شخص PopCap روی Frostbite. همیشه آنلاین، رنگارنگ و کم‌توقع."
+  },
+  "the-dark-pictures-anthology-the-devil-in-me": {
+    "en": "Supermassive's anthology entry set in a replica of a murder hotel. Branching horror on Unreal Engine 4, modest to run.",
+    "fa": "نسخه‌ای از مجموعهٔ Supermassive در بازسازی یک هتل قتل. ترسناک شاخه‌ای روی Unreal Engine 4، با اجرای متوسط."
+  },
+  "little-nightmares-iii": {
+    "en": "The third entry, adding two-player co-operative play to the series' side-scrolling horror. Same stylised scale as its predecessors.",
+    "fa": "نسخهٔ سوم که بازی مشارکتی دونفره را به ترسناک افقی این مجموعه اضافه می‌کند. همان مقیاس سبک‌پردازی‌شدهٔ نسخه‌های پیشین."
+  },
+  "forspoken": {
+    "en": "Luminous Productions' open-world action game about a New Yorker pulled into the land of Athia. Demanding for what it draws, and one of the first titles to ship FSR 3 frame generation.",
+    "fa": "بازی اکشن جهان‌باز Luminous Productions دربارهٔ نیویورکی‌ای که به سرزمین آتیا کشیده می‌شود. نسبت به آنچه رسم می‌کند سنگین است، و از نخستین بازی‌هایی بود که با تولید فریم FSR 3 عرضه شد."
+  },
+  "forspoken-no-sub": {
+    "en": "The same Forspoken, listed without a subscription requirement. See the main entry.",
+    "fa": "همان Forspoken، فهرست‌شده بدون نیاز به اشتراک. به ورودی اصلی مراجعه کن."
+  },
+  "baldurs-gate-3-no-sub": {
+    "en": "The same Baldur's Gate 3, listed without a subscription requirement. See the main entry.",
+    "fa": "همان Baldur's Gate 3، فهرست‌شده بدون نیاز به اشتراک. به ورودی اصلی مراجعه کن."
+  },
+  "horizon-forbidden-west": {
+    "en": "The base Forbidden West, as distinct from the Complete Edition that bundles the Burning Shores expansion. Same engine and the same steady, heavy load.",
+    "fa": "نسخهٔ پایهٔ Forbidden West، متمایز از نسخهٔ Complete که بستهٔ Burning Shores را همراه دارد. همان موتور و همان بار یکنواخت و سنگین."
+  },
+  "dying-light-2-stay-human": {
+    "en": "The full title of Dying Light 2. Ray-traced global illumination is the setting that decides its frame rate.",
+    "fa": "عنوان کامل Dying Light 2. نورپردازی سراسری رهگیری‌پرتو تنظیمی است که نرخ فریمش را تعیین می‌کند."
+  },
+  "doomthedarkages": {
+    "en": "The same DOOM: The Dark Ages, listed under a compressed slug. Requires a ray-tracing capable card.",
+    "fa": "همان DOOM: The Dark Ages، با اسلاگ فشرده فهرست شده. به کارت گرافیک با قابلیت رهگیری پرتو نیاز دارد."
+  },
+  "assassin-s-creed-syndicate-2": {
+    "en": "A second catalogue entry for Assassin's Creed Syndicate. Victorian London, lighter than Unity.",
+    "fa": "ورودی دوم کاتالوگ برای Assassin's Creed Syndicate. لندن ویکتوریایی، سبک‌تر از Unity."
+  },
+  "assassin-s-creed-chronicles-china": {
+    "en": "A side-scrolling Assassin's Creed set in sixteenth-century China, painted in an ink-wash style. Small, short and very light.",
+    "fa": "یک اساسینز کرید افقی در چین قرن شانزدهم، با سبک نقاشی آبرنگ چینی. کوچک، کوتاه و بسیار سبک."
+  },
+  "wanted-weapons-of-fate": {
+    "en": "The 2009 shooter following the film, built around curving bullets around cover. A period piece; light on anything modern.",
+    "fa": "شوتر ۲۰۰۹ بر اساس فیلم، ساخته‌شده حول خم کردن مسیر گلوله دور سنگر. اثری متعلق به دوران خودش؛ روی هر سخت‌افزار امروزی سبک."
+  },
+  "call-of-juarez-the-cartel": {
+    "en": "Techland's modern-day entry in the Call of Juarez western series, moved to Los Angeles. Old and undemanding.",
+    "fa": "نسخهٔ امروزی Techland از مجموعهٔ وسترن Call of Juarez، منتقل‌شده به لس‌آنجلس. قدیمی و کم‌توقع."
+  },
+  "bright-memory": {
+    "en": "A short first-person action game made largely by one developer, notable as an early ray-tracing and DLSS showcase.",
+    "fa": "بازی اکشن اول‌شخص کوتاهی که عمدتاً توسط یک نفر ساخته شده، و به‌عنوان ویترین اولیهٔ رهگیری پرتو و DLSS شناخته می‌شود."
+  },
+  "pacific-drive": {
+    "en": "Ironwood's driving survival game in a quarantined Pacific Northwest, where your station wagon is the only shelter. Modest requirements.",
+    "fa": "بازی بقای رانندگی Ironwood در شمال‌غرب اقیانوس آرام قرنطینه‌شده، جایی که استیشن‌واگنت تنها پناهگاه است. نیازمندی متوسط."
+  },
+  "ea-sports-fc-24": {
+    "en": "EA's football game on Frostbite, the first under the FC name. CPU-led in crowded stadium scenes; the online mode is where the connection matters.",
+    "fa": "بازی فوتبال EA روی Frostbite، اولین نسخه با نام FC. در صحنه‌های شلوغ استادیوم پردازنده‌محور است؛ در حالت آنلاین کیفیت اتصال اهمیت پیدا می‌کند."
+  },
+  "ea-sports-fc-25": {
+    "en": "The following season's entry, same engine and the same demands. Yearly releases change the roster more than the requirements.",
+    "fa": "نسخهٔ فصل بعد، همان موتور و همان توقعات. عرضه‌های سالانه بیشتر فهرست بازیکنان را عوض می‌کنند تا نیازمندی‌ها را."
+  },
+  "fifa-23": {
+    "en": "The last game under the FIFA name, on Frostbite. Comfortable on mid-range hardware.",
+    "fa": "آخرین بازی با نام فیفا، روی Frostbite. روی سخت‌افزار میان‌رده راحت است."
+  },
+  "fifa-22": {
+    "en": "The 2021 entry, introducing HyperMotion animation on the newer consoles. The PC version is built on the previous generation's version.",
+    "fa": "نسخهٔ ۲۰۲۱ که انیمیشن HyperMotion را روی کنسول‌های جدیدتر معرفی کرد. نسخهٔ رایانه بر پایهٔ نسل قبل ساخته شده."
+  },
+  "fifa-20": {
+    "en": "The 2019 entry, with the street-football Volta mode. Old and light.",
+    "fa": "نسخهٔ ۲۰۱۹، با حالت فوتبال خیابانی Volta. قدیمی و سبک."
+  },
+  "fifa-19": {
+    "en": "The 2018 entry, the first with the Champions League licence. Undemanding on modern hardware.",
+    "fa": "نسخهٔ ۲۰۱۸، اولین نسخه با مجوز لیگ قهرمانان. روی سخت‌افزار امروزی کم‌توقع."
+  },
+  "fifa-18": {
+    "en": "The 2017 entry on Frostbite, continuing the Journey story mode. Light by current standards.",
+    "fa": "نسخهٔ ۲۰۱۷ روی Frostbite که حالت داستانی The Journey را ادامه می‌دهد. با معیارهای امروزی سبک."
+  },
+  "wwe-2k23": {
+    "en": "2K's wrestling game with a John Cena-focused showcase mode. Modest requirements and a large roster.",
+    "fa": "بازی کشتی کج 2K با حالت نمایشی متمرکز بر جان سینا. نیازمندی متوسط و فهرست بزرگی از شخصیت‌ها."
+  },
+  "high-on-life-2": {
+    "en": "Squanch Games' comedic first-person shooter with talking guns, continuing the first game. Unreal Engine, modest to run.",
+    "fa": "شوتر اول‌شخص کمدی Squanch Games با اسلحه‌های سخنگو، در ادامهٔ بازی اول. روی Unreal Engine و با اجرای متوسط."
+  },
+  "silent-hill-f": {
+    "en": "The Silent Hill entry set in 1960s Japan, written by Ryukishi07 and built on Unreal Engine 5. New setting, modern hardware cost.",
+    "fa": "نسخه‌ای از سایلنت هیل در ژاپن دههٔ ۱۹۶۰، نوشتهٔ Ryukishi07 و ساخته‌شده روی Unreal Engine 5. فضای تازه، هزینهٔ سخت‌افزاری امروزی."
+  },
+  "clair-obscur-expedition-33": {
+    "en": "Sandfall's turn-based role-playing game with real-time dodges and parries, set in a Belle Epoque-inspired world. Unreal Engine 5.",
+    "fa": "بازی نقش‌آفرینی نوبتی Sandfall با جاخالی و دفع ضربهٔ بلادرنگ، در جهانی الهام‌گرفته از دوران بل اپوک. روی Unreal Engine 5."
+  },
+  "wuchang-fallen-feathers": {
+    "en": "A soulslike set in late-Ming dynasty China, built on Unreal Engine 5. Demanding, in line with the rest of the current UE5 wave.",
+    "fa": "بازی soulslike در چین اواخر سلسلهٔ مینگ، ساخته‌شده روی Unreal Engine 5. سنگین است، هم‌سو با بقیهٔ موج امروزی UE5."
+  },
+  "nioh-3": {
+    "en": "Team Ninja's third Nioh, continuing the studio's fast, stance-based action in a historical Japan. Timing-critical, so frame stability matters most.",
+    "fa": "سومین Nioh از Team Ninja که اکشن سریع و مبتنی بر حالت این استودیو را در ژاپن تاریخی ادامه می‌دهد. زمان‌بندی حیاتی است، پس ثبات فریم بیش از همه اهمیت دارد."
+  },
+  "crimson-desert": {
+    "en": "Pearl Abyss's open-world action game on their own engine, set in the world of Black Desert. Large in scale and built for current hardware.",
+    "fa": "بازی اکشن جهان‌باز Pearl Abyss روی موتور اختصاصی خودشان، در جهان Black Desert. مقیاس بزرگ و ساخته‌شده برای سخت‌افزار امروزی."
+  },
+  "inzoi": {
+    "en": "Krafton's life simulator on Unreal Engine 5, aimed at the ground The Sims occupies. Far heavier than its genre usually is, because of the engine.",
+    "fa": "شبیه‌ساز زندگی Krafton روی Unreal Engine 5، با هدف قرار دادن جایگاه The Sims. به‌خاطر موتورش بسیار سنگین‌تر از حد معمول این ژانر است."
+  },
+  "arena-breakout-infinite": {
+    "en": "A free tactical extraction shooter, where the goal is to get out with what you carried in. Built for wide hardware support.",
+    "fa": "شوتر تاکتیکی استخراج رایگان، که هدفش بیرون آمدن با چیزی است که با خودت برده‌ای. ساخته‌شده برای پشتیبانی از سخت‌افزار گسترده."
+  },
+  "bodycam": {
+    "en": "A first-person shooter rendered to look like body-camera footage, built on Unreal Engine 5. The photorealistic look comes at a real cost.",
+    "fa": "شوتر اول‌شخصی که طوری رندر شده که شبیه تصویر دوربین بدنی به نظر برسد، روی Unreal Engine 5. ظاهر فوتورئالیستی‌اش هزینهٔ واقعی دارد."
+  },
+  "halo-campaign-evolved": {
+    "en": "A remake of the original Halo campaign, rebuilt on a modern engine. New requirements rather than the original's.",
+    "fa": "بازسازی بخش داستانی هیلوی اصلی روی موتوری امروزی. نیازمندی‌هایش تازه است نه مال نسخهٔ اصلی."
+  },
+  "resident-evil-requiem": {
+    "en": "The next mainline Resident Evil, on the RE Engine like the entries before it. Capcom's engine has a consistent record of running well on modest hardware.",
+    "fa": "نسخهٔ اصلی بعدی رزیدنت ایول، روی موتور RE مثل نسخه‌های پیش از آن. موتور کپکام سابقهٔ ثابتی در اجرای خوب روی سخت‌افزار متوسط دارد."
+  },
+  "the-alters": {
+    "en": "11 bit studios' survival game where the crew is alternate versions of one man. Base-building and choice driven; modest requirements.",
+    "fa": "بازی بقای 11 bit studios که خدمهٔ آن نسخه‌های موازی یک نفرند. پایگاه‌سازی و انتخاب‌محور؛ نیازمندی متوسط."
+  },
+  "dragon-age-inquisition-2": {
+    "en": "A second catalogue entry for Dragon Age: Inquisition. Frostbite, large zones, and the Hinterlands as the frame-rate test.",
+    "fa": "ورودی دوم کاتالوگ برای Dragon Age: Inquisition. موتور Frostbite، مناطق بزرگ، و Hinterlands به‌عنوان آزمون نرخ فریم."
+  },
+  "forza-horizon-6": {
+    "en": "The next entry in Playground's open-world racing series. The line has a consistent record of scaling well across hardware.",
+    "fa": "نسخهٔ بعدی مجموعهٔ مسابقهٔ جهان‌باز Playground. این خط سابقهٔ ثابتی در مقیاس‌پذیری خوب روی سخت‌افزارهای مختلف دارد."
+  },
+  "hell-is-us": {
+    "en": "Rogue Factor's third-person action-adventure in Hadea, a country closed off by civil war where supernatural creatures called the Calamity have begun to appear. Deliberately built without quest markers, minimap or objective arrows — you navigate by what people tell you and what you notice.",
+    "fa": "بازی اکشن-ماجراجویی سوم‌شخص Rogue Factor در هادیا، کشوری بسته در جنگ داخلی که موجوداتی فراطبیعی به نام Calamity در آن پیدا شده‌اند. عمداً بدون نشانگر مأموریت، نقشهٔ کوچک و فلش هدف ساخته شده — راه را از حرف مردم و از چیزی که خودت می‌بینی پیدا می‌کنی."
+  },
+  "mindseye": {
+    "en": "An action thriller from Build a Rocket Boy, the studio founded by former Grand Theft Auto producer Leslie Benzies, set in Redrock — a high-tech city ringed by desert. Ships with a creation toolkit that lets players build missions from the game's own assets.",
+    "fa": "تریلر اکشن از Build a Rocket Boy، استودیویی که لزلی بنزیس، تهیه‌کنندهٔ پیشین Grand Theft Auto، بنیان گذاشت، در شهر ردراک — شهری پیشرفته در محاصرهٔ بیابان. با ابزار ساخت عرضه می‌شود که به بازیکن اجازه می‌دهد از دارایی‌های خود بازی مأموریت بسازد."
+  },
+  "beast-of-reincarnation": {
+    "en": "Game Freak's action role-playing game in a post-apocalyptic Japan where humanity is nearly gone, overrun by creatures called Malefacts. You play Emma, an outcast, alongside Koo, a blighted dog — her sword and his commands are one combat system rather than two.",
+    "fa": "بازی نقش‌آفرینی اکشن Game Freak در ژاپنِ پساآخرالزمانی، جایی که بشر تقریباً از بین رفته و موجوداتی به نام Malefact همه‌جا را گرفته‌اند. در نقش اما، فردی طردشده، در کنار کو، سگی آلوده — شمشیر او و فرمان‌های سگ یک سیستم مبارزه‌اند نه دو تا."
+  },
+  "samson": {
+    "en": "Samson: A Tyndalston Story, from Liquid Swords — the studio founded by Avalanche's Christofer Sundberg. A third-person brawler in the city of Tyndalston, where Samson McCray works off a debt to an underground syndicate.",
+    "fa": "Samson: A Tyndalston Story از Liquid Swords — استودیویی که کریستوفر سوندبرگ، بنیان‌گذار Avalanche، تأسیس کرده. بازی مشت‌زنی سوم‌شخص در شهر تیندالستون، جایی که سمسون مک‌کری بدهی‌اش را به یک سندیکای زیرزمینی کار می‌کند."
   }
 }
