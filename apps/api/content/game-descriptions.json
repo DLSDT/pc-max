@@ -1,0 +1,102 @@
+{
+  "control": {
+    "en": "A supernatural third-person action game from Remedy Entertainment, released in 2019. You play Jesse Faden, newly made Director of the Federal Bureau of Control, exploring the Oldest House — a building that rearranges itself — while fighting an intrusion known as the Hiss. Its shifting concrete and heavy physics make it one of the more demanding titles of its generation.",
+    "fa": "یک بازی اکشن سوم‌شخص فراطبیعی از استودیوی Remedy، منتشرشده در ۲۰۱۹. در نقش جسی فیدن، مدیر تازهٔ «ادارهٔ فدرال کنترل»، ساختمانی به نام Oldest House را می‌گردی که مدام خودش را بازچینی می‌کند و با نفوذی به نام Hiss می‌جنگی. فیزیک سنگین و محیط متغیرش آن را به یکی از سنگین‌ترین بازی‌های نسل خودش تبدیل کرده."
+  },
+  "atomic-heart": {
+    "en": "A first-person shooter from Mundfish, set in an alternate 1955 Soviet Union where a programmable substance called Polymer put robots into every home. You play Major Sergey Nechayev, sent into Facility 3826 after the machines turn hostile. Dense interiors and heavy post-processing make it hard on the GPU.",
+    "fa": "یک شوتر اول‌شخص از Mundfish، در سال ۱۹۵۵ شوروی در جهانی موازی که مادهٔ برنامه‌پذیری به نام پلیمر ربات‌ها را به خانه‌ها آورده است. در نقش سرگرد سرگئی نچایف وارد «تأسیسات ۳۸۲۶» می‌شوی، جایی که ماشین‌ها سرکش شده‌اند. فضاهای شلوغ و پردازش‌های تصویری سنگینش فشار زیادی به کارت گرافیک می‌آورد."
+  },
+  "cyberpunk-2077": {
+    "en": "CD Projekt Red's open-world role-playing game, set in Night City. You play V, a mercenary chasing an implant that carries the digitised mind of a dead rockstar. One of the heaviest PC releases in years: ray tracing and path tracing here are what most upscaling and frame-generation work is measured against.",
+    "fa": "بازی نقش‌آفرینی جهان‌باز از CD Projekt Red در شهر نایت‌سیتی. در نقش V، مزدوری که دنبال ایمپلنتی است که ذهن دیجیتال‌شدهٔ یک راک‌استار مرده را در خود دارد. یکی از سنگین‌ترین عناوین سال‌های اخیر روی رایانه — رهگیری پرتو و path tracing آن معیار سنجش بیشتر فناوری‌های ارتقای تصویر و تولید فریم است."
+  },
+  "red-dead-redemption-2": {
+    "en": "Rockstar's open-world western, following Arthur Morgan of the Van der Linde gang in 1899 as the era closes around them. Its volumetric fog, dense foliage and long draw distances remain a serious load on any machine years after release.",
+    "fa": "وسترن جهان‌باز راک‌استار، دربارهٔ آرتور مورگان از دار و دستهٔ ون‌درلینده در سال ۱۸۹۹، زمانی که دوران آن‌ها رو به پایان است. مه حجمی، پوشش گیاهی انبوه و دید بسیار دور، سال‌ها بعد از انتشار هم برای هر سیستمی سنگین است."
+  },
+  "the-witcher-3-wild-hunt": {
+    "en": "CD Projekt Red's open-world role-playing game. Geralt of Rivia, a monster hunter, searches for Ciri across a war-torn continent. The next-generation update added ray tracing and made a decade-old game demanding again.",
+    "fa": "بازی نقش‌آفرینی جهان‌باز از CD Projekt Red. گرالت اهل ریویا، شکارچی هیولا، در قاره‌ای جنگ‌زده دنبال سیری می‌گردد. به‌روزرسانی نسل جدید با افزودن رهگیری پرتو، بازی‌ای ده‌ساله را دوباره سنگین کرد."
+  },
+  "elden-ring-shadow-of-the-erdtree": {
+    "en": "The expansion to FromSoftware's open-world action role-playing game, taking the Tarnished into the Land of Shadow. Same punishing combat, a denser world, and a heavier draw on the GPU than the base game.",
+    "fa": "بستهٔ الحاقی بازی نقش‌آفرینی اکشن جهان‌باز فرام‌سافتور که «تارنیشد» را به سرزمین سایه می‌برد. همان مبارزهٔ بی‌رحم، جهانی متراکم‌تر، و فشاری بیشتر بر کارت گرافیک نسبت به بازی اصلی."
+  },
+  "baldur-s-gate-3": {
+    "en": "Larian's role-playing game built on Dungeons & Dragons rules, where almost every encounter can be solved more than one way. Turn-based combat keeps the frame rate less critical than in a shooter, but crowded scenes and its cinematic dialogue still ask a lot of a mid-range PC.",
+    "fa": "بازی نقش‌آفرینی لاریان بر پایهٔ قوانین Dungeons & Dragons، جایی که تقریباً هر موقعیت بیش از یک راه‌حل دارد. مبارزهٔ نوبتی باعث می‌شود نرخ فریم به اندازهٔ یک شوتر حیاتی نباشد، ولی صحنه‌های شلوغ و دیالوگ‌های سینمایی‌اش همچنان از یک سیستم میان‌رده زیاد می‌خواهد."
+  },
+  "hogwarts-legacy": {
+    "en": "An open-world role-playing game set in the wizarding world of the 1800s, a century before the Harry Potter books. Known on PC for heavy VRAM use and traversal stutter, which is why upscaling and frame generation help it noticeably.",
+    "fa": "بازی نقش‌آفرینی جهان‌باز در دنیای جادوگری قرن نوزدهم، یک قرن پیش از کتاب‌های هری پاتر. روی رایانه به مصرف بالای حافظهٔ گرافیکی و لگ هنگام جابه‌جایی شناخته می‌شود؛ به همین دلیل ارتقای تصویر و تولید فریم تأثیر محسوسی رویش دارد."
+  },
+  "black-myth-wukong": {
+    "en": "An action role-playing game from Game Science, drawn from the Chinese classic Journey to the West. Built on Unreal Engine 5 with Lumen and Nanite, which makes it one of the clearest tests of what a card can do at native resolution.",
+    "fa": "بازی نقش‌آفرینی اکشن از Game Science، برگرفته از رمان کلاسیک چینی «سفر به غرب». روی موتور Unreal Engine 5 با Lumen و Nanite ساخته شده و به همین دلیل یکی از گویاترین محک‌ها برای توان یک کارت گرافیک در رزولوشن بومی است."
+  },
+  "stalker-2-heart-of-chornobyl": {
+    "en": "An open-world first-person shooter set in the Chornobyl Exclusion Zone, from GSC Game World. A large Unreal Engine 5 world with anomalies, mutants and factions — and a well-documented appetite for CPU and VRAM alike.",
+    "fa": "شوتر اول‌شخص جهان‌باز در «منطقهٔ ممنوعهٔ چرنوبیل» از GSC Game World. جهانی بزرگ بر پایهٔ Unreal Engine 5 با ناهنجاری‌ها، جهش‌یافته‌ها و گروه‌ها — و اشتهایی شناخته‌شده هم برای پردازنده و هم برای حافظهٔ گرافیکی."
+  },
+  "alan-wake-2": {
+    "en": "Remedy's survival horror sequel, following both the missing writer Alan Wake and FBI agent Saga Anderson. Its lighting is among the most expensive in any current game — the path-traced mode is a benchmark in its own right.",
+    "fa": "دنبالهٔ بازی ترسناک بقا از Remedy، دربارهٔ آلن ویک نویسندهٔ گم‌شده و ساگا اندرسون مأمور اف‌بی‌آی. نورپردازی‌اش از گران‌ترین‌های بازی‌های امروزی است — حالت path tracing آن خودش یک محک تمام‌عیار است."
+  },
+  "counter-strike-2": {
+    "en": "Valve's competitive team shooter, the successor to CS:GO on the Source 2 engine. Frame rate matters more than visual detail here: most players lower settings deliberately to keep input latency as low as possible.",
+    "fa": "شوتر تیمی رقابتی از Valve، جانشین CS:GO بر پایهٔ موتور Source 2. اینجا نرخ فریم مهم‌تر از جزئیات تصویری است: بیشتر بازیکنان عمداً تنظیمات را پایین می‌آورند تا تأخیر ورودی کمینه بماند."
+  },
+  "doom-eternal": {
+    "en": "id Software's fast first-person shooter, built on id Tech 7. Unusually well optimised — it holds high frame rates on modest hardware, which makes it a good reference point when judging whether a problem is the game or the machine.",
+    "fa": "شوتر اول‌شخص پرسرعت از id Software بر پایهٔ موتور id Tech 7. به‌طور غیرمعمولی بهینه است و روی سخت‌افزار متوسط هم نرخ فریم بالا می‌دهد؛ به همین دلیل معیار خوبی است برای تشخیص اینکه مشکل از بازی است یا از سیستم."
+  },
+  "god-of-war-ragnarok": {
+    "en": "Santa Monica Studio's action-adventure, following Kratos and Atreus through Norse myth as Ragnarök approaches. The PC release scales well and supports the major upscalers, so it runs across a wide range of hardware.",
+    "fa": "بازی اکشن-ماجراجویی از Santa Monica Studio، دربارهٔ کریتوس و آترئوس در اسطوره‌های نورس در آستانهٔ راگناروک. نسخهٔ رایانه مقیاس‌پذیری خوبی دارد و از فناوری‌های اصلی ارتقای تصویر پشتیبانی می‌کند، پس روی طیف وسیعی از سخت‌افزارها اجرا می‌شود."
+  },
+  "the-last-of-us": {
+    "en": "Naughty Dog's post-apocalyptic action-adventure: Joel escorts Ellie across a ruined United States twenty years after a fungal infection collapsed society. The PC version is memory-hungry, and shader compilation on first launch takes a while.",
+    "fa": "بازی اکشن-ماجراجویی پساآخرالزمانی از Naughty Dog: جوئل، الی را در آمریکایی ویران، بیست سال پس از فروپاشی جامعه بر اثر یک عفونت قارچی، همراهی می‌کند. نسخهٔ رایانه حافظه‌خوار است و کامپایل شیدرها در اولین اجرا زمان می‌برد."
+  },
+  "horizon-forbidden-west-complete-edition": {
+    "en": "Guerrilla Games' open-world action role-playing game. Aloy travels west through a world reclaimed by nature and ruled by machine animals. Dense vegetation and long sightlines make it a steady, heavy load rather than a spiky one.",
+    "fa": "بازی نقش‌آفرینی اکشن جهان‌باز از Guerrilla Games. الوی به سمت غرب سفر می‌کند، در جهانی که طبیعت پس گرفته و جانوران ماشینی بر آن حکم می‌رانند. پوشش گیاهی انبوه و دید بسیار دور، باری یکنواخت و سنگین ایجاد می‌کند نه ناگهانی."
+  },
+  "starfield": {
+    "en": "Bethesda's space role-playing game, built on the Creation Engine 2. Performance leans on the CPU more than most modern titles, particularly in cities, so a faster processor often helps more than a faster GPU.",
+    "fa": "بازی نقش‌آفرینی فضایی از Bethesda بر پایهٔ Creation Engine 2. کارایی‌اش بیشتر از عناوین امروزی به پردازنده وابسته است، به‌ویژه در شهرها؛ پس معمولاً پردازندهٔ سریع‌تر بیشتر از کارت گرافیک سریع‌تر کمک می‌کند."
+  },
+  "sekiro": {
+    "en": "FromSoftware's action-adventure set in a reimagined late-1500s Japan, built around posture-breaking sword duels rather than stamina management. Lighter than the studio's later games, but it demands frame-time consistency: a stutter at the wrong moment costs the parry.",
+    "fa": "بازی اکشن-ماجراجویی از فرام‌سافتور در ژاپن بازآفرینی‌شدهٔ اواخر قرن شانزدهم، بر پایهٔ شکستن تعادل حریف در دوئل شمشیر به‌جای مدیریت استقامت. از بازی‌های بعدی این استودیو سبک‌تر است، ولی ثبات زمان فریم برایش حیاتی است: یک لگ در لحظهٔ اشتباه یعنی از دست دادن دفع ضربه."
+  },
+  "resident-evil-4-remake": {
+    "en": "Capcom's remake of the 2005 survival horror game, rebuilt on the RE Engine. Leon Kennedy is sent to rescue the president's daughter from a rural cult. The RE Engine is efficient, so this looks modern without the cost of a heavier engine.",
+    "fa": "بازسازی بازی ترسناک بقای ۲۰۰۵ توسط کپکام روی موتور RE Engine. لئون کندی برای نجات دختر رئیس‌جمهور به روستایی در چنگ یک فرقه فرستاده می‌شود. موتور RE بهینه است، پس بازی ظاهری امروزی دارد بدون هزینهٔ موتورهای سنگین‌تر."
+  },
+  "silent-hill-2": {
+    "en": "Bloober Team's remake of Konami's 2001 psychological horror. James Sunderland returns to Silent Hill after a letter from his dead wife. Built on Unreal Engine 5, with the fog that defined the original now costing real GPU time.",
+    "fa": "بازسازی بازی ترسناک روان‌شناختی ۲۰۰۱ کونامی توسط Bloober Team. جیمز ساندرلند پس از نامه‌ای از همسر مرده‌اش به سایلنت هیل بازمی‌گردد. بر پایهٔ Unreal Engine 5 ساخته شده و مهی که هویت نسخهٔ اصلی بود، حالا هزینهٔ واقعی روی کارت گرافیک دارد."
+  },
+  "grand-theft-auto-v-enhanced": {
+    "en": "The 2025 re-release of Rockstar's open-world crime game, adding ray tracing and support for modern upscalers. The base game is old enough to run almost anywhere; the enhanced features are what make settings worth tuning.",
+    "fa": "انتشار مجدد ۲۰۲۵ بازی جنایی جهان‌باز راک‌استار، با افزودن رهگیری پرتو و پشتیبانی از فناوری‌های امروزی ارتقای تصویر. بازی پایه آن‌قدر قدیمی هست که تقریباً همه‌جا اجرا شود؛ آنچه تنظیمات را ارزشمند می‌کند همین قابلیت‌های افزوده است."
+  },
+  "metro-exodus-enhanced-edition": {
+    "en": "4A Games' first-person shooter, moving the series out of the Moscow tunnels into open landscapes across a year of post-nuclear Russia. The enhanced edition requires a ray-tracing capable card — its global illumination is not optional.",
+    "fa": "شوتر اول‌شخص از 4A Games که مجموعه را از تونل‌های مسکو به مناظر باز روسیهٔ پساهسته‌ای در طول یک سال می‌برد. نسخهٔ Enhanced به کارت گرافیک با قابلیت رهگیری پرتو نیاز دارد — نورپردازی سراسری‌اش اختیاری نیست."
+  },
+  "forza-horizon-4": {
+    "en": "Playground Games' open-world racer, set in a version of Britain that moves through all four seasons. Well optimised and heavily CPU-aware, and one of the easier modern racers to hold at high frame rates.",
+    "fa": "بازی مسابقه‌ای جهان‌باز از Playground Games، در نسخه‌ای از بریتانیا که چهار فصل را طی می‌کند. بهینه و متکی به پردازنده است، و یکی از ساده‌ترین بازی‌های مسابقه‌ای امروزی برای نگه داشتن نرخ فریم بالا."
+  },
+  "assetto-corsa": {
+    "en": "A driving simulator from Kunos Simulazioni, built around physics accuracy rather than spectacle. Light on the GPU by modern standards, which leaves headroom for triple screens or a VR headset.",
+    "fa": "شبیه‌ساز رانندگی از Kunos Simulazioni، ساخته‌شده بر پایهٔ دقت فیزیک نه جلوهٔ بصری. با معیارهای امروزی برای کارت گرافیک سبک است، و همین فضا را برای سه نمایشگر یا هدست واقعیت مجازی باز می‌گذارد."
+  },
+  "dying-light": {
+    "en": "Techland's first-person zombie game built on parkour: the city is safe enough by day and lethal after dark. Runs well on modest hardware, and the day-night cycle is the main thing that moves the frame rate.",
+    "fa": "بازی زامبی اول‌شخص از Techland بر پایهٔ پارکور: شهر در روز نسبتاً امن است و بعد از تاریکی مرگبار. روی سخت‌افزار متوسط خوب اجرا می‌شود و چرخهٔ شب و روز مهم‌ترین عامل تغییر نرخ فریم است."
+  }
+}
