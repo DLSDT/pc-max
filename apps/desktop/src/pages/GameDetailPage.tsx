@@ -13,7 +13,7 @@ import { cache } from '@/lib/cache';
 import { useHardware } from '@/store/hardware';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge, Button, EmptyState, Input, Skeleton } from '@/components/ui';
-import { CARD_TECHS, HARDWARE_TIER_LABEL, TECH_LABELS, formatDate } from '@/lib/labels';
+import { CARD_TECHS, HARDWARE_TIER_LABEL, TECH_LABELS, formatDate, gameDescription } from '@/lib/labels';
 import { gameIconUrl } from '@/lib/gameIcons';
 import { downloadGameIcon } from '@/lib/downloadIcon';
 import type { GameRequirement, HardwareRecommendResponse, OptimizationProfile, OptimizationSetting, PackagePublic } from '@goh/types';
@@ -419,7 +419,7 @@ function Requirements({ items }: { items: GameRequirement[] }) {
 }
 
 export default function GameDetailPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { slug = '' } = useParams();
   const { data: game, isLoading, isError } = useGameDetail(slug);
   const { data: profiles = [] } = useOptimizations(slug);
@@ -598,7 +598,9 @@ export default function GameDetailPage() {
       </section>
 
       {/* Description */}
-      {game.description && <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{game.description}</p>}
+      {gameDescription(game, i18n.language) && (
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">{gameDescription(game, i18n.language)}</p>
+      )}
 
       {/* Recommended for your PC — compatibility engine */}
       <RecommendedForYourPc slug={slug} />

@@ -37,3 +37,20 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 }
+
+/**
+ * The game description to show, for the language being read.
+ *
+ * Falls back to the other language rather than to nothing: a player who reads
+ * Persian is better served by an English paragraph than by a blank space, and
+ * the catalogue is filled in one language at a time. `description` is the
+ * pre-split column, still populated on older rows.
+ */
+export function gameDescription(
+  game: { descriptionFa?: string | null; descriptionEn?: string | null; description?: string | null },
+  locale: string,
+): string | null {
+  const fa = game.descriptionFa?.trim() || null;
+  const en = game.descriptionEn?.trim() || game.description?.trim() || null;
+  return locale.startsWith('fa') ? fa ?? en : en ?? fa;
+}
