@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Loader2, Plus, Rocket, Settings2, Trash2, Upload } from 'lucide-react';
 import { api } from '@/lib/api';
-import { errMessage, iconBtnClass, inputClass, LoadingState, ErrorState, EmptyState, primaryBtnClass, dangerIconBtnClass, TableWrap } from './shared';
+import { errMessage, iconBtnClass, inputClass, LoadingState, ErrorState, EmptyState, primaryBtnClass, dangerBtnClass, dangerIconBtnClass, TableWrap } from './shared';
 
 const KINDS = ['graphics', 'frame_generation', 'upscaler', 'optiflow', 'optiscaler', 'streamline'] as const;
 const GPU_VENDORS = ['any', 'nvidia', 'amd', 'intel'] as const;
@@ -273,6 +273,9 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  /** Rows ticked for removal. Replacing a tool means clearing all of its files,
+   *  which was one confirmation dialog per file. */
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [destination, setDestination] = useState('');
   const [operation, setOperation] = useState<(typeof OPERATIONS)[number]>('replace');
   const [role, setRole] = useState<(typeof ROLES)[number]>('relative');
@@ -428,6 +431,37 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
     }
   }
 
+  async function handleDeleteSelected() {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    if (!window.confirm(t('admin.confirmRemoveFiles', { count: ids.length }))) return;
+    setMsg(null);
+    let done = 0;
+    try {
+      for (const fileId of ids) {
+        await api.adminDeletePackageFile(id, fileId);
+        done += 1;
+      }
+      setMsg(t('admin.removedCount', { count: done }));
+    } catch (err) {
+      // Deleting stops at the first failure rather than pressing on, so the
+      // count says exactly how far it got and the list shows what is left.
+      setMsg(`${errMessage(err, t('common.error'))} — ${t('admin.removedCount', { count: done })}`);
+    } finally {
+      setSelected(new Set());
+      load();
+    }
+  }
+
+  function toggleRow(fileId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(fileId)) next.delete(fileId);
+      else next.add(fileId);
+      return next;
+    });
+  }
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState message={error} />;
   if (!pkg) return null;
@@ -543,6 +577,12 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
             {t('admin.upload')}
             <input type="file" multiple onChange={(e) => void handleUpload(e)} disabled={uploading} className="hidden" />
           </label>
+          {selected.size > 0 && (
+            <button type="button" onClick={() => void handleDeleteSelected()} className={dangerBtnClass}>
+              <Trash2 className="size-3.5" />
+              {t('admin.removeSelected', { count: selected.size })}
+            </button>
+          )}
         </div>
         {files.length === 0 ? (
           <EmptyState message={t('admin.noFiles')} />
@@ -551,6 +591,16 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <th className="w-8 px-4 py-2.5">
+                    <input
+                      type="checkbox"
+                      aria-label={t('admin.selectAll')}
+                      checked={files.length > 0 && selected.size === files.length}
+                      onChange={(e) =>
+                        setSelected(e.target.checked ? new Set(files.map((f) => String(f.id))) : new Set())
+                      }
+                    />
+                  </th>
                   <th className="px-4 py-2.5">{t('admin.name')}</th>
                   <th className="px-4 py-2.5">{t('admin.destination')}</th>
                   <th className="px-4 py-2.5">{t('admin.fileRole')}</th>
@@ -563,6 +613,14 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
               <tbody>
                 {files.map((f) => (
                   <tr key={String(f.id)} className="border-b border-border/50 last:border-0">
+                    <td className="px-4 py-2.5">
+                      <input
+                        type="checkbox"
+                        aria-label={String(f.filename)}
+                        checked={selected.has(String(f.id))}
+                        onChange={() => toggleRow(String(f.id))}
+                      />
+                    </td>
                     <td className="px-4 py-2.5 font-medium" dir="ltr">{String(f.filename)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground" dir="ltr">{String(f.destination)}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{t(`admin.role_${String(f.role ?? 'relative')}`)}</td>

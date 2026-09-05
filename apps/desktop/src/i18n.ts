@@ -603,6 +603,10 @@ void i18n.use(initReactI18next).init({
           imageTypeError: 'Only JPEG, PNG or WebP images are allowed.',
           uploadFailed: 'Upload failed.',
           uploadingCount: 'Uploading… {{done}} of {{total}}',
+          selectAll: 'Select all',
+          removeSelected: 'Remove {{count}} selected',
+          confirmRemoveFiles: 'Remove {{count}} file(s) from this package?',
+          removedCount: '{{count}} file(s) removed.',
           uploadedCount: '{{count}} file(s) uploaded.',
           oneDestinationManyFiles:
             'A destination can only name one file. Clear it to use each file\u2019s own name, or end it with / to use it as a folder.',
@@ -1505,6 +1509,10 @@ void i18n.use(initReactI18next).init({
           imageTypeError: 'فقط تصاویر JPEG، PNG یا WebP مجاز هستند.',
           uploadFailed: 'بارگذاری ناموفق بود.',
           uploadingCount: 'در حال آپلود… {{done}} از {{total}}',
+          selectAll: 'انتخاب همه',
+          removeSelected: 'حذف {{count}} مورد انتخاب‌شده',
+          confirmRemoveFiles: '{{count}} فایل از این پکیج حذف شود؟',
+          removedCount: '{{count}} فایل حذف شد.',
           uploadedCount: '{{count}} فایل آپلود شد.',
           oneDestinationManyFiles:
             'مقصد فقط می‌تواند نام یک فایل باشد. خالی بگذارید تا نام خود فایل‌ها استفاده شود، یا آخرش / بگذارید تا پوشه حساب شود.',

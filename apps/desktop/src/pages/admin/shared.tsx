@@ -50,5 +50,7 @@ export const primaryBtnClass =
   'flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground disabled:opacity-50';
 export const iconBtnClass =
   'flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-accent disabled:opacity-50';
+export const dangerBtnClass =
+  'flex h-8 items-center gap-1.5 rounded-md border border-destructive/40 px-3 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50';
 export const dangerIconBtnClass =
   'flex size-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:border-destructive/40 hover:text-destructive disabled:opacity-50';
