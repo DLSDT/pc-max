@@ -95,10 +95,17 @@ for (const slug of slugs) {
   if (!game) continue;
   const entry = wanted[slug] ?? {};
   const patch = {};
-  // A description already there was either written by hand or applied earlier;
-  // either way it is not this file's to replace unless asked.
-  if (entry.en && (overwrite || !game.descriptionEn)) patch.descriptionEn = entry.en;
-  if (entry.fa && (overwrite || !game.descriptionFa)) patch.descriptionFa = entry.fa;
+
+  // The list endpoint returns a summary without the description columns, so
+  // reading them from it made every row look empty — and the guard below
+  // silently did nothing. Only the detail endpoint has them, which is one
+  // request per game named in the file rather than per game in the catalogue.
+  const current = overwrite ? {} : await api('GET', `/admin/games/${game.id}`);
+
+  // A description already there was either written by hand in the panel or
+  // applied earlier; either way it is not this file's to replace unless asked.
+  if (entry.en && (overwrite || !current.descriptionEn)) patch.descriptionEn = entry.en;
+  if (entry.fa && (overwrite || !current.descriptionFa)) patch.descriptionFa = entry.fa;
   if (Object.keys(patch).length === 0) skipped.push(slug);
   else planned.push({ slug, id: game.id, name: game.name, patch });
 }
