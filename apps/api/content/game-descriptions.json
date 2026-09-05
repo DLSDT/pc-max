@@ -398,5 +398,105 @@
   "dying-light-the-beast": {
     "en": "Techland's 2025 entry, returning to the parkour-and-night-terror structure in a new region. Same engine lineage as the earlier games, tuned for current hardware.",
     "fa": "نسخهٔ ۲۰۲۵ از Techland که به ساختار پارکور و وحشت شبانه در منطقه‌ای تازه بازمی‌گردد. از همان خانوادهٔ موتور بازی‌های قبلی، تنظیم‌شده برای سخت‌افزار امروزی."
+  },
+  "uncharted": {
+    "en": "Naughty Dog's treasure-hunting action-adventure collection, brought to PC as the Legacy of Thieves pair. Well behaved on PC and scales down to modest hardware without much loss.",
+    "fa": "مجموعهٔ اکشن-ماجراجویی گنج‌یابی از Naughty Dog که به‌صورت Legacy of Thieves به رایانه آمد. روی رایانه رفتار خوبی دارد و بدون افت زیاد روی سخت‌افزار متوسط هم پایین می‌آید."
+  },
+  "call-of-duty-black-ops-cold-war": {
+    "en": "Treyarch's 2020 entry, the first Call of Duty with ray tracing and DLSS. The campaign is where those features are worth turning on; multiplayer is still about latency.",
+    "fa": "نسخهٔ ۲۰۲۰ از Treyarch، اولین کال آو دیوتی با رهگیری پرتو و DLSS. بخش داستانی جایی است که روشن کردن این قابلیت‌ها ارزش دارد؛ چندنفره همچنان دربارهٔ تأخیر است."
+  },
+  "call-of-duty-black-ops-3": {
+    "en": "The 2015 entry that brought wall-running and co-operative zombies to the series. Old enough now to run comfortably almost anywhere.",
+    "fa": "نسخهٔ ۲۰۱۵ که دویدن روی دیوار و زامبی مشارکتی را به مجموعه آورد. حالا آن‌قدر قدیمی هست که تقریباً همه‌جا راحت اجرا شود."
+  },
+  "call-of-duty-black-ops-ii": {
+    "en": "The 2012 entry, split between the Cold War and a near-future 2025, with branching campaign endings. Light on modern hardware.",
+    "fa": "نسخهٔ ۲۰۱۲، تقسیم‌شده میان جنگ سرد و آینده‌ای نزدیک در ۲۰۲۵، با پایان‌های شاخه‌ای برای داستان. روی سخت‌افزار امروزی سبک است."
+  },
+  "metal-gear-solid-v-ground-zeroes": {
+    "en": "The short prologue to The Phantom Pain, one dense night-time base to infiltrate. Same Fox Engine, same reputation for running well on very little.",
+    "fa": "پیش‌درآمد کوتاه The Phantom Pain، یک پایگاه شبانهٔ متراکم برای نفوذ. همان موتور Fox، همان شهرت اجرای خوب روی سخت‌افزار کم."
+  },
+  "metal-gear-solid-2-sons-of-liberty": {
+    "en": "Kojima's 2001 stealth game, available on PC through the Master Collection. A period piece technically, but its story is the reason it is still discussed.",
+    "fa": "بازی مخفی‌کاری ۲۰۰۱ کوجیما، روی رایانه از طریق Master Collection در دسترس است. از نظر فنی متعلق به دوران خودش است، ولی داستانش دلیل بحث‌های امروزی دربارهٔ آن است."
+  },
+  "metal-gear-solid-snake-eater-2025": {
+    "en": "The Unreal Engine 5 remake of Snake Eater, rebuilding the 1960s jungle infiltration with the original performances kept intact. Modern engine, modern hardware cost.",
+    "fa": "بازسازی Snake Eater روی Unreal Engine 5، که نفوذ در جنگل دههٔ ۱۹۶۰ را با حفظ صداپیشگی‌های اصلی از نو می‌سازد. موتور امروزی، هزینهٔ سخت‌افزاری امروزی."
+  },
+  "wo-long-fallen-dynasty": {
+    "en": "Team Ninja's action game in a Three Kingdoms China turned supernatural, built on deflecting rather than dodging. Timing-critical, so a stable frame rate matters more than a high one.",
+    "fa": "بازی اکشن Team Ninja در چینِ سه پادشاهی با چاشنی فراطبیعی، بر پایهٔ دفع ضربه به‌جای جاخالی. زمان‌بندی حیاتی است، پس نرخ فریم پایدار مهم‌تر از نرخ فریم بالاست."
+  },
+  "ninja-gaiden-4": {
+    "en": "The return of Team Ninja's punishing action series, co-developed with PlatinumGames. Fast combat where frame consistency is the whole game.",
+    "fa": "بازگشت مجموعهٔ اکشن بی‌رحم Team Ninja، با همکاری PlatinumGames. مبارزهٔ پرسرعتی که ثبات فریم در آن همه‌چیز است."
+  },
+  "prince-of-persia": {
+    "en": "The 2008 cel-shaded reboot, built around a companion who catches you instead of a death screen. Very light by modern standards.",
+    "fa": "بازآغاز cel-shaded سال ۲۰۰۸، ساخته‌شده حول همراهی که به‌جای صفحهٔ مرگ تو را می‌گیرد. با معیارهای امروزی بسیار سبک است."
+  },
+  "injustice-gods-among-us": {
+    "en": "NetherRealm's DC fighting game on a version of the Unreal Engine 3. Trivial for modern hardware; hold the frame rate and nothing else matters.",
+    "fa": "بازی مبارزه‌ای دی‌سی از NetherRealm روی نسخه‌ای از Unreal Engine 3. برای سخت‌افزار امروزی ناچیز است؛ نرخ فریم را نگه دار و بقیه اهمیتی ندارد."
+  },
+  "crash-bandicoot-4-it-s-about-time": {
+    "en": "Toys for Bob's continuation of the original trilogy, denser and harder than the remasters. Modest requirements and a locked, readable art style.",
+    "fa": "ادامهٔ سه‌گانهٔ اصلی از Toys for Bob، متراکم‌تر و سخت‌تر از نسخه‌های بازسازی‌شده. نیازمندی متوسط و سبک هنری ثابت و خوانا."
+  },
+  "beyond-two-souls": {
+    "en": "Quantic Dream's narrative game following Jodie and an entity bound to her, told out of order. Choice-driven rather than reflex-driven, so frame rate is the least of it.",
+    "fa": "بازی روایی Quantic Dream دربارهٔ جودی و موجودی که به او بسته شده، با روایتی نامرتب. انتخاب‌محور است نه واکنش‌محور، پس نرخ فریم کم‌اهمیت‌ترین بخش آن است."
+  },
+  "blair-witch": {
+    "en": "Bloober Team's first-person horror in the Black Hills forest, with a dog as your only company. Short, dark, and light on hardware.",
+    "fa": "بازی ترسناک اول‌شخص از Bloober Team در جنگل Black Hills، با یک سگ به‌عنوان تنها همراه. کوتاه، تاریک، و سبک برای سخت‌افزار."
+  },
+  "dante-s-inferno": {
+    "en": "Visceral's action game retelling the Divine Comedy as a descent through nine circles. A console-era game on PC through emulation rather than a native port.",
+    "fa": "بازی اکشن Visceral که کمدی الهی را به‌صورت فرودی در نه دایره بازگو می‌کند. بازی‌ای متعلق به دوران کنسول که روی رایانه به‌جای نسخهٔ بومی از راه شبیه‌سازی در دسترس است."
+  },
+  "god-of-war-ghost-of-sparta": {
+    "en": "The PSP entry filling in Kratos's search for his brother Deimos. Playable on PC through emulation, where it runs far above its original resolution.",
+    "fa": "نسخهٔ PSP که جست‌وجوی کریتوس برای برادرش دیموس را روایت می‌کند. روی رایانه از راه شبیه‌سازی قابل بازی است و بسیار بالاتر از رزولوشن اصلی‌اش اجرا می‌شود."
+  },
+  "god-of-war-ascension": {
+    "en": "The prequel closing the Greek arc, and the only entry in that run with multiplayer. A PlayStation 3 game, so PC play means emulation.",
+    "fa": "پیش‌درآمدی که قوس یونانی را می‌بندد، و تنها نسخهٔ آن دوره با بخش چندنفره. بازی پلی‌استیشن ۳ است، پس اجرای رایانه‌ای یعنی شبیه‌سازی."
+  },
+  "assassin-s-creed-brotherhood": {
+    "en": "Ezio's Rome, and the entry that added recruitable assassins to the series. Old, light, and still one of the better-paced games in the line.",
+    "fa": "رم اتزیو، و نسخه‌ای که اساسین‌های قابل استخدام را به مجموعه افزود. قدیمی، سبک، و هنوز یکی از خوش‌ریتم‌ترین بازی‌های این خط."
+  },
+  "assassin-s-creed-revelations": {
+    "en": "Ezio's last chapter, in Constantinople. Same engine generation as Brotherhood and equally undemanding now.",
+    "fa": "آخرین فصل اتزیو، در قسطنطنیه. از همان نسل موتور Brotherhood و امروز به همان اندازه کم‌توقع."
+  },
+  "assassin-s-creed-iv-black-flag-freedom-cry": {
+    "en": "The standalone expansion to Black Flag, following Adéwalé in Saint-Domingue. Same Caribbean sailing systems in a shorter, sharper story.",
+    "fa": "بستهٔ الحاقی مستقل Black Flag، دربارهٔ آدِواله در سن‌دومنگ. همان سیستم دریانوردی کارائیب در داستانی کوتاه‌تر و تیزتر."
+  },
+  "tom-clancy-s-splinter-cell-blacklist": {
+    "en": "Ubisoft's stealth game letting the player pick between ghosting, panther and assault play. Runs well on old hardware and still reads clearly at high resolution.",
+    "fa": "بازی مخفی‌کاری یوبی‌سافت که به بازیکن اجازه می‌دهد میان سبک‌های نامرئی، پلنگی و تهاجمی انتخاب کند. روی سخت‌افزار قدیمی خوب اجرا می‌شود و در رزولوشن بالا هم خوانا می‌ماند."
+  },
+  "tom-clancy-s-rainbow-six-extraction": {
+    "en": "The co-operative spin-off of Siege against an alien parasite. Built on the same engine, so it inherits Siege's efficiency.",
+    "fa": "اسپین‌آف مشارکتی Siege در برابر انگلی بیگانه. روی همان موتور ساخته شده، پس کارآمدی Siege را به ارث برده."
+  },
+  "the-matrix-awakens": {
+    "en": "Epic's Unreal Engine 5 technology demonstration rather than a game: a city built to show Nanite and Lumen at scale. Useful as a stress test and little else.",
+    "fa": "نمایش فناوری Unreal Engine 5 از Epic، نه یک بازی: شهری ساخته‌شده برای نشان دادن Nanite و Lumen در مقیاس بزرگ. به‌عنوان آزمون فشار مفید است و نه چیز دیگری."
+  },
+  "jusant": {
+    "en": "Don't Nod's climbing game up a dried-out tower, with no combat at all. Light, calm, and unusual in asking nothing of the hardware.",
+    "fa": "بازی صخره‌نوردی Don't Nod روی برجی خشکیده، بدون هیچ مبارزه‌ای. سبک، آرام، و غیرمعمول در اینکه هیچ چیزی از سخت‌افزار نمی‌خواهد."
+  },
+  "frostpunk-2": {
+    "en": "The sequel widening 11 bit's frozen city-builder from a single settlement to a whole region. Simulation depth means the CPU is the limit, as in the first game.",
+    "fa": "دنباله‌ای که شهرسازی یخ‌زدهٔ 11 bit را از یک سکونتگاه به کل یک منطقه گسترش می‌دهد. عمق شبیه‌سازی یعنی پردازنده سقف است، مثل بازی اول."
   }
 }
