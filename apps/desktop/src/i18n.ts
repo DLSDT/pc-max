@@ -912,6 +912,14 @@ void i18n.use(initReactI18next).init({
           goToGames: 'Add a game',
           manageGames: 'Manage my games',
         },
+        account: {
+          closeTitle: 'Close account',
+          closeHint:
+            'Your email, username and devices are removed and you are signed out everywhere. Records of payments you have made are kept, as accounting requires. You can sign up again with the same email afterwards.',
+          closeAction: 'Close my account',
+          closeConfirm: 'Enter your password to confirm',
+          closeSubmit: 'Close account permanently',
+        },
         common: {
           loading: 'Loading…',
           error: 'Something went wrong.',
@@ -1799,6 +1807,14 @@ void i18n.use(initReactI18next).init({
           noGames: 'هنوز بازی‌ای در کتابخانه شما نیست.',
           goToGames: 'افزودن بازی',
           manageGames: 'مدیریت بازی‌های من',
+        },
+        account: {
+          closeTitle: 'بستن حساب کاربری',
+          closeHint:
+            'ایمیل، نام کاربری و دستگاه‌های شما حذف می‌شوند و از همه‌جا خارج می‌شوید. سوابق پرداخت‌هایتان طبق الزامات حسابداری نگه داشته می‌شود. بعداً می‌توانید با همان ایمیل دوباره ثبت‌نام کنید.',
+          closeAction: 'حساب من را ببند',
+          closeConfirm: 'برای تأیید، رمز عبورتان را وارد کنید',
+          closeSubmit: 'بستن دائمی حساب',
         },
         common: {
           loading: 'در حال بارگذاری…',

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { Archive, CreditCard, Gamepad2, Globe, Heart, History, Info, KeyRound, Loader2, LogOut, Moon, RefreshCw, Sun, UserRound } from 'lucide-react';
+import { Archive, CreditCard, Gamepad2, Globe, Heart, History, Info, KeyRound, Loader2, LogOut, Moon, RefreshCw, Sun, Trash2, UserRound } from 'lucide-react';
 import { applyDirection } from '@/i18n';
 import { api } from '@/lib/api';
 import { config, getRuntimeAppVersion } from '@/lib/config';
@@ -41,6 +41,10 @@ export default function SettingsPage() {
   const [subActive, setSubActive] = useState(false);
   const [subChecked, setSubChecked] = useState(false);
   const [appVersion, setAppVersion] = useState<string>(config.appVersion);
+
+  /** Null until the user asks to close the account — the form is not on screen
+   *  until then, so it cannot be triggered by a stray click. */
+  const [closing, setClosing] = useState<{ password: string; error: string | null; busy: boolean } | null>(null);
 
   useEffect(() => {
     void getRuntimeAppVersion().then(setAppVersion);
@@ -86,6 +90,21 @@ export default function SettingsPage() {
     navigate('/');
   }
 
+  async function onCloseAccount() {
+    if (!closing) return;
+    setClosing({ ...closing, busy: true, error: null });
+    try {
+      await api.deleteAccount(closing.password);
+      // The account is gone; the local session has to go with it or the app
+      // keeps rendering a signed-in shell for a user that no longer exists.
+      await logout();
+      await queryClient.invalidateQueries();
+      navigate('/');
+    } catch (err) {
+      setClosing({ ...closing, busy: false, error: err instanceof Error ? err.message : String(err) });
+    }
+  }
+
   function onLanguage(code: 'en' | 'fa') {
     setLanguage(code);
     void i18n.changeLanguage(code);
@@ -126,6 +145,55 @@ export default function SettingsPage() {
               {t('auth.signOut')}
             </Button>
           </div>
+
+          <section className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-destructive">
+              <Trash2 aria-hidden className="size-4" />
+              {t('account.closeTitle')}
+            </h2>
+            <p className="text-xs text-muted-foreground">{t('account.closeHint')}</p>
+
+            {closing === null ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-destructive/40 text-destructive hover:bg-destructive/10"
+                onClick={() => setClosing({ password: '', error: null, busy: false })}
+              >
+                {t('account.closeAction')}
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <label className="block text-xs font-medium" htmlFor="close-password">
+                  {t('account.closeConfirm')}
+                </label>
+                <input
+                  id="close-password"
+                  type="password"
+                  dir="ltr"
+                  autoComplete="current-password"
+                  value={closing.password}
+                  onChange={(e) => setClosing({ ...closing, password: e.target.value, error: null })}
+                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                />
+                {closing.error && <p className="text-xs text-destructive">{closing.error}</p>}
+                <div className="flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={closing.busy || closing.password.length === 0}
+                    onClick={() => void onCloseAccount()}
+                  >
+                    {closing.busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
+                    {t('account.closeSubmit')}
+                  </Button>
+                  <Button variant="ghost" size="sm" disabled={closing.busy} onClick={() => setClosing(null)}>
+                    {t('common.cancel')}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </section>
         </>
       ) : (
         <section className="space-y-3 rounded-xl border border-border bg-card p-5">

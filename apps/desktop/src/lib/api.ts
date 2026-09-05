@@ -285,6 +285,9 @@ export const api = {
     request<{ ok: boolean }>('/auth/password/reset', { method: 'POST', body, authed: false }),
   logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'POST', authed: true, withCredentials: true }),
   me: () => request<UserPublic>('/auth/me', { authed: true }),
+  /** Close the account. The password is what authorises it, not the token. */
+  deleteAccount: (password: string) =>
+    request<{ ok: boolean }>('/me', { method: 'DELETE', body: { password }, authed: true }),
   /** Which gated areas the signed-in user may use (server-decided). */
   myFeatures: () => request<{ features: Record<string, boolean> }>('/me/features', { authed: true }),
   /** Server go-ahead for a gated feature. Throws 403 without a subscription. */
