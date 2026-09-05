@@ -30,6 +30,11 @@ async function main() {
   // no scheduler; RETENTION_INTERVAL_HOURS=0 turns it off if an external cron
   // takes over. Failures are logged, never fatal — a stuck cleanup must not
   // take the API down.
+  //
+  // A second API process would run this too. The deletes are idempotent so
+  // nothing breaks, but three processes sweeping the same tables on the same
+  // schedule is three times the load for one sweep's worth of work — set
+  // RETENTION_INTERVAL_HOURS=0 on every replica but one.
   let retentionTimer: NodeJS.Timeout | undefined;
   if (config.RETENTION_INTERVAL_HOURS > 0) {
     const trim = async () => {

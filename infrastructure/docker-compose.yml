@@ -88,6 +88,11 @@ services:
       # a single client's offline-first sync alone fires 2 requests per changed
       # game, so a full sync trips the default limit on its own.
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-1500}
+      # Every request needing the database waits on one of these, not just the
+      # slow ones. Ten was a single small container's number; raising it costs
+      # nothing until the connections are actually used. Postgres's own
+      # max_connections is the real ceiling — replicas x this must stay under it.
+      DB_POOL_MAX: ${DB_POOL_MAX:-25}
       # Auth routes were 30/min per IP. Iran's carriers put thousands of
       # subscribers behind one address, so that locked out real users during a
       # spike. The per-account protections (OTP cooldown, login lockout) are
