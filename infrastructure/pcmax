@@ -56,6 +56,13 @@ case "${1:-help}" in
     "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/apply-catalog-metadata.js "${@:2}"
     ;;
 
+  # Write the bilingual game descriptions shipped in apps/api/content.
+  # Runs inside the container against the database, so unlike the admin-API
+  # version it needs no password. Keeps text already there; --force replaces it.
+  descriptions)
+    "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/apply-game-descriptions.js "${@:2}"
+    ;;
+
   # Fill optimization_profiles.target_fps from each profile's preset colour.
   # Profiles ship with it NULL, which the app renders as "—". Idempotent: fills
   # NULLs only, so a target an admin set by hand survives. Pass --dry-run to
@@ -151,5 +158,5 @@ PY
     echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
     ;;
 
-  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|fix-sequences|backup|backup-all [dir]|restore <f>|health}" ;;
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|fix-sequences|descriptions|backup|backup-all [dir]|restore <f>|health}" ;;
 esac

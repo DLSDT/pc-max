@@ -38,6 +38,9 @@ COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /app/apps/api/dist ./apps/api/dist
 # Migrations SQL — needed by the startup migration runner.
 COPY --from=build /app/apps/api/drizzle ./apps/api/drizzle
+# Catalogue copy the scripts apply. Small, and shipping it with the image is
+# what lets `pcmax descriptions` run without fetching anything.
+COPY --from=build /app/apps/api/content ./apps/api/content
 # Local-storage uploads dir (bind a volume in compose for persistence).
 RUN mkdir -p /app/uploads
 ENV UPLOAD_DIR=/app/uploads
