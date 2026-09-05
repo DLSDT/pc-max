@@ -22,7 +22,11 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   /** Where the auth guard bounced them from, if anywhere. */
-  const from = (location.state as { from?: string } | null)?.from;
+  const requested = (location.state as { from?: string } | null)?.from;
+  // Where they were headed, unless that was the admin panel. Signing in as a
+  // customer and being delivered to the admin area is how an ordinary user
+  // ended up looking at a second password prompt they had no business seeing.
+  const from = requested && !requested.startsWith('/admin') ? requested : undefined;
 
   function validate(): boolean {
     const next: { email?: string; password?: string } = {};

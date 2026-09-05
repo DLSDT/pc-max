@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAdminAuth } from '@/store/adminAuth';
 import {
@@ -47,59 +48,6 @@ const TABS: { key: AdminTab; i18nKey: string; icon: React.ReactNode }[] = [
   { key: 'settings', i18nKey: 'admin.tabSettings', icon: <Settings className="size-4" /> },
 ];
 
-function AdminLoginForm() {
-  const { t } = useTranslation();
-  const login = useAdminAuth((s) => s.login);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    try {
-      await login(email.trim(), password);
-    } catch (err) {
-      setError(errMessage(err, t('admin.loginError')));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-      <Shield className="size-12 text-primary" />
-      <p className="text-lg font-semibold">{t('admin.loginTitle')}</p>
-      <form onSubmit={(e) => void handleSubmit(e)} className="flex w-full max-w-xs flex-col gap-3 text-left">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={t('admin.loginEmail')}
-          dir="ltr"
-          required
-          className={inputClass}
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder={t('admin.loginPassword')}
-          dir="ltr"
-          required
-          className={inputClass}
-        />
-        {error && <p className="text-xs text-destructive">{error}</p>}
-        <button type="submit" disabled={submitting} className={`${primaryBtnClass} justify-center`}>
-          {submitting ? <Loader2 className="size-3.5 animate-spin" /> : null}
-          {t('admin.loginButton')}
-        </button>
-      </form>
-    </div>
-  );
-}
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -120,7 +68,17 @@ export default function AdminPage() {
     );
   }
 
-  if (!admin) return <AdminLoginForm />;
+  // A signed-in customer must never be shown this, or even learn it exists.
+  // They can reach /admin without ever asking to: RequireAuth remembers where
+  // they were headed when it bounces them to sign in, so a session that
+  // expired on this page sends them straight back to it afterwards — and what
+  // they got was a second password prompt, on their own account's email, for a
+  // panel that is none of their business.
+  //
+  // An admin does not need the form either: the ordinary sign-in form takes
+  // admin credentials and opens the panel itself. So there is nowhere left for
+  // this to be the right answer, and it is gone.
+  if (!admin) return <Navigate to="/" replace />;
 
   return (
     <div className="space-y-6">

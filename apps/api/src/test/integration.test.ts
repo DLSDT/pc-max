@@ -1290,6 +1290,38 @@ describe('subscriptions & payments (Phase 5-6)', () => {
     expect(pub.data.some((p) => p.slug === '2-weeks-trial')).toBe(true);
   });
 
+  it('keeps an inactive plan out of the storefront and refuses to sell it', async () => {
+    // What the staff plan rests on. A staff account is an ordinary customer
+    // account whose subscription sits on an internal plan, and `inactive` is
+    // the only thing keeping that plan out of the prices customers are shown —
+    // and out of reach of anyone who learns its id.
+    const create = await inject('POST', '/api/v1/admin/subscriptions/plans', {
+      token: adminToken,
+      body: {
+        name: 'Staff',
+        slug: 'staff-internal',
+        durationDays: 3_650,
+        price: 0,
+        currency: 'IRR',
+        deviceLimit: 5,
+        features: ['premium_optimization', 'one_click_optimization'],
+        status: 'inactive',
+        sortOrder: 999,
+      },
+    });
+    expect(create.status).toBe(201);
+    const hiddenId = (create.json as { id: string }).id;
+
+    const pub = (await inject('GET', '/api/v1/subscriptions/plans')).json as { data: { slug: string }[] };
+    expect(pub.data.some((p) => p.slug === 'staff-internal'), 'an internal plan was offered for sale').toBe(false);
+
+    const buy = await inject('POST', '/api/v1/subscriptions/purchase', {
+      token: userToken,
+      body: { planId: hiddenId, idempotencyKey: 'staff-plan-attempt-0001' },
+    });
+    expect(buy.status).not.toBe(200);
+  });
+
   it('purchases with the mock provider and activates only after server-side verification', async () => {
     const purchase = await inject('POST', '/api/v1/subscriptions/purchase', {
       token: userToken,

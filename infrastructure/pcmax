@@ -81,6 +81,17 @@ case "${1:-help}" in
     unset PW
     ;;
 
+  # An ordinary customer login whose subscription does not run out, for testing
+  # the paid areas as a customer rather than as an admin. Prompts for the
+  # password rather than taking it as an argument.
+  staff-account)
+    [ -n "${2:-}" ] || { echo "usage: pcmax staff-account <email>"; exit 1; }
+    read -rsp "Password for $2: " PW; echo
+    [ -n "$PW" ] || { echo "aborted: empty password"; exit 1; }
+    printf '%s' "$PW" | "${COMPOSE[@]}" exec -T api node apps/api/dist/scripts/set-staff-account.js "$2" --password-stdin
+    unset PW
+    ;;
+
   # Everything needed to rebuild this deployment somewhere else, in one file.
   #
   # `backup` alone is the database. Restoring only that onto a fresh box gives
@@ -158,5 +169,5 @@ PY
     echo -n "public: "; curl -fsS https://pc-maxapp.rixy.ir/api/v1/health || echo "DOWN"
     ;;
 
-  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|fix-sequences|descriptions|backup|backup-all [dir]|restore <f>|health}" ;;
+  *) echo "usage: pcmax {up|down|restart|ps|logs|deploy|metadata|target-fps|set-admin <email>|staff-account <email>|fix-sequences|descriptions|backup|backup-all [dir]|restore <f>|health}" ;;
 esac
