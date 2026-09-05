@@ -1,3 +1,9 @@
+/* Vazirmatn, bundled rather than fetched: this app runs offline and a webfont
+   from a CDN would simply not arrive. One variable file covers every weight
+   from 100 to 900, so the heavy headings cost no extra download.
+   SIL OFL 1.1 — see node_modules/@fontsource-variable/vazirmatn/LICENSE. */
+@import '@fontsource-variable/vazirmatn';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -138,10 +144,20 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    @apply bg-background font-sans text-foreground antialiased;
+    /* Persian digits look wrong in a spec sheet full of Latin numerals — the
+       app mixes "۳۶۴ روز" with "1920x1080" and "v0.4.11" — so the Latin forms
+       are used throughout for consistency. */
+    font-variant-numeric: tabular-nums;
     user-select: none;
     overscroll-behavior-y: none;
+  }
+
+  /* Headings carry the weight. Vazirmatn's heavy end is what gives the UI its
+     edge; at 600 it read like a document rather than a product. */
+  h1, h2, h3 {
+    font-weight: 800;
+    letter-spacing: -0.015em;
   }
 
   /* Text remains selectable in content areas */

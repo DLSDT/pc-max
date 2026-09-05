@@ -537,7 +537,7 @@ export default function GameDetailPage() {
 
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{game.name}</h1>
+                <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{game.name}</h1>
                 {hasCuratedMeta && (
                   <Badge variant="default" className="tabular-nums">
                     {t('detail.rating')}: {game.performanceRating}

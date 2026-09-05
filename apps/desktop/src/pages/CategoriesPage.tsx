@@ -12,7 +12,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('sidebar.categories')}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('sidebar.categories')}</h1>
 
       {isLoading && !categories.length ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

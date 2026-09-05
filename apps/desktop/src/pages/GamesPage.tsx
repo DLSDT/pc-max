@@ -87,7 +87,7 @@ export default function GamesPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('games.title')}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t('games.title')}</h1>
           {data && (
             <p className="mt-1 text-xs text-muted-foreground">{t('categories.games', { count: data.meta.total })}</p>
           )}

@@ -12,7 +12,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('favorites.title')}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('favorites.title')}</h1>
       {favorites.length === 0 ? (
         <EmptyState
           icon={<Heart aria-hidden />}

@@ -83,7 +83,7 @@ export default function AdminPage() {
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('admin.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t('admin.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('admin.subtitle')}</p>
       </header>
 

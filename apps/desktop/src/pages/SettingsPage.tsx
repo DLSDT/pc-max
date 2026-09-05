@@ -118,8 +118,8 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('settings.title')}</h1>
+    <div className="mx-auto max-w-5xl space-y-5">
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('settings.title')}</h1>
 
       {/* Account — profile hero + quick links, then the app settings below. */}
       {!authReady ? (
@@ -130,7 +130,7 @@ export default function SettingsPage() {
         <>
           <ProfileHeader />
 
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             <ProfileMenuItem to="/library" icon={<Gamepad2 aria-hidden />} label={t('profile.menuLibrary')} />
             <ProfileMenuItem to="/favorites" icon={<Heart aria-hidden />} label={t('profile.menuFavorites')} />
             <ProfileMenuItem to="/recently-viewed" icon={<History aria-hidden />} label={t('profile.menuRecent')} />
@@ -146,54 +146,6 @@ export default function SettingsPage() {
             </Button>
           </div>
 
-          <section className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
-            <h2 className="flex items-center gap-2 text-sm font-semibold text-destructive">
-              <Trash2 aria-hidden className="size-4" />
-              {t('account.closeTitle')}
-            </h2>
-            <p className="text-xs text-muted-foreground">{t('account.closeHint')}</p>
-
-            {closing === null ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-destructive/40 text-destructive hover:bg-destructive/10"
-                onClick={() => setClosing({ password: '', error: null, busy: false })}
-              >
-                {t('account.closeAction')}
-              </Button>
-            ) : (
-              <div className="space-y-2">
-                <label className="block text-xs font-medium" htmlFor="close-password">
-                  {t('account.closeConfirm')}
-                </label>
-                <input
-                  id="close-password"
-                  type="password"
-                  dir="ltr"
-                  autoComplete="current-password"
-                  value={closing.password}
-                  onChange={(e) => setClosing({ ...closing, password: e.target.value, error: null })}
-                  className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                />
-                {closing.error && <p className="text-xs text-destructive">{closing.error}</p>}
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={closing.busy || closing.password.length === 0}
-                    onClick={() => void onCloseAccount()}
-                  >
-                    {closing.busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
-                    {t('account.closeSubmit')}
-                  </Button>
-                  <Button variant="ghost" size="sm" disabled={closing.busy} onClick={() => setClosing(null)}>
-                    {t('common.cancel')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </section>
         </>
       ) : (
         <section className="space-y-3 rounded-xl border border-border bg-card p-5">
@@ -209,8 +161,10 @@ export default function SettingsPage() {
         </section>
       )}
 
-      {/* Appearance — theme and language are the same shape, so they pair up. */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* App settings. Each of these is a short card; stacked full width they
+          left most of the window empty and pushed the last of them off the
+          bottom. Two columns fit them in a screenful. */}
+      <div className="grid items-start gap-4 md:grid-cols-2">
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold">
           {theme === 'dark' ? <Moon aria-hidden className="size-4 text-primary" /> : <Sun aria-hidden className="size-4 text-primary" />}
@@ -274,7 +228,6 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
-      </div>
 
       {/* Updates */}
       <section className="space-y-3 rounded-xl border border-border bg-card p-5">
@@ -321,6 +274,58 @@ export default function SettingsPage() {
         </h2>
         <p className="text-muted-foreground">{t('settings.version', { version: appVersion })}</p>
         <p className="text-muted-foreground">{t('about.tagline')}</p>
+      </section>
+      </div>
+
+      {/* Closing the account is last on purpose: a destructive action does
+         not belong in the middle of a settings page, above the theme picker. */}
+      <section className="space-y-3 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-destructive">
+          <Trash2 aria-hidden className="size-4" />
+          {t('account.closeTitle')}
+        </h2>
+        <p className="text-xs text-muted-foreground">{t('account.closeHint')}</p>
+
+        {closing === null ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-destructive/40 text-destructive hover:bg-destructive/10"
+            onClick={() => setClosing({ password: '', error: null, busy: false })}
+          >
+            {t('account.closeAction')}
+          </Button>
+        ) : (
+          <div className="space-y-2">
+            <label className="block text-xs font-medium" htmlFor="close-password">
+              {t('account.closeConfirm')}
+            </label>
+            <input
+              id="close-password"
+              type="password"
+              dir="ltr"
+              autoComplete="current-password"
+              value={closing.password}
+              onChange={(e) => setClosing({ ...closing, password: e.target.value, error: null })}
+              className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            />
+            {closing.error && <p className="text-xs text-destructive">{closing.error}</p>}
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={closing.busy || closing.password.length === 0}
+                onClick={() => void onCloseAccount()}
+              >
+                {closing.busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
+                {t('account.closeSubmit')}
+              </Button>
+              <Button variant="ghost" size="sm" disabled={closing.busy} onClick={() => setClosing(null)}>
+                {t('common.cancel')}
+              </Button>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

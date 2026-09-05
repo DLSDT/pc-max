@@ -1,8 +1,8 @@
 {
   "name": "@goh/desktop",
-  "version": "0.4.11",
+  "version": "0.4.12",
   "private": true,
-  "description": "Game Optimization Hub \u2014 Windows Desktop App (Tauri 2 + React)",
+  "description": "Game Optimization Hub — Windows Desktop App (Tauri 2 + React)",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
     "check:api-url": "node scripts/check-api-url.mjs"
   },
   "dependencies": {
+    "@fontsource-variable/vazirmatn": "^5.3.0",
     "@goh/types": "^0.1.0",
     "@goh/validation": "^0.1.0",
     "@sentry/browser": "^10.70.0",

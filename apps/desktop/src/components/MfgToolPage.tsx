@@ -397,7 +397,7 @@ export default function MfgToolPage({
       <BackLink />
 
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t(titleKey)}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t(titleKey)}</h1>
         <p className="text-sm text-muted-foreground">{t(subtitleKey)}</p>
       </header>
 

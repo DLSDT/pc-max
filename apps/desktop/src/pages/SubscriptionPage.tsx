@@ -117,7 +117,7 @@ export default function SubscriptionPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('subscription.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">{t('subscription.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('subscription.hint')}</p>
       </div>
 

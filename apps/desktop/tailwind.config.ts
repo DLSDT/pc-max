@@ -5,6 +5,13 @@ const config: Config = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        // Vazirmatn reads well in both scripts, which matters here: the UI is
+        // Persian with Latin product names, version numbers and file paths
+        // running through it, and the default stack rendered those two halves
+        // in visibly different typefaces.
+        sans: ['Vazirmatn Variable', 'Vazirmatn', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',

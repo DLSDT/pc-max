@@ -21,7 +21,7 @@ export default function OptimizedSettingPage() {
   return (
     <div className="space-y-8">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('optimizedSetting.title')}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t('optimizedSetting.title')}</h1>
         <p className="text-sm text-muted-foreground">{t('optimizedSetting.subtitle')}</p>
       </header>
 

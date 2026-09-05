@@ -84,7 +84,7 @@ export default function HomePage() {
         <div className="flex items-center gap-4">
           <img src="/icon.png" alt="" aria-hidden className="size-12 rounded-xl object-contain shadow-glow-sm" draggable={false} />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('appName')}</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t('appName')}</h1>
             <p className="text-sm text-muted-foreground">{t('home.tagline')}</p>
           </div>
         </div>

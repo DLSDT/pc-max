@@ -20,7 +20,7 @@ export default function RecommendedPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('recommended.title')}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('recommended.title')}</h1>
 
       {isLoading && !games ? (
         <GameGrid>

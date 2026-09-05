@@ -57,36 +57,46 @@ export default function ProfileHeader() {
 
   return (
     <section className="overflow-hidden rounded-2xl border border-border bg-card">
-      {/* Banner */}
-      <div className="relative bg-gradient-to-br from-primary via-primary/80 to-primary/40 px-6 pb-16 pt-6">
-        <div className="flex items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-background/90 text-lg font-bold text-primary shadow-glow-sm">
-            {initialsOf(displayName)}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-lg font-bold text-primary-foreground">{displayName}</p>
-            {identifier && (
-              <p dir="ltr" className="truncate text-sm text-primary-foreground/80">
-                {identifier}
-              </p>
-            )}
-          </div>
+      {/* Banner. It used to be 64px of padding with a card pulled 48px back up
+          over it, which on a wide window left a large empty field of gradient
+          beside the name and nothing in it. The subscription state moved up
+          here instead: it is the other thing this page is opened to check, and
+          it fills the space with something worth reading. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 bg-gradient-to-br from-primary via-primary/80 to-primary/50 px-5 py-4">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-background/90 text-base font-bold text-primary shadow-glow-sm">
+          {initialsOf(displayName)}
         </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-base font-bold text-primary-foreground">{displayName}</p>
+          {identifier && (
+            <p dir="ltr" className="truncate text-xs text-primary-foreground/80">
+              {identifier}
+            </p>
+          )}
+        </div>
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-background/20 px-3 py-1 text-xs font-semibold text-primary-foreground ring-1 ring-inset ring-primary-foreground/25">
+          <ShieldCheck aria-hidden className="size-3.5" />
+          {active && remaining !== null ? t('profile.daysValue', { count: remaining }) : t('subscription.noActive')}
+        </span>
       </div>
 
-      {/* Device + subscription card, overlapping the banner */}
-      <div className="-mt-12 px-4 pb-4">
-        <div className="rounded-xl border border-border bg-background/95 p-5 shadow-lg backdrop-blur">
-          <p className="mb-4 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+      {/* Device + subscription */}
+      <div className="p-4">
+        <div className="rounded-xl border border-border bg-background/60 p-4">
+          <p className="mb-3 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
             <MonitorCog aria-hidden className="size-4 text-primary" />
             {t('profile.currentDevice')}
           </p>
 
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          {/* A grid, not `justify-between`: with three items on a wide card
+              that pushed them to the far corners and left two lakes of empty
+              space in the middle. The device takes the slack; the subscription
+              and its action stay together at the end where they belong. */}
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
             {/* Detected machine */}
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary">
-                <Cpu aria-hidden className="size-6 text-muted-foreground" />
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary">
+                <Cpu aria-hidden className="size-5 text-muted-foreground" />
               </div>
               <div className="min-w-0 space-y-0.5">
                 {/* A browser-preview reading has no GPU or CPU in it, so the
@@ -136,24 +146,20 @@ export default function ProfileHeader() {
             <div className="text-center sm:text-start">
               {active && remaining !== null ? (
                 <>
-                  <p className="text-2xl font-bold tabular-nums text-amber-500">{t('profile.daysValue', { count: remaining })}</p>
+                  <p className="text-xl font-extrabold tabular-nums leading-tight text-amber-500">
+                    {t('profile.daysValue', { count: remaining })}
+                  </p>
                   <p className="text-xs text-muted-foreground">{t('profile.untilExpiry')}</p>
                 </>
               ) : (
-                <>
-                  <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-muted-foreground sm:justify-start">
-                    <ShieldCheck aria-hidden className="size-4" />
-                    {t('subscription.noActive')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{t('profile.subscribeHint')}</p>
-                </>
+                <p className="text-xs text-muted-foreground">{t('profile.subscribeHint')}</p>
               )}
             </div>
 
             <Link
               to="/subscription"
               className={cn(
-                'inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border px-5 text-sm font-medium transition-colors',
+                'inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors',
                 active
                   ? 'border-border hover:bg-accent'
                   : 'border-transparent bg-primary text-primary-foreground hover:bg-primary/90',

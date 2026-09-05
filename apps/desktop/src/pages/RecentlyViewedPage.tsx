@@ -12,7 +12,7 @@ export default function RecentlyViewedPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">{t('recently.title')}</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">{t('recently.title')}</h1>
       {recent.length === 0 ? (
         <EmptyState
           icon={<Clock aria-hidden />}

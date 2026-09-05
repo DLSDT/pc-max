@@ -30,7 +30,7 @@ export function AuthHeader({ title, subtitle }: { title: string; subtitle?: stri
       />
       <div className="space-y-1.5">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">{t('appName')}</p>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
         {subtitle && <p className="text-balance text-sm leading-relaxed text-muted-foreground">{subtitle}</p>}
       </div>
     </div>

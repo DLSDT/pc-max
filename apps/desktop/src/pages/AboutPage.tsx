@@ -16,7 +16,7 @@ export default function AboutPage() {
       <div className="flex items-center gap-4">
         <img src="/icon.png" alt={t('appName')} className="size-14 rounded-2xl object-contain shadow-sm" draggable={false} />
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t('appName')}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t('appName')}</h1>
           <p className="text-xs text-muted-foreground">{t('settings.version', { version: appVersion })}</p>
         </div>
       </div>
