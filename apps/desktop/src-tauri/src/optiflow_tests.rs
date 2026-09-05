@@ -499,6 +499,87 @@ fn a_folder_beside_the_executable_comes_back_out_again() {
 }
 
 #[test]
+fn upgrading_from_the_old_layout_leaves_the_game_exactly_as_it_was() {
+    // The path every existing user takes next: they have OptiScaler installed
+    // the old way, with its folder at the game root, and they install again
+    // now that the folder goes beside the executable.
+    //
+    // The two installs write to different paths, so nothing about the second
+    // one cleans up after the first — that is the app's job, and this pins the
+    // half it depends on: that removal driven by the OLD record still finds
+    // and undoes every old file, including the ones under a root-relative
+    // folder no new install will ever touch again.
+    let t = TempTree::new("upgrade");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+    t.file("bin/x64/dxgi.dll", b"the game's own dxgi");
+
+    let record_of = |r: &super::optiflow::InstallReport| -> Vec<InstalledFile> {
+        r.written.iter().map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced }).collect()
+    };
+
+    // Old: the proxy beside the exe, the folder at the game root.
+    let old = install(
+        &exe,
+        &[
+            payload("OptiScaler.dll", "dxgi.dll", FileRole::Launcher, b"proxy v1"),
+            payload("libxess.dll", "OptiScaler/libxess.dll", FileRole::Relative, b"xess v1"),
+        ],
+    )
+    .unwrap();
+    assert!(t.exists("OptiScaler/libxess.dll"), "the old layout put it at the root");
+
+    // Removing the old install is what the app now does before installing.
+    let undo = uninstall(&exe, Path::new(&old.backup_dir), &record_of(&old)).unwrap();
+    assert!(undo.failed.is_empty(), "{undo:?}");
+    assert!(!t.exists("OptiScaler/libxess.dll"), "the old root folder was left behind");
+    assert_eq!(t.read("bin/x64/dxgi.dll"), b"the game's own dxgi".to_vec());
+
+    // New: both beside the exe.
+    let new = install(
+        &exe,
+        &[
+            payload("OptiScaler.dll", "dxgi.dll", FileRole::Launcher, b"proxy v2"),
+            payload("libxess.dll", "OptiScaler/libxess.dll", FileRole::Launcher, b"xess v2"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(t.read("bin/x64/OptiScaler/libxess.dll"), b"xess v2");
+    assert_eq!(t.read("bin/x64/dxgi.dll"), b"proxy v2");
+
+    let undo = uninstall(&exe, Path::new(&new.backup_dir), &record_of(&new)).unwrap();
+    assert!(undo.failed.is_empty(), "{undo:?}");
+
+    // Back to the game as it shipped: its own dxgi.dll restored, and not one
+    // file of ours anywhere in the tree, at either layout's paths.
+    assert_eq!(t.read("bin/x64/dxgi.dll"), b"the game's own dxgi".to_vec());
+    let mut left = game_files(&t.root);
+    left.sort();
+    assert_eq!(left, vec!["bin/x64/TheGame.exe".to_string(), "bin/x64/dxgi.dll".to_string()]);
+}
+
+/// Every file in the tree bar our own backups, relative to `root`, so a test
+/// can assert on what the GAME is left holding.
+fn game_files(root: &Path) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = fs::read_dir(&dir) else { continue };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.file_name().is_some_and(|n| n == ".goh-backup") {
+                continue;
+            }
+            if path.is_dir() {
+                stack.push(path);
+            } else if let Ok(rel) = path.strip_prefix(root) {
+                out.push(rel.to_string_lossy().replace('\\', "/"));
+            }
+        }
+    }
+    out
+}
+
+#[test]
 fn a_launcher_destination_cannot_climb_out_either() {
     // The launcher role takes a path now, which is the same lever the relative
     // role gives a crafted package. Its base is deeper in the tree, so `..`

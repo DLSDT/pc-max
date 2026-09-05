@@ -913,6 +913,9 @@ void i18n.use(initReactI18next).init({
           stepDownloading: 'Downloading',
           stepVerifying: 'Verifying installation…',
           stepRemoving: 'Removing…',
+          stepRemovingPrevious: 'Removing the previous installation…',
+          previousRemoveFailed:
+            'The previous installation of this tool could not be fully removed, so it was not replaced. Remove it from the list below and try again.',
         },
         optimizedSetting: {
           title: 'Optimized Setting',
@@ -1821,6 +1824,9 @@ void i18n.use(initReactI18next).init({
           stepDownloading: 'در حال دریافت',
           stepVerifying: 'در حال بررسی نصب…',
           stepRemoving: 'در حال حذف…',
+          stepRemovingPrevious: 'در حال حذف نصب قبلی…',
+          previousRemoveFailed:
+            'نصب قبلی این ابزار به‌طور کامل حذف نشد، پس جایگزین هم نشد. از فهرست پایین حذفش کن و دوباره تلاش کن.',
         },
         optimizedSetting: {
           title: 'تنظیمات بهینه',

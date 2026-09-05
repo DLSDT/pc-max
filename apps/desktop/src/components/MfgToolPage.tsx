@@ -280,6 +280,37 @@ export default function MfgToolPage({
     setRemoved(null);
     setStage('installing');
     try {
+      // Undo any previous install of this tool in this game before writing a
+      // new one. The record is keyed by (tool, game) and is about to be
+      // replaced, so a file the new install does not happen to land on top of
+      // would be orphaned — still in the game, with nothing left that knows it
+      // is ours to remove.
+      //
+      // Moving OptiScaler's folder from the game root to the executable's
+      // folder is exactly that case: every file in it is at a path the new
+      // install never touches. Without this, upgrading leaves a dead copy of
+      // the old layout behind permanently.
+      const previous = getInstall(tool, scan.gameDir);
+      if (previous) {
+        setStep(t('optiscaler.stepRemovingPrevious'));
+        const undo = await uninstallTool({
+          exePath: previous.exePath,
+          backupDir: previous.backupDir,
+          files: previous.files,
+        });
+        if (undo.failed.length > 0) {
+          // Installing on top of a half-removed install is the state that
+          // produces the confusing failures. The record is kept, so Remove
+          // stays available and this is retryable.
+          setRemoved(undo);
+          setError(t('optiscaler.previousRemoveFailed'));
+          return;
+        }
+        clearInstall(tool, previous.gameDir);
+        setExisting(null);
+        refreshInstalls();
+      }
+
       setStep(t('optiscaler.stepPreparing'));
       const report = await installTool({
         tool,
@@ -320,7 +351,7 @@ export default function MfgToolPage({
       setStep(null);
       setProgress(null);
     }
-  }, [exePath, scan, selection, status, t, tool, titleKey]);
+  }, [exePath, scan, selection, status, t, tool, titleKey, refreshInstalls]);
 
   const runRemove = useCallback(async (entry: MfgInstall) => {
     setError(null);
