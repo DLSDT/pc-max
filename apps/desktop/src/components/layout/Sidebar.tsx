@@ -41,6 +41,43 @@ const SECONDARY: { to: string; i18nKey: string; icon: Icon }[] = [
   { to: '/recommended', i18nKey: 'sidebar.recommended', icon: Sparkles },
 ];
 
+/**
+ * The shell's classes.
+ *
+ * Out here rather than inline because getting it wrong is invisible from the
+ * code: it renders, it logs nothing, and the sidebar is simply not on the
+ * screen. `sidebarShell.test.ts` asserts the property that broke.
+ *
+ * Below `lg` this is a drawer over the page, not a column beside it. As a
+ * column it took 240 of a 375px screen and left the content 135px: cards 77px
+ * wide, a search box 50px wide — a layout that technically did not overflow
+ * and was unusable anyway.
+ *
+ * Collapsing only means anything in the column form, so its width classes are
+ * all `lg:` — inside the drawer the sidebar is full width no matter how the
+ * desktop was left.
+ */
+export function sidebarShellClass({ collapsed, navOpen }: { collapsed: boolean; navOpen: boolean }): string {
+  return cn(
+    'fixed inset-y-0 start-0 z-50 flex w-72 shrink-0 flex-col border-e border-border bg-card shadow-2xl',
+    'transition-transform duration-200 ease-out',
+    'lg:static lg:z-auto lg:w-60 lg:translate-x-0 lg:bg-card/50 lg:shadow-none lg:backdrop-blur lg:transition-[width]',
+    collapsed && 'lg:w-16',
+    // Off-canvas toward the edge it is anchored to, which flips with the
+    // writing direction: Persian puts the sidebar on the right.
+    //
+    // `max-lg:`, not a bare class relying on `lg:translate-x-0` to override it.
+    // The rtl variant compiles to `[dir="rtl"] .rtl\:translate-x-full` — two
+    // selectors — while `lg:translate-x-0` is one, and a media query adds no
+    // specificity. So on a Persian desktop the off-canvas transform won and the
+    // sidebar sat outside the window with no way to open it: the drawer button
+    // is hidden at that width precisely because there is supposed to be a
+    // sidebar there. Bounding the closed state to below `lg` means the two
+    // rules never meet and nothing has to out-rank anything.
+    navOpen ? 'translate-x-0' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full',
+  );
+}
+
 function NavLinkItem({ to, i18nKey, icon: Icon, end, collapsed }: { to: string; i18nKey: string; icon: Icon; end?: boolean; collapsed: boolean }) {
   const { t } = useTranslation();
   return (
@@ -92,29 +129,7 @@ export default function Sidebar() {
   }, [navOpen, setNavOpen]);
 
   return (
-    <aside
-      aria-label="Primary"
-      // Below `lg` this is a drawer over the page, not a column beside it.
-      // As a column it took 240 of a 375px screen and left the content 135px:
-      // cards 77px wide, a search box 50px wide — a layout that technically did
-      // not overflow and was unusable anyway.
-      //
-      // The collapse toggle only means anything in the column form, so its
-      // width classes are all `lg:` — inside the drawer the sidebar is always
-      // full width regardless of how it was left on the desktop.
-      className={cn(
-        'fixed inset-y-0 start-0 z-50 flex w-72 shrink-0 flex-col border-e border-border bg-card shadow-2xl',
-        'transition-transform duration-200 ease-out',
-        'lg:static lg:z-auto lg:w-60 lg:translate-x-0 lg:bg-card/50 lg:shadow-none lg:backdrop-blur lg:transition-[width]',
-        collapsed && 'lg:w-16',
-        // Off-canvas toward the edge it is anchored to, which flips with the
-        // writing direction: Persian puts the sidebar on the right. Both states
-        // name a transform rather than one of them being the absence of a
-        // class — leaving it unset relies on every other rule that could set
-        // one being absent too, and that is not a thing to rely on.
-        navOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full',
-      )}
-    >
+    <aside aria-label="Primary" className={sidebarShellClass({ collapsed, navOpen })}>
       {/* Brand */}
       <div className={cn('flex h-16 items-center gap-3 border-b border-border px-4', collapsed && 'lg:justify-center lg:px-2')}>
         <img
