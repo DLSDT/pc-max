@@ -498,5 +498,105 @@
   "frostpunk-2": {
     "en": "The sequel widening 11 bit's frozen city-builder from a single settlement to a whole region. Simulation depth means the CPU is the limit, as in the first game.",
     "fa": "دنباله‌ای که شهرسازی یخ‌زدهٔ 11 bit را از یک سکونتگاه به کل یک منطقه گسترش می‌دهد. عمق شبیه‌سازی یعنی پردازنده سقف است، مثل بازی اول."
+  },
+  "dark-souls-iii": {
+    "en": "FromSoftware's third Dark Souls, faster than its predecessors and the closest the series came to Bloodborne's pace. Runs at a locked 60 frames, which is by design rather than a limitation.",
+    "fa": "سومین دارک سولز فرام‌سافتور، سریع‌تر از نسخه‌های پیشین و نزدیک‌ترین بازی مجموعه به ریتم Bloodborne. روی ۶۰ فریم قفل است، که تصمیم طراحی است نه محدودیت."
+  },
+  "dying-light-2": {
+    "en": "Techland's sequel, a taller city with more parkour and a branching story. Heavier than the first game; its ray-traced global illumination is the setting that decides the frame rate.",
+    "fa": "دنبالهٔ Techland، شهری بلندتر با پارکور بیشتر و داستانی شاخه‌ای. از بازی اول سنگین‌تر است؛ نورپردازی سراسری رهگیری‌پرتوی آن تنظیمی است که نرخ فریم را تعیین می‌کند."
+  },
+  "mass-effect-legendary-edition": {
+    "en": "The remastered trilogy, with the first game brought closest to the other two. Modest requirements and one of the better-executed remaster packages on PC.",
+    "fa": "سه‌گانهٔ بازسازی‌شده، با بازی اول که بیشترین نزدیکی را به دو نسخهٔ دیگر پیدا کرده. نیازمندی متوسط و یکی از بهترین بسته‌های بازسازی روی رایانه."
+  },
+  "deus-ex-human-revolution": {
+    "en": "Eidos Montréal's cyberpunk immersive sim, where nearly every objective has a stealth, social and violent route. Light on modern hardware and famously readable at any resolution.",
+    "fa": "شبیه‌ساز فراگیر سایبرپانک از Eidos Montréal، جایی که تقریباً هر هدف سه راه دارد: مخفی‌کاری، گفت‌وگو، خشونت. روی سخت‌افزار امروزی سبک است و در هر رزولوشنی خوانا می‌ماند."
+  },
+  "fallout-3": {
+    "en": "Bethesda's post-nuclear Washington. Its age shows, and on modern Windows it needs community patches more than it needs a fast graphics card.",
+    "fa": "واشنگتنِ پساهسته‌ای Bethesda. سنش پیداست، و روی ویندوز امروزی بیشتر از کارت گرافیک سریع به وصله‌های جامعهٔ کاربری نیاز دارد."
+  },
+  "tom-clancy-s-the-division-2": {
+    "en": "Massive's online shooter in a collapsed Washington DC. Snowdrop engine, well optimised, and its built-in benchmark is a genuinely useful tuning tool.",
+    "fa": "شوتر آنلاین Massive در واشنگتن دی‌سی فروپاشیده. موتور Snowdrop، بهینه، و ابزار محک داخلی‌اش واقعاً برای تنظیم کردن به کار می‌آید."
+  },
+  "tom-clancy-s-rainbow-six-siege": {
+    "en": "Ubisoft's tactical shooter built on destructible walls and one life per round. Very well optimised — competitive players run it at hundreds of frames on modest cards.",
+    "fa": "شوتر تاکتیکی یوبی‌سافت بر پایهٔ دیوارهای تخریب‌پذیر و یک جان در هر راند. بسیار بهینه است — بازیکنان رقابتی روی کارت‌های متوسط با صدها فریم اجرایش می‌کنند."
+  },
+  "resident-evil-3": {
+    "en": "Capcom's remake of Resident Evil 3, with Jill pursued through Raccoon City by Nemesis. Shorter than the RE2 remake, on the same efficient RE Engine.",
+    "fa": "بازسازی Resident Evil 3 توسط کپکام، با جیل که در راکون‌سیتی توسط نمسیس تعقیب می‌شود. کوتاه‌تر از بازسازی RE2، روی همان موتور بهینهٔ RE."
+  },
+  "assassins-creed-origins": {
+    "en": "The entry that turned Assassin's Creed into a role-playing game, set in Ptolemaic Egypt. Notably CPU-heavy because of its anti-tamper layer, more than because of the world itself.",
+    "fa": "نسخه‌ای که اساسینز کرید را به بازی نقش‌آفرینی تبدیل کرد، در مصر بطلمیوسی. به‌طور محسوسی به پردازنده فشار می‌آورد، بیشتر به‌خاطر لایهٔ ضدتقلبش تا خودِ جهان بازی."
+  },
+  "assassin-s-creed-unity": {
+    "en": "Revolutionary Paris, and the densest crowds the series ever rendered. Those crowds are why it still asks a lot of a CPU a decade later.",
+    "fa": "پاریسِ انقلابی، و متراکم‌ترین جمعیتی که این مجموعه تا به حال رسم کرده. همان جمعیت است که یک دهه بعد هنوز از پردازنده زیاد می‌خواهد."
+  },
+  "mafia-iii": {
+    "en": "Hangar 13's open-world crime story in a 1968 New Bordeaux. Locked to 30 frames at launch and patched later — check the setting before assuming the machine is at fault.",
+    "fa": "داستان جنایی جهان‌باز Hangar 13 در نیو بوردوی سال ۱۹۶۸. هنگام عرضه روی ۳۰ فریم قفل بود و بعداً اصلاح شد — قبل از اینکه سیستم را مقصر بدانی، آن تنظیم را بررسی کن."
+  },
+  "sniper-elite-4": {
+    "en": "Rebellion's sniping game across wartime Italy, with much larger maps than earlier entries. Scales well and supports both Vulkan and DirectX 12.",
+    "fa": "بازی تک‌تیراندازی Rebellion در ایتالیای زمان جنگ، با نقشه‌هایی بسیار بزرگ‌تر از نسخه‌های قبلی. مقیاس‌پذیری خوبی دارد و هم از Vulkan و هم از DirectX 12 پشتیبانی می‌کند."
+  },
+  "left-4-dead": {
+    "en": "Valve's four-player co-operative zombie shooter on Source, where an AI director paces every run. Trivially light, and the reason the genre exists.",
+    "fa": "شوتر زامبی مشارکتی چهارنفرهٔ Valve روی موتور Source، جایی که یک کارگردان هوش مصنوعی ریتم هر دور را تعیین می‌کند. به‌شدت سبک، و دلیل وجود این ژانر."
+  },
+  "spec-ops-the-line": {
+    "en": "Yager's third-person shooter in a buried Dubai, better known for what it says about the genre than for its combat. Old and light.",
+    "fa": "شوتر سوم‌شخص Yager در دبیِ مدفون زیر شن، بیشتر به‌خاطر حرفی که دربارهٔ خودِ این ژانر می‌زند شناخته می‌شود تا مبارزه‌اش. قدیمی و سبک."
+  },
+  "american-truck-simulator": {
+    "en": "SCS Software's long-haul driving simulator across the American west. CPU-bound and playable on almost anything, with a very long tail of official map expansions.",
+    "fa": "شبیه‌ساز رانندگی مسافت‌طولانی SCS Software در غرب آمریکا. وابسته به پردازنده و تقریباً روی هر چیزی قابل بازی، با دنباله‌ای بسیار طولانی از بسته‌های نقشهٔ رسمی."
+  },
+  "war-thunder": {
+    "en": "Gaijin's free-to-play vehicle combat game spanning aircraft, tanks and ships. Scales from very old laptops to modern cards, and the engine has been rebuilt more than once.",
+    "fa": "بازی نبرد وسایل نقلیهٔ رایگان Gaijin شامل هواپیما، تانک و کشتی. از لپ‌تاپ‌های بسیار قدیمی تا کارت‌های امروزی مقیاس می‌گیرد، و موتورش بیش از یک بار بازسازی شده."
+  },
+  "avowed": {
+    "en": "Obsidian's first-person fantasy role-playing game in the Pillars of Eternity world. Unreal Engine 5, and the usual Unreal traversal stutter is the thing to watch for.",
+    "fa": "بازی نقش‌آفرینی فانتزی اول‌شخص Obsidian در جهان Pillars of Eternity. روی Unreal Engine 5، و همان لگ همیشگی Unreal هنگام جابه‌جایی چیزی است که باید مراقبش بود."
+  },
+  "evil-west": {
+    "en": "Flying Wild Hog's third-person action game about vampire hunters in a supernatural American west. Linear, punchy, and undemanding.",
+    "fa": "بازی اکشن سوم‌شخص Flying Wild Hog دربارهٔ شکارچیان خون‌آشام در غرب آمریکای فراطبیعی. خطی، پرضرب، و کم‌توقع."
+  },
+  "little-nightmares-ii": {
+    "en": "Tarsier's side-scrolling horror, following Mono and Six through a broken world at child scale. Short, stylised and light on hardware.",
+    "fa": "بازی ترسناک افقی Tarsier، دربارهٔ مونو و سیکس در جهانی شکسته، از دید یک کودک. کوتاه، سبک‌پردازی‌شده و سبک برای سخت‌افزار."
+  },
+  "life-is-strange-before-the-storm": {
+    "en": "Deck Nine's prequel following Chloe before the first game. Dialogue-driven, so the hardware barely matters.",
+    "fa": "پیش‌درآمد Deck Nine دربارهٔ کلویی، پیش از بازی اول. گفت‌وگومحور است، پس سخت‌افزار تقریباً اهمیتی ندارد."
+  },
+  "gears-of-war": {
+    "en": "Epic's cover shooter that defined the third-person form on consoles. The PC release is old enough to run anywhere; the Ultimate Edition is the version to look for.",
+    "fa": "شوتر سنگرمحور Epic که فرم سوم‌شخص را روی کنسول‌ها تعریف کرد. نسخهٔ رایانه آن‌قدر قدیمی هست که همه‌جا اجرا شود؛ نسخهٔ Ultimate همانی است که باید دنبالش بگردی."
+  },
+  "battlefield-hardline": {
+    "en": "Visceral's cops-and-robbers Battlefield on Frostbite. Smaller in scale than the war entries and correspondingly lighter.",
+    "fa": "بتلفیلدِ پلیس و دزد از Visceral روی Frostbite. از نسخه‌های جنگی کوچک‌تر است و به همان نسبت سبک‌تر."
+  },
+  "battlefield-2": {
+    "en": "The 2005 entry that set the template for modern Battlefield: squads, commanders and 64-player maps. Ancient by hardware standards, kept alive by community servers.",
+    "fa": "نسخهٔ ۲۰۰۵ که الگوی بتلفیلدِ امروزی را ساخت: جوخه، فرمانده و نقشه‌های ۶۴ نفره. از نظر سخت‌افزاری باستانی است و با سرورهای جامعهٔ کاربری زنده مانده."
+  },
+  "max-payne-2": {
+    "en": "Remedy's second Max Payne, and an early showcase for Havok physics. Trivial to run; the work is making it behave on modern Windows.",
+    "fa": "دومین مکس پین از Remedy، و ویترین اولیهٔ فیزیک Havok. اجرایش ناچیز است؛ کار اصلی درست کار کردنش روی ویندوز امروزی است."
+  },
+  "resident-evil-village": {
+    "en": "Capcom's follow-up to RE7, moving Ethan Winters to a European village of four houses. RE Engine again, and one of the best-performing modern horror games on PC.",
+    "fa": "دنبالهٔ RE7 از کپکام که ایتان وینترز را به دهکده‌ای اروپایی با چهار خانه می‌برد. باز هم موتور RE، و یکی از خوش‌کارکردترین بازی‌های ترسناک امروزی روی رایانه."
   }
 }
