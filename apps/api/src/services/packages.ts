@@ -71,14 +71,22 @@ export function assertSafeDestination(destination: string): void {
  * Validate a destination for a role whose directory is decided on the user's
  * machine, not here.
  *
- * A `streamline` or `launcher` file has no path — the installer finds the
- * directory (the existing component's location, or the launcher's folder) and
- * the destination is only the name to write there. Accepting a path would mean
- * publishing a package whose path half is silently ignored at install time, so
- * anything with a separator is refused at authoring time instead.
+ * `relative` is a path under the game root. `launcher` is a path under the
+ * folder holding the executable the user picked — the root half is decided
+ * there, the rest is ours, so a subfolder is meaningful and allowed. That is
+ * what OptiScaler needs: its proxy DLL and its `OptiScaler/` folder of backend
+ * libraries have to end up in the SAME directory as the game's exe, and with a
+ * bare-name-only launcher role the folder could only be expressed as
+ * `relative`, which lands it at the game root instead — often several levels
+ * up from the exe, where OptiScaler does not look for it.
+ *
+ * `streamline` genuinely has no path: the file replaces the game's own copy
+ * wherever that already is, so the installer finds the directory by searching
+ * for the name. A path there would be silently ignored at install time, so it
+ * is refused at authoring time instead.
  */
 export function assertSafeRoleDestination(destination: string, role: PackageFileRole): void {
-  if (role === 'relative') {
+  if (role === 'relative' || role === 'launcher') {
     assertSafeDestination(destination);
     return;
   }

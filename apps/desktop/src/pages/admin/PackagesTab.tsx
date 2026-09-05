@@ -385,9 +385,11 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
       return isPrefix ? `${typed}${relative}` : relative;
     };
 
-    // The server refuses a path for these roles; catching it here names the
-    // problem next to the field instead of as a generic 400.
-    if (role !== 'relative' && picked.some((f) => /[\\/]/.test(destinationFor(f)))) {
+    // The server refuses a path for this role; catching it here names the
+    // problem next to the field instead of as a generic 400. Only streamline:
+    // relative and launcher both take a path, they just resolve it against a
+    // different base (the game root vs the folder holding the executable).
+    if (role === 'streamline' && picked.some((f) => /[\\/]/.test(destinationFor(f)))) {
       setMsg(t('admin.roleNeedsBareName'));
       return;
     }
@@ -544,7 +546,7 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
           <input
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            placeholder={role === 'relative' ? t('admin.destinationPlaceholder') : t('admin.destinationNamePlaceholder')}
+            placeholder={role === 'streamline' ? t('admin.destinationNamePlaceholder') : t('admin.destinationPlaceholder')}
             dir="ltr"
             className={inputClass}
           />

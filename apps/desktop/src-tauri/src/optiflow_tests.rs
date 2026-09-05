@@ -373,6 +373,110 @@ fn a_destination_cannot_climb_out_of_the_game_folder() {
 }
 
 #[test]
+fn optiscalers_folder_lands_beside_the_executable_not_at_the_game_root() {
+    // The bug this pins, in the shape it was reported: the Plan and the Order
+    // arrived and the OptiScaler folder did not.
+    //
+    // OptiScaler is one directory's worth of files. A proxy DLL under the name
+    // of something the game already loads (the Plan), a config beside it (the
+    // Order), and a folder of backend libraries the proxy opens by relative
+    // path. All three have to be in the SAME folder as the executable.
+    //
+    // The first two are `launcher` files and were always correct. The folder
+    // could only be expressed as `relative`, which resolves against the game
+    // ROOT — here two levels above `bin/x64`, so the DLL that went looking for
+    // `OptiScaler/libxess.dll` beside itself found nothing and the tool did
+    // not work. The folder was on disk; it was in the wrong place.
+    let t = TempTree::new("optiscaler-layout");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+
+    let report = install(
+        &exe,
+        &[
+            payload("OptiScaler.dll", "dxgi.dll", FileRole::Launcher, b"the proxy"),
+            payload("OptiScaler.ini", "OptiScaler.ini", FileRole::Launcher, b"[Upscalers]"),
+            payload("libxess.dll", "OptiScaler/libxess.dll", FileRole::Launcher, b"xess"),
+            payload(
+                "amd_fidelityfx_vk.dll",
+                "OptiScaler/amd_fidelityfx_vk.dll",
+                FileRole::Launcher,
+                b"fsr",
+            ),
+        ],
+    )
+    .expect("an OptiScaler-shaped payload must install");
+
+    // Everything in one directory — the one holding the executable.
+    assert_eq!(t.read("bin/x64/dxgi.dll"), b"the proxy");
+    assert_eq!(t.read("bin/x64/OptiScaler.ini"), b"[Upscalers]");
+    assert_eq!(t.read("bin/x64/OptiScaler/libxess.dll"), b"xess");
+    assert_eq!(t.read("bin/x64/OptiScaler/amd_fidelityfx_vk.dll"), b"fsr");
+    assert_eq!(report.written.len(), 4);
+
+    // And nothing at the game root, which is where the folder used to go.
+    assert!(
+        !t.exists("OptiScaler"),
+        "the backend folder landed at the game root, two levels above the exe that loads it"
+    );
+}
+
+#[test]
+fn a_folder_beside_the_executable_comes_back_out_again() {
+    let t = TempTree::new("optiscaler-remove");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+    t.file("bin/x64/dxgi.dll", b"the game's own dxgi");
+
+    let report = install(
+        &exe,
+        &[
+            payload("OptiScaler.dll", "dxgi.dll", FileRole::Launcher, b"the proxy"),
+            payload("libxess.dll", "OptiScaler/libxess.dll", FileRole::Launcher, b"xess"),
+        ],
+    )
+    .unwrap();
+
+    let record: Vec<InstalledFile> = report
+        .written
+        .iter()
+        .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
+        .collect();
+    let un = uninstall(&exe, Path::new(&report.backup_dir), &record).expect("uninstall");
+
+    // The proxy displaced a real file, so that one is restored rather than
+    // deleted; the library was ours to begin with and goes.
+    assert_eq!(un.restored, vec![t.root.join("bin/x64/dxgi.dll").to_string_lossy().to_string()]);
+    assert_eq!(t.read("bin/x64/dxgi.dll"), b"the game's own dxgi".to_vec());
+    assert!(!t.exists("bin/x64/OptiScaler/libxess.dll"));
+}
+
+#[test]
+fn a_launcher_destination_cannot_climb_out_either() {
+    // The launcher role takes a path now, which is the same lever the relative
+    // role gives a crafted package. Its base is deeper in the tree, so `..`
+    // stays inside the game folder for two levels before leaving it — the
+    // containment check has to be what stops it, not the depth.
+    let t = TempTree::new("launcher-escape");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+
+    for bad in [
+        "../loot.dll",
+        "../../loot.dll",
+        "OptiScaler/../../../loot.dll",
+        "/etc/passwd.dll",
+        "C:/Windows/system32/evil.dll",
+    ] {
+        let err = install(&exe, &[payload("x.dll", bad, FileRole::Launcher, b"x")])
+            .expect_err(&format!("{bad} must be refused"));
+        assert!(
+            err.starts_with("unsafe_destination|") || err.starts_with("outside_game_folder|"),
+            "unexpected error for {bad}: {err}"
+        );
+    }
+    assert!(!t.exists("bin/loot.dll"));
+    assert!(!t.exists("loot.dll"));
+}
+
+#[test]
 fn replaces_a_component_at_every_location_the_game_ships_it() {
     let t = TempTree::new("everywhere");
     let exe = t.file("bin/x64/TheGame.exe", b"MZ");

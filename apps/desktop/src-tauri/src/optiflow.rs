@@ -412,9 +412,20 @@ pub fn install(exe_path: &Path, files: &[OptiFlowFile]) -> Result<InstallReport,
 
         let targets: Vec<PathBuf> = match f.role {
             FileRole::Launcher => {
-                let name = safe_component_name(&f.destination)
+                // A path, not just a name: the launcher folder is the base and
+                // the destination is resolved under it. OptiScaler ships a
+                // folder of backend libraries that has to sit beside its proxy
+                // DLL — i.e. beside the exe — and resolving that against the
+                // game root instead put it several levels above the game's
+                // binaries, where nothing looked for it.
+                //
+                // `safe_destination` is the same gate the relative role uses:
+                // no `..`, no absolute or drive-lettered path, no dotfiles, and
+                // the extension allowlist. A bare filename still resolves to
+                // exactly what it did before.
+                let target = crate::safe_destination(&launcher_dir, &f.destination)
                     .ok_or_else(|| format!("unsafe_destination|{}", f.destination))?;
-                vec![launcher_dir.join(name)]
+                vec![target]
             }
             FileRole::Streamline => {
                 if safe_component_name(&f.destination).is_none() {

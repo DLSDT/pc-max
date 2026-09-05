@@ -2542,12 +2542,45 @@ describe('multi-frame generation tools (OptiFlow / OptiScaler)', () => {
     expect(dupe.status).toBe(400);
   });
 
-  it('refuses a path for a role whose folder the installer decides', async () => {
-    // Accepting this would publish a package whose path half is silently
-    // ignored on every machine that installs it.
-    for (const role of ['streamline', 'launcher']) {
-      const res = await uploadFile(pkgId, 'sl.dlss_g.dll', { destination: `bin/x64/sl.dlss_g.dll`, role, operation: 'replace' });
-      expect(res.status, role).toBe(400);
+  it('refuses a path for a streamline file, whose folder is found by name', async () => {
+    // A streamline file replaces the game's own copy wherever that already is,
+    // so there is no folder for the author to choose. Accepting a path would
+    // publish a package whose path half is silently ignored on every machine
+    // that installs it.
+    const res = await uploadFile(pkgId, 'sl.dlss_g.dll', { destination: 'bin/x64/sl.dlss_g.dll', role: 'streamline', operation: 'replace' });
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts a folder under a launcher destination — that is where a tool that loads with the game lives', async () => {
+    // OptiScaler's backend libraries sit in a folder beside its proxy DLL,
+    // which sits beside the executable. With this refused there was no way to
+    // say that: the folder had to be published as `relative`, which resolves
+    // against the game root and put it above the game's binaries, where the
+    // proxy that opens it by relative path never looked.
+    // Its own package: the shared one's manifest is asserted file-by-file
+    // further down, and an extra row here would break those instead of this.
+    const create = await inject('POST', '/api/v1/admin/packages', {
+      token: adminToken,
+      body: { name: 'OptiScaler folder', slug: 'optiscaler-folder', kind: 'optiscaler' },
+    });
+    expect(create.status).toBe(201);
+    const folderPkgId = (create.json as { id: string }).id;
+
+    const res = await uploadFile(folderPkgId, 'libxess.dll', { destination: 'OptiScaler/libxess.dll', role: 'launcher', operation: 'add' });
+    expect(res.status).toBe(200);
+
+    const files = (await inject('GET', `/api/v1/admin/packages/${folderPkgId}/files`, { token: adminToken })).json as {
+      data: { filename: string; destination: string; role: string }[];
+    };
+    const row = files.data.find((f) => f.filename === 'libxess.dll');
+    expect(row?.destination).toBe('OptiScaler/libxess.dll');
+    expect(row?.role).toBe('launcher');
+  });
+
+  it('still refuses a launcher path that climbs out of the folder it was given', async () => {
+    for (const destination of ['../loot.dll', 'OptiScaler/../../loot.dll', '/etc/passwd.dll', 'C:/Windows/evil.dll']) {
+      const res = await uploadFile(pkgId, 'version.dll', { destination, role: 'launcher', operation: 'add' });
+      expect(res.status, destination).toBe(400);
     }
   });
 
