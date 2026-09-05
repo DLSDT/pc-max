@@ -376,7 +376,13 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
 
     const destinationFor = (file: File) => {
       if (picked.length === 1 && typed && !isPrefix) return typed;
-      return isPrefix ? `${typed}${file.name}` : file.name;
+      // A folder pick reports each file's path relative to the chosen folder,
+      // including the folder's own name — "Optim/data/x.dll". Using file.name
+      // there would flatten the tree into the game root, and a tool that looks
+      // for its files in a subfolder would not find them. An ordinary
+      // multi-file pick has no relative path and falls back to the name.
+      const relative = file.webkitRelativePath || file.name;
+      return isPrefix ? `${typed}${relative}` : relative;
     };
 
     // The server refuses a path for these roles; catching it here names the
@@ -576,6 +582,23 @@ function PackageEditor({ id, onBack }: { id: string; onBack: () => void }) {
             {uploading ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
             {t('admin.upload')}
             <input type="file" multiple onChange={(e) => void handleUpload(e)} disabled={uploading} className="hidden" />
+          </label>
+          {/* A package whose files live in folders — the destination of each is
+              its path inside the folder that was picked, so the tree arrives
+              intact rather than as a pile of names. */}
+          <label className={`${primaryBtnClass} cursor-pointer ${uploading ? 'pointer-events-none opacity-50' : ''}`}>
+            <Upload className="size-3.5" />
+            {t('admin.uploadFolder')}
+            <input
+              type="file"
+              multiple
+              // @ts-expect-error — directory picking is not in the React types
+              webkitdirectory=""
+              directory=""
+              onChange={(e) => void handleUpload(e)}
+              disabled={uploading}
+              className="hidden"
+            />
           </label>
           {selected.size > 0 && (
             <button type="button" onClick={() => void handleDeleteSelected()} className={dangerBtnClass}>

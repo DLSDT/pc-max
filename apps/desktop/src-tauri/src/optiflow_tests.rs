@@ -295,6 +295,84 @@ fn installs_a_file_into_a_subfolder_the_game_does_not_have_yet() {
 }
 
 #[test]
+fn installs_a_whole_directory_tree_and_keeps_its_shape() {
+    // A package can name a folder as its destination — OptiScaler ships into
+    // one. The question this pins is whether nesting survives: a payload bound
+    // for `Optim/data/x.dll` must land there and not be flattened to `x.dll`
+    // beside the executable, which would leave the game unable to find it.
+    let t = TempTree::new("tree");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+
+    let report = install(
+        &exe,
+        &[
+            payload("a.dll", "Optim/a.dll", FileRole::Relative, b"one"),
+            payload("b.dll", "Optim/data/b.dll", FileRole::Relative, b"two"),
+            payload("c.ini", "Optim/data/deep/c.ini", FileRole::Relative, b"three"),
+        ],
+    )
+    .expect("a directory tree must install");
+
+    assert_eq!(t.read("Optim/a.dll"), b"one");
+    assert_eq!(t.read("Optim/data/b.dll"), b"two");
+    assert_eq!(t.read("Optim/data/deep/c.ini"), b"three");
+    assert_eq!(report.written.len(), 3);
+    // Nothing was flattened into the game root beside the executable.
+    assert!(!t.exists("a.dll"), "a.dll was flattened out of its folder");
+    assert!(!t.exists("bin/x64/b.dll"), "b.dll landed beside the exe");
+}
+
+#[test]
+fn a_directory_tree_comes_back_out_again() {
+    // Removal reads the record, so a nested file has to be found by the path it
+    // was written to rather than by name.
+    let t = TempTree::new("tree-remove");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+    t.file("Optim/keep-me.txt", b"the user put this here");
+
+    let report = install(
+        &exe,
+        &[payload("a.dll", "Optim/data/a.dll", FileRole::Relative, b"one")],
+    )
+    .unwrap();
+
+    let record: Vec<InstalledFile> = report
+        .written
+        .iter()
+        .map(|w| InstalledFile { path: w.path.clone(), replaced: w.replaced })
+        .collect();
+    let un = uninstall(&exe, Path::new(&report.backup_dir), &record).expect("uninstall");
+
+    assert_eq!(un.removed.len(), 1, "{un:?}");
+    assert!(!t.exists("Optim/data/a.dll"));
+    // A file the user had in that folder is not ours and must survive.
+    assert_eq!(t.read("Optim/keep-me.txt"), b"the user put this here".to_vec());
+}
+
+#[test]
+fn a_destination_cannot_climb_out_of_the_game_folder() {
+    // The same directory support that lets a package nest is what a crafted
+    // package would use to escape, so the escape is pinned beside the feature.
+    let t = TempTree::new("tree-escape");
+    let exe = t.file("bin/x64/TheGame.exe", b"MZ");
+
+    for bad in [
+        "../outside.dll",
+        "Optim/../../outside.dll",
+        "/etc/passwd.dll",
+        "C:/Windows/system32/evil.dll",
+        "Optim/../../../evil.dll",
+    ] {
+        let err = install(&exe, &[payload("x.dll", bad, FileRole::Relative, b"x")])
+            .expect_err(&format!("{bad} must be refused"));
+        assert!(
+            err.starts_with("unsafe_destination|") || err.starts_with("outside_game_folder|"),
+            "unexpected error for {bad}: {err}"
+        );
+    }
+}
+
+#[test]
 fn replaces_a_component_at_every_location_the_game_ships_it() {
     let t = TempTree::new("everywhere");
     let exe = t.file("bin/x64/TheGame.exe", b"MZ");
