@@ -298,5 +298,105 @@
   "need-for-speed-most-wanted": {
     "en": "The 2005 street racer with the police pursuit system the series is still measured against. Runs on anything; the work is in getting it stable on modern Windows.",
     "fa": "بازی مسابقهٔ خیابانی ۲۰۰۵ با سیستم تعقیب پلیس که هنوز معیار سنجش مجموعه است. روی هر چیزی اجرا می‌شود؛ کار اصلی پایدار کردنش روی ویندوز امروزی است."
+  },
+  "tekken-8": {
+    "en": "Bandai Namco's fighting game on Unreal Engine 5. Heavier than a fighting game needs to be, but the only number that matters is holding 60 frames without a single drop — the input timing is built on it.",
+    "fa": "بازی مبارزه‌ای بانداي نامکو روی Unreal Engine 5. از آنچه یک بازی مبارزه‌ای لازم دارد سنگین‌تر است، ولی تنها عددی که اهمیت دارد نگه داشتن ۶۰ فریم بدون حتی یک افت است — زمان‌بندی ورودی بر همان بنا شده."
+  },
+  "senua-s-saga-hellblade-ii": {
+    "en": "Ninja Theory's sequel, a narrow cinematic journey through tenth-century Iceland. Runs at a fixed 21:9 frame and targets fidelity over frame rate, so upscaling is close to mandatory below a high-end card.",
+    "fa": "دنبالهٔ Ninja Theory، سفری سینمایی و باریک در ایسلند قرن دهم. در قاب ثابت ۲۱:۹ اجرا می‌شود و کیفیت را بر نرخ فریم ترجیح می‌دهد، پس زیر کارت‌های رده‌بالا ارتقای تصویر تقریباً اجباری است."
+  },
+  "hellblade-senua-s-sacrifice": {
+    "en": "The first Hellblade: a Pictish warrior's journey through Norse hell and her own psychosis, built with input from mental-health clinicians. Light compared to the sequel.",
+    "fa": "Hellblade اول: سفر جنگجویی پیکتی در دوزخ نورس و در روان‌پریشی خودش، ساخته‌شده با مشورت متخصصان سلامت روان. در مقایسه با دنباله‌اش سبک است."
+  },
+  "indiana-jones-and-the-great-circle": {
+    "en": "MachineGames' first-person adventure on id Tech, set between Raiders and The Last Crusade. Ray-traced global illumination is always on, so a card without hardware ray tracing will not start it.",
+    "fa": "ماجراجویی اول‌شخص از MachineGames روی موتور id Tech، در فاصلهٔ میان دو فیلم اول ایندیانا جونز. نورپردازی سراسری رهگیری‌پرتو همیشه روشن است، پس کارتی بدون رهگیری پرتوی سخت‌افزاری آن را اجرا نمی‌کند."
+  },
+  "no-man-s-sky": {
+    "en": "Hello Games' procedurally generated space exploration game, rebuilt across a decade of free updates. Generation happens as you fly, so the CPU and storage decide how smooth a planet approach feels.",
+    "fa": "بازی اکتشاف فضایی با تولید رویه‌ای از Hello Games، که در طول یک دهه با به‌روزرسانی‌های رایگان بازسازی شده. تولید محتوا حین پرواز انجام می‌شود، پس پردازنده و حافظه تعیین می‌کنند نزدیک شدن به یک سیاره چقدر روان باشد."
+  },
+  "deathloop": {
+    "en": "Arkane's time-loop shooter on Blackreef, where the same day repeats until you plan a perfect run. Well optimised on PC and one of the better Arkane ports.",
+    "fa": "شوتر حلقهٔ زمانی از Arkane در جزیرهٔ Blackreef، جایی که یک روز تکرار می‌شود تا نقشهٔ بی‌نقصت را بچینی. روی رایانه بهینه است و از بهترین نسخه‌های Arkane."
+  },
+  "wolfenstein-ii": {
+    "en": "MachineGames' shooter in an America occupied by the Reich, on id Tech 6. Vulkan-only and unusually efficient — high frame rates on hardware that struggles elsewhere.",
+    "fa": "شوتر MachineGames در آمریکایی اشغال‌شده به دست رایش، روی id Tech 6. فقط Vulkan و به‌طور غیرمعمول کارآمد — نرخ فریم بالا روی سخت‌افزاری که جای دیگر به زحمت می‌افتد."
+  },
+  "wolfenstein-the-new-order": {
+    "en": "The 2014 entry that restarted the series, on id Tech 5. Its megatexture streaming can look soft up close, which is an engine trait rather than a settings problem.",
+    "fa": "نسخهٔ ۲۰۱۴ که مجموعه را از نو آغاز کرد، روی id Tech 5. بارگذاری مگاتکسچرش از نزدیک ممکن است تار به نظر برسد؛ این ویژگی موتور است نه مشکل تنظیمات."
+  },
+  "crysis": {
+    "en": "Crytek's 2007 shooter, for years the standard answer to \"but can it run Crysis\". Ironically hard on modern machines too: it leans on single-thread CPU speed in a way current hardware is not built for.",
+    "fa": "شوتر ۲۰۰۷ از Crytek که سال‌ها پاسخ استاندارد جملهٔ «ولی آیا Crysis را اجرا می‌کند؟» بود. طعنه‌آمیز اینکه روی ماشین‌های امروزی هم سخت است: به سرعت تک‌رشته‌ای پردازنده تکیه دارد، چیزی که سخت‌افزار امروزی برایش ساخته نشده."
+  },
+  "crysis-2": {
+    "en": "The New York-set sequel, narrower than the first game and easier to run. The Remastered edition adds ray tracing and changes the calculus entirely.",
+    "fa": "دنبالهٔ نیویورکی، محدودتر از بازی اول و ساده‌تر برای اجرا. نسخهٔ Remastered رهگیری پرتو اضافه می‌کند و کل معادله را عوض می‌کند."
+  },
+  "max-payne-3": {
+    "en": "Rockstar's third-person shooter, moving Max to São Paulo. Its bullet-time slow motion and euphoria physics still hold up, and it runs easily on modern hardware.",
+    "fa": "شوتر سوم‌شخص راک‌استار که مکس را به سائوپائولو می‌برد. حرکت آهستهٔ bullet-time و فیزیک euphoria آن هنوز جا افتاده‌اند، و روی سخت‌افزار امروزی راحت اجرا می‌شود."
+  },
+  "batman-arkham-city-goty": {
+    "en": "Rocksteady's open-world Batman game, still the reference for its melee system. Old and light, though the PhysX effects were always the expensive part.",
+    "fa": "بازی بتمن جهان‌باز از Rocksteady که هنوز معیار سیستم مبارزهٔ تن‌به‌تن است. قدیمی و سبک است، هرچند جلوه‌های PhysX همیشه بخش گران‌قیمتش بودند."
+  },
+  "bioshock-2": {
+    "en": "The return to Rapture as a Big Daddy, ten years after the first game's events. Light on any modern machine.",
+    "fa": "بازگشت به شهر Rapture در نقش یک Big Daddy، ده سال پس از رویدادهای بازی اول. روی هر ماشین امروزی سبک است."
+  },
+  "frostpunk": {
+    "en": "11 bit studios' city-builder in a frozen world, where every rule you pass has a cost. Simulation-bound, so it is the CPU that decides how a late-game city runs.",
+    "fa": "بازی شهرسازی از 11 bit studios در جهانی یخ‌زده، جایی که هر قانونی که تصویب می‌کنی هزینه دارد. وابسته به شبیه‌سازی است، پس پردازنده تعیین می‌کند شهرِ مراحل پایانی چطور اجرا شود."
+  },
+  "cuphead": {
+    "en": "Studio MDHR's run-and-gun game, animated frame by frame in the style of 1930s cartoons. Trivial to run; every difficulty is in the player's hands.",
+    "fa": "بازی run-and-gun از Studio MDHR، فریم‌به‌فریم به سبک کارتون‌های دههٔ ۱۹۳۰ متحرک‌سازی شده. اجرایش ناچیز است؛ تمام سختی‌اش در دست بازیکن است."
+  },
+  "minecraft": {
+    "en": "Mojang's sandbox. The Java edition is CPU and RAM bound and gains most from allocation tuning; the Bedrock edition supports ray tracing and behaves like a modern game.",
+    "fa": "جعبه‌شن Mojang. نسخهٔ Java به پردازنده و حافظه وابسته است و بیشترین سود را از تنظیم تخصیص حافظه می‌برد؛ نسخهٔ Bedrock از رهگیری پرتو پشتیبانی می‌کند و مثل یک بازی امروزی رفتار می‌کند."
+  },
+  "fortnite": {
+    "en": "Epic's battle royale and the showcase for Unreal Engine 5's Lumen and Nanite. Performance mode strips all of that out for competitive play, and the difference is enormous.",
+    "fa": "بتل‌رویال Epic و ویترین Lumen و Nanite در Unreal Engine 5. حالت Performance همهٔ آن‌ها را برای بازی رقابتی حذف می‌کند و تفاوتش عظیم است."
+  },
+  "red-dead-redemption": {
+    "en": "Rockstar's first western, ported to PC long after the fact. Modest by modern standards — the sequel is where the hardware cost is.",
+    "fa": "اولین وسترن راک‌استار که مدت‌ها بعد به رایانه آمد. با معیارهای امروزی متوسط است — هزینهٔ سخت‌افزاری در دنبالهٔ آن است."
+  },
+  "watch-dogs-2": {
+    "en": "Ubisoft's open-world hacking game in San Francisco, lighter in tone than the first. Notably CPU-hungry for its age because of the density of simulated pedestrians.",
+    "fa": "بازی جهان‌باز هک از یوبی‌سافت در سان‌فرانسیسکو، با لحنی سبک‌تر از نسخهٔ اول. برای سن خود به‌طور محسوسی پردازنده‌خوار است، به‌خاطر تراکم عابران شبیه‌سازی‌شده."
+  },
+  "far-cry-4": {
+    "en": "Ubisoft's open-world shooter in the Himalayan country of Kyrat. Dunia engine, well-behaved on PC, and old enough now to be comfortable on mid-range hardware.",
+    "fa": "شوتر جهان‌باز یوبی‌سافت در کشور هیمالیایی کیرات. موتور Dunia، رفتار خوب روی رایانه، و حالا آن‌قدر قدیمی که روی سخت‌افزار میان‌رده راحت باشد."
+  },
+  "tom-clancy-s-ghost-recon-wildlands": {
+    "en": "Ubisoft's open-world tactical shooter across Bolivia. Very large streaming world; draw distance and shadow quality are what actually move the frame rate.",
+    "fa": "شوتر تاکتیکی جهان‌باز یوبی‌سافت در سراسر بولیوی. جهان بارگذاری‌شوندهٔ بسیار بزرگ؛ فاصلهٔ دید و کیفیت سایه هستند که واقعاً نرخ فریم را جابه‌جا می‌کنند."
+  },
+  "the-sims-3": {
+    "en": "The life simulator whose performance depends on how much you have added to it: a large household in a full town is a CPU problem, not a graphics one.",
+    "fa": "شبیه‌ساز زندگی که کارایی‌اش به مقدار چیزی که به آن اضافه کرده‌ای بستگی دارد: یک خانوادهٔ بزرگ در شهری پر، مسئلهٔ پردازنده است نه گرافیک."
+  },
+  "payday-3": {
+    "en": "Starbreeze's co-operative heist shooter on Unreal Engine 4, always online. Modest hardware demands; the connection matters more than the graphics card.",
+    "fa": "شوتر سرقت مشارکتی از Starbreeze روی Unreal Engine 4، همیشه آنلاین. نیاز سخت‌افزاری متوسطی دارد؛ کیفیت اتصال بیشتر از کارت گرافیک اهمیت دارد."
+  },
+  "borderlands-4": {
+    "en": "Gearbox's looter shooter, continuing the cel-shaded series on Unreal Engine 5. The art style hides resolution loss well, which makes upscaling unusually cheap here.",
+    "fa": "شوتر غارتی از Gearbox که مجموعهٔ cel-shaded را روی Unreal Engine 5 ادامه می‌دهد. سبک هنری‌اش افت رزولوشن را خوب پنهان می‌کند، و همین ارتقای تصویر را اینجا غیرمعمول کم‌هزینه می‌سازد."
+  },
+  "dying-light-the-beast": {
+    "en": "Techland's 2025 entry, returning to the parkour-and-night-terror structure in a new region. Same engine lineage as the earlier games, tuned for current hardware.",
+    "fa": "نسخهٔ ۲۰۲۵ از Techland که به ساختار پارکور و وحشت شبانه در منطقه‌ای تازه بازمی‌گردد. از همان خانوادهٔ موتور بازی‌های قبلی، تنظیم‌شده برای سخت‌افزار امروزی."
   }
 }
