@@ -421,6 +421,55 @@ fn optiscalers_folder_lands_beside_the_executable_not_at_the_game_root() {
 }
 
 #[test]
+fn the_published_optiscaler_manifest_installs_into_one_directory() {
+    // The destinations below are the ones the live package actually serves —
+    // one Plan and one Order out of the published sets, plus all eleven base
+    // files. Pinning the real list catches what the four-file case above
+    // cannot: that nothing in the full combination collides (`OptiScaler.dll`
+    // the file sits beside `OptiScaler/` the folder), and that every one of the
+    // twenty files lands in the same directory as the executable.
+    let t = TempTree::new("optiscaler-real");
+    let exe = t.file("Bin/Win64/TheGame.exe", b"MZ");
+
+    let base = [
+        "OptiScaler.dll",
+        "OptiScaler/amd_fidelityfx_framegeneration_dx12.dll",
+        "OptiScaler/amd_fidelityfx_loader_dx12.dll",
+        "OptiScaler/amd_fidelityfx_upscaler_dx12.dll",
+        "OptiScaler/amd_fidelityfx_vk.dll",
+        "OptiScaler/dlss-enabler-headless.dll",
+        "OptiScaler/dlssg_to_fsr3_amd_is_better.dll",
+        "OptiScaler/libxell.dll",
+        "OptiScaler/libxess.dll",
+        "OptiScaler/libxess_dx11.dll",
+        "OptiScaler/libxess_fg.dll",
+    ];
+    let mut files: Vec<OptiFlowFile> = base
+        .iter()
+        .map(|d| {
+            let name = d.rsplit('/').next().unwrap();
+            payload(name, d, FileRole::Launcher, d.as_bytes())
+        })
+        .collect();
+    // The user's two choices: a proxy name the game already loads, and a profile.
+    files.push(payload("OptiScaler.dll", "dxgi.dll", FileRole::Launcher, b"plan"));
+    files.push(payload("OptiScaler.ini", "OptiScaler.ini", FileRole::Launcher, b"order"));
+
+    let report = install(&exe, &files).expect("the published manifest must install");
+    assert_eq!(report.written.len(), 13);
+    assert!(report.skipped.is_empty(), "{:?}", report.skipped);
+
+    // Every file in the executable's own folder, and the folder is a folder.
+    for d in base {
+        assert_eq!(t.read(&format!("Bin/Win64/{d}")), d.as_bytes(), "{d} is not beside the exe");
+    }
+    assert_eq!(t.read("Bin/Win64/dxgi.dll"), b"plan");
+    assert_eq!(t.read("Bin/Win64/OptiScaler.ini"), b"order");
+    assert!(t.root.join("Bin/Win64/OptiScaler").is_dir());
+    assert!(!t.exists("OptiScaler"), "the backend folder is at the game root again");
+}
+
+#[test]
 fn a_folder_beside_the_executable_comes_back_out_again() {
     let t = TempTree::new("optiscaler-remove");
     let exe = t.file("bin/x64/TheGame.exe", b"MZ");
