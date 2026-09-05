@@ -21,6 +21,11 @@ interface UiState {
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
 
+  /** The narrow-screen nav drawer. Deliberately not persisted: an app that
+   *  opens with the navigation covering the page is not where anyone left it. */
+  navOpen: boolean;
+  setNavOpen: (open: boolean) => void;
+
   language: 'en' | 'fa';
   setLanguage: (lng: 'en' | 'fa') => void;
 
@@ -54,6 +59,9 @@ export const useUi = create<UiState>()(
     (set) => ({
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+
+      navOpen: false,
+      setNavOpen: (navOpen) => set({ navOpen }),
 
       language: 'en',
       setLanguage: (language) => set({ language }),

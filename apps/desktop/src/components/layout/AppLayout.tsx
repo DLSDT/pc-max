@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils';
 export default function AppLayout() {
   const { t, i18n } = useTranslation();
   const sidebarCollapsed = useUi((s) => s.sidebarCollapsed);
+  const navOpen = useUi((s) => s.navOpen);
+  const setNavOpen = useUi((s) => s.setNavOpen);
   const updateRequired = useUi((s) => s.updateRequired);
   const offlineSession = useAuth((s) => s.offline);
   const reconnect = useAuth((s) => s.restore);
@@ -37,6 +39,16 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-background text-foreground">
+      {/* Backdrop for the narrow-screen nav drawer. Tapping anywhere off the
+          drawer closes it, which is the gesture people try first. */}
+      {navOpen && (
+        <button
+          type="button"
+          aria-label={t('common.close')}
+          onClick={() => setNavOpen(false)}
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+        />
+      )}
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         {updateRequired && (

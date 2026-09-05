@@ -55,6 +55,7 @@ void i18n.use(initReactI18next).init({
           about: 'About',
           library: 'Library',
           collapse: 'Collapse sidebar',
+          open: 'Open navigation',
         },
         errorBoundary: {
           title: 'Something went wrong on this page',
@@ -942,6 +943,7 @@ void i18n.use(initReactI18next).init({
           back: 'Back',
           all: 'All',
           cancel: 'Cancel',
+          close: 'Close',
           save: 'Save',
           noInternet: "You're offline. Reconnect to the internet and try again.",
           serviceUnavailable: 'PC MAX service is temporarily unavailable. Please try again in a moment.',
@@ -971,6 +973,7 @@ void i18n.use(initReactI18next).init({
           about: 'درباره',
           library: 'کتابخانه',
           collapse: 'جمع‌کردن نوار کناری',
+          open: 'باز کردن منو',
         },
         errorBoundary: {
           title: 'در این صفحه مشکلی پیش آمد',
@@ -1853,6 +1856,7 @@ void i18n.use(initReactI18next).init({
           back: 'بازگشت',
           all: 'همه',
           cancel: 'انصراف',
+          close: 'بستن',
           save: 'ذخیره',
           noInternet: 'آفلاین هستید. لطفاً به اینترنت متصل شوید و دوباره تلاش کنید.',
           serviceUnavailable: 'سرویس PC MAX موقتاً در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.',
