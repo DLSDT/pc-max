@@ -25,22 +25,41 @@ import RegisterPage from './pages/RegisterPage';
 import SettingsPage from './pages/SettingsPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import { useAuth } from './store/auth';
+import { useAdminAuth } from './store/adminAuth';
+import { adminSeen, shouldProbeAdmin } from './lib/authGate';
 import { api } from './lib/api';
 import { applyBranding, brandingFromConfig, loadCachedBranding } from './lib/branding';
 
 export default function App() {
   const restore = useAuth((s) => s.restore);
+  const ready = useAuth((s) => s.ready);
+  const user = useAuth((s) => s.user);
+  const adminReady = useAdminAuth((s) => s.ready);
+  const restoreAdmin = useAdminAuth((s) => s.restore);
 
   // Restore the user session from the httpOnly refresh cookie on boot.
   //
-  // The admin session is deliberately not restored here. AdminPage already
-  // restores it when it mounts, so doing it on boot only added two requests —
-  // /admin/auth/me and the refresh its 401 triggers — to every launch by every
-  // ordinary user, neither of which could ever succeed for them. A deep link
-  // straight to /admin still works, because that is the page that asks.
+  // The admin session is restored conditionally, right below, rather than
+  // unconditionally here: /admin/auth/me and the refresh its 401 triggers are
+  // two requests on every launch by every ordinary user, neither of which could
+  // ever succeed for them.
   useEffect(() => {
     void restore();
   }, [restore]);
+
+  // …but SOMETHING has to answer the admin question, because two separate
+  // screens wait on it — the guard in front of the signed-in routes and the
+  // shell around the signed-out ones. When nothing asked, `adminReady` stayed
+  // false forever and both of them rendered a spinner and nothing else, which
+  // is the whole app.
+  //
+  // Asking from here, once, is what keeps that impossible: a new screen can
+  // read the answer without having to know it is also responsible for
+  // producing it. `shouldProbeAdmin` is what keeps it cheap — it is false for
+  // a signed-in user and false on any machine no admin has ever used.
+  useEffect(() => {
+    if (shouldProbeAdmin({ ready, user, adminReady, adminSeen: adminSeen() })) void restoreAdmin();
+  }, [ready, user, adminReady, restoreAdmin]);
 
   // Remote branding/theme (Phase 15): paint the last-known brand immediately,
   // then fetch the live config (cached server-side) and re-apply.

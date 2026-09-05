@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { applyDirection } from '@/i18n';
+import { adminSeen, authGate } from '@/lib/authGate';
 import { useAuth } from '@/store/auth';
 import { useAdminAuth } from '@/store/adminAuth';
 import { Navigate } from 'react-router-dom';
@@ -26,9 +27,13 @@ export default function AuthLayout() {
     applyDirection(i18n.language);
   }, [i18n.language]);
 
-  // Wait for the boot-time restore before deciding, or a returning user sees
-  // the login form flash before being sent back in.
-  if (!ready || !adminReady) {
+  // The same rule the guard on the other side uses, so the two cannot disagree
+  // about who is signed in — and so neither can wait on an answer nobody is
+  // going to produce. Waiting matters here for a returning user, who would
+  // otherwise see the login form flash before being sent back in.
+  const gate = authGate({ ready, user, adminReady, admin, adminSeen: adminSeen() });
+
+  if (gate === 'wait') {
     return (
       <div className="flex h-full w-full items-center justify-center bg-background">
         <Spinner />
@@ -37,7 +42,7 @@ export default function AuthLayout() {
   }
 
   // Already signed in — /login is not somewhere to sit.
-  if (user || admin) return <Navigate to={admin && !user ? '/admin' : '/'} replace />;
+  if (gate === 'allow') return <Navigate to={admin && !user ? '/admin' : '/'} replace />;
 
   return (
     <div className="relative flex h-full w-full items-center justify-center overflow-y-auto bg-background px-4 py-10 text-foreground">

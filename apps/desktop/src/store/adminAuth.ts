@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { AdminMe } from '@goh/types';
 import { api, setAdminAuthToken } from '@/lib/api';
+import { setAdminSeen } from '@/lib/authGate';
 
 interface AdminAuthState {
   /** In-memory admin session — entirely separate from the end-user session in store/auth.ts. */
@@ -35,6 +36,10 @@ export const useAdminAuth = create<AdminAuthState>()((set) => ({
   login: async (email, password) => {
     const res = await api.adminLogin({ email, password });
     setAdminAuthToken(res.accessToken);
+    // From here on this machine has an admin session worth restoring on a
+    // later launch. Nothing else records that: the session itself is in memory
+    // and the refresh cookie is httpOnly, so it cannot be seen from here.
+    setAdminSeen(true);
     set({ admin: { ...res.admin, lastLoginAt: null }, ready: true });
   },
 
@@ -45,6 +50,7 @@ export const useAdminAuth = create<AdminAuthState>()((set) => ({
       // best-effort — the local session is cleared regardless
     }
     setAdminAuthToken(null);
+    setAdminSeen(false);
     set({ admin: null });
   },
 }));
