@@ -198,5 +198,105 @@
   "days-gone-remastered": {
     "en": "Bend Studio's open-world survival game, following drifter Deacon St. John through post-outbreak Oregon. The hordes are hundreds of individually simulated enemies and are what the hardware is actually being asked to do.",
     "fa": "بازی بقای جهان‌باز از Bend Studio، دربارهٔ دیکن سنت‌جان در اورگانِ پس از شیوع. دسته‌های زامبی صدها دشمنِ جداگانه شبیه‌سازی‌شده‌اند و همان چیزی‌اند که واقعاً از سخت‌افزار خواسته می‌شود."
+  },
+  "the-witcher-2-assassins-of-kings": {
+    "en": "CD Projekt Red's second Witcher game, following Geralt through a kingmaking plot after a regicide. Notorious in its day for the UberSampling option, which renders above native resolution and still costs real money in frames.",
+    "fa": "دومین بازی ویچر از CD Projekt Red، دربارهٔ گرالت در توطئه‌ای برای تعیین پادشاه پس از یک شاه‌کشی. در زمان خود به گزینهٔ UberSampling مشهور بود که بالاتر از رزولوشن بومی رندر می‌کند و هنوز هم هزینهٔ واقعی روی نرخ فریم دارد."
+  },
+  "the-witcher": {
+    "en": "The first Witcher game, an isometric-leaning action role-playing game built on a modified Aurora engine. Old enough to run anywhere; the Enhanced Edition is the version worth installing.",
+    "fa": "اولین بازی ویچر، یک نقش‌آفرینی اکشن با دوربین نیمه‌ایزومتریک بر پایهٔ نسخهٔ اصلاح‌شدهٔ موتور Aurora. آن‌قدر قدیمی هست که همه‌جا اجرا شود؛ نسخهٔ Enhanced همانی است که ارزش نصب دارد."
+  },
+  "elden-ring-nightreign": {
+    "en": "A standalone co-operative spin-off of Elden Ring, structured around timed three-player runs rather than open-world exploration. Same engine, so the same frame-pacing quirks apply.",
+    "fa": "اسپین‌آف مستقل و مشارکتی الدن رینگ، بر پایهٔ دورهای زمان‌دار سه‌نفره به‌جای گشت‌وگذار در جهان باز. همان موتور، پس همان بی‌نظمی‌های زمان‌بندی فریم را دارد."
+  },
+  "god-of-war": {
+    "en": "The 2018 reboot of Santa Monica Studio's series, moving Kratos into Norse myth with his son Atreus and a single unbroken camera shot. The PC port is one of the better-behaved Sony releases.",
+    "fa": "بازآغاز ۲۰۱۸ مجموعهٔ Santa Monica Studio که کریتوس را با پسرش آترئوس به اسطوره‌های نورس می‌برد، با یک نمای دوربین بی‌وقفه. نسخهٔ رایانه‌اش از سالم‌ترین عرضه‌های سونی است."
+  },
+  "the-last-of-us-part-ii": {
+    "en": "Naughty Dog's sequel, following Ellie and Abby through a story told from both sides. Heavier than the first game on PC, and its texture streaming rewards fast storage.",
+    "fa": "دنبالهٔ Naughty Dog، دربارهٔ الی و ابی در داستانی که از هر دو سو روایت می‌شود. روی رایانه از بازی اول سنگین‌تر است و بارگذاری بافت‌هایش از حافظهٔ سریع سود می‌برد."
+  },
+  "horizon-zero-dawn-remastered": {
+    "en": "The remastered first Horizon: Aloy hunts machine creatures in a world that grew over the ruins of ours. Lighter than Forbidden West while sharing its engine lineage.",
+    "fa": "نسخهٔ بازسازی‌شدهٔ Horizon اول: الوی در جهانی که روی ویرانه‌های دنیای ما روییده، جانوران ماشینی را شکار می‌کند. از Forbidden West سبک‌تر است، هرچند از همان خانوادهٔ موتور می‌آید."
+  },
+  "doom-the-dark-ages": {
+    "en": "id Software's 2025 entry, trading the series' aerial combat for grounded, medieval-flavoured brawling. Built on id Tech 8 and requires a ray-tracing capable card.",
+    "fa": "نسخهٔ ۲۰۲۵ از id Software که مبارزهٔ هوایی مجموعه را با نبرد زمینی و قرون‌وسطایی عوض می‌کند. روی id Tech 8 ساخته شده و به کارت گرافیک با قابلیت رهگیری پرتو نیاز دارد."
+  },
+  "metro-exodus": {
+    "en": "The original release of 4A Games' open-landscape Metro. Runs on cards without ray tracing, unlike the Enhanced Edition, which makes it the version for older hardware.",
+    "fa": "نسخهٔ اصلی Metro با مناظر باز از 4A Games. برخلاف نسخهٔ Enhanced روی کارت‌های بدون رهگیری پرتو هم اجرا می‌شود، و همین آن را گزینهٔ سخت‌افزارهای قدیمی‌تر می‌کند."
+  },
+  "metro-last-light": {
+    "en": "The second Metro game, still mostly inside the Moscow tunnels. Old enough now to be comfortable on modest hardware while still looking deliberate.",
+    "fa": "دومین بازی مترو، هنوز عمدتاً در تونل‌های مسکو. حالا آن‌قدر قدیمی هست که روی سخت‌افزار متوسط راحت باشد و در عین حال ظاهری سنجیده داشته باشد."
+  },
+  "alan-wake": {
+    "en": "Remedy's original 2010 thriller: a writer searches for his wife in a Pacific Northwest town where darkness is literally the enemy. Light by any modern measure.",
+    "fa": "تریلر اصلی ۲۰۱۰ از Remedy: نویسنده‌ای در شهری در شمال‌غرب اقیانوس آرام دنبال همسرش می‌گردد، جایی که تاریکی به‌معنای واقعی دشمن است. با هر معیار امروزی سبک است."
+  },
+  "quantum-break": {
+    "en": "Remedy's time-manipulation shooter, mixing gameplay with live-action episodes. Its volumetric lighting was expensive at release and is still the setting to lower first.",
+    "fa": "شوتر دستکاری زمان از Remedy که گیم‌پلی را با اپیزودهای فیلم واقعی ترکیب می‌کند. نورپردازی حجمی‌اش هنگام عرضه گران بود و هنوز اولین تنظیمی است که باید پایین بیاوری."
+  },
+  "dark-souls-2-scholar-of-the-first-sin": {
+    "en": "The revised edition of Dark Souls II, with reworked enemy placement and lighting. Runs at 60 frames without the fixes the first game needed.",
+    "fa": "نسخهٔ بازنگری‌شدهٔ Dark Souls II، با جانمایی دشمنان و نورپردازی بازکار‌شده. بدون اصلاحیه‌هایی که بازی اول لازم داشت، روی ۶۰ فریم اجرا می‌شود."
+  },
+  "mortal-kombat": {
+    "en": "The 2011 series reboot that returned Mortal Kombat to a 2D plane. Very light on modern hardware; the thing to protect is frame consistency, not fidelity.",
+    "fa": "بازآغاز ۲۰۱۱ مجموعه که مورتال کامبت را به صفحهٔ دوبعدی برگرداند. روی سخت‌افزار امروزی بسیار سبک است؛ آنچه باید حفظ شود ثبات فریم است نه کیفیت."
+  },
+  "assassin-creed-mirage": {
+    "en": "Ubisoft's return to a smaller, stealth-first Assassin's Creed, set in ninth-century Baghdad. Deliberately scoped down from the RPG entries, and lighter to run because of it.",
+    "fa": "بازگشت یوبی‌سافت به اساسینز کریدِ کوچک‌تر و مخفی‌کاری‌محور، در بغدادِ قرن نهم. عمداً از نسخه‌های نقش‌آفرینی جمع‌وجورتر است و به همین دلیل سبک‌تر اجرا می‌شود."
+  },
+  "assassin-s-creed-iii": {
+    "en": "The American Revolution entry, introducing large forested wilderness and naval battles to the series. The remastered version is the one that behaves on modern Windows.",
+    "fa": "نسخهٔ انقلاب آمریکا، که جنگل‌های وسیع و نبردهای دریایی را به مجموعه آورد. نسخهٔ بازسازی‌شده همانی است که روی ویندوز امروزی درست کار می‌کند."
+  },
+  "watch-dogs-legion": {
+    "en": "Ubisoft's open-world hacking game in a near-future London where any pedestrian can be recruited. Ray-traced reflections are its heaviest setting by a wide margin.",
+    "fa": "بازی جهان‌باز هک از یوبی‌سافت در لندنِ آینده‌ای نزدیک، جایی که هر رهگذری قابل استخدام است. بازتاب‌های رهگیری‌پرتو با فاصلهٔ زیاد سنگین‌ترین تنظیمش هستند."
+  },
+  "far-cry-6": {
+    "en": "Ubisoft's open-world shooter on the Caribbean island of Yara under a dictatorship. The high-resolution texture pack needs real VRAM and is the first thing to drop on an 8 GB card.",
+    "fa": "شوتر جهان‌باز یوبی‌سافت در جزیرهٔ کارائیبی یارا زیر حکومت دیکتاتوری. بستهٔ بافت با کیفیت بالا حافظهٔ گرافیکی واقعی می‌خواهد و روی کارت ۸ گیگابایتی اولین چیزی است که باید حذف شود."
+  },
+  "hitman-3": {
+    "en": "IO Interactive's stealth sandbox, where each level is a dense social machine to be picked apart. Crowd simulation makes the CPU matter more than in most stealth games.",
+    "fa": "جعبه‌شن مخفی‌کاری از IO Interactive، جایی که هر مرحله ماشین اجتماعی متراکمی است که باید تکه‌تکه بازش کنی. شبیه‌سازی جمعیت باعث می‌شود پردازنده بیشتر از بیشتر بازی‌های مخفی‌کاری اهمیت پیدا کند."
+  },
+  "dragon-age-inquisition": {
+    "en": "BioWare's role-playing game on Frostbite, an engine built for shooters and bent into an RPG. Large zones and heavy foliage; the Hinterlands are where frame rates go to die.",
+    "fa": "بازی نقش‌آفرینی BioWare روی موتور Frostbite، موتوری که برای شوتر ساخته شده و به‌زور نقش‌آفرینی شده است. مناطق بزرگ و پوشش گیاهی سنگین؛ Hinterlands همان‌جایی است که نرخ فریم می‌میرد."
+  },
+  "battlefield-3": {
+    "en": "DICE's 2011 shooter, the first Frostbite 2 game, and a benchmark of its era. Trivial for modern hardware, but the 64-player servers still lean on the CPU.",
+    "fa": "شوتر ۲۰۱۱ از DICE، اولین بازی Frostbite 2 و محک دوران خودش. برای سخت‌افزار امروزی ناچیز است، ولی سرورهای ۶۴ نفره‌اش هنوز به پردازنده فشار می‌آورند."
+  },
+  "call-of-duty-modern-warfare-iii": {
+    "en": "The 2023 entry, built on the same engine as Modern Warfare II with an open-combat campaign. Same tuning logic: settings low, latency lower.",
+    "fa": "نسخهٔ ۲۰۲۳، روی همان موتور Modern Warfare II با بخش داستانیِ نبرد باز. همان منطق تنظیم: کیفیت پایین، تأخیر پایین‌تر."
+  },
+  "tom-clancy-s-ghost-recon-breakpoint": {
+    "en": "Ubisoft's open-world tactical shooter on the island of Auroa. Long sightlines and dense terrain make draw distance the setting that actually costs.",
+    "fa": "شوتر تاکتیکی جهان‌باز یوبی‌سافت در جزیرهٔ آئوروآ. دید طولانی و زمین متراکم باعث می‌شود فاصلهٔ دید تنظیمی باشد که واقعاً هزینه دارد."
+  },
+  "ori-and-the-blind-forest": {
+    "en": "Moon Studios' hand-painted platformer. Very light, and one of the few games where a laptop's integrated graphics is genuinely enough.",
+    "fa": "بازی سکوبازی نقاشی‌شده با دست از Moon Studios. بسیار سبک است و یکی از معدود بازی‌هایی که گرافیک مجتمع لپ‌تاپ واقعاً برایش کافی است."
+  },
+  "sniper-elite-nazi-zombie-army-2": {
+    "en": "The co-operative zombie spin-off of Sniper Elite, set in an occult-twisted Second World War. Old, light, and built for four players rather than spectacle.",
+    "fa": "اسپین‌آف زامبیِ مشارکتی Sniper Elite، در جنگ جهانی دومی با چاشنی خرافه. قدیمی، سبک، و ساخته‌شده برای چهار بازیکن نه برای جلوهٔ بصری."
+  },
+  "need-for-speed-most-wanted": {
+    "en": "The 2005 street racer with the police pursuit system the series is still measured against. Runs on anything; the work is in getting it stable on modern Windows.",
+    "fa": "بازی مسابقهٔ خیابانی ۲۰۰۵ با سیستم تعقیب پلیس که هنوز معیار سنجش مجموعه است. روی هر چیزی اجرا می‌شود؛ کار اصلی پایدار کردنش روی ویندوز امروزی است."
   }
 }
