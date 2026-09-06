@@ -50,33 +50,23 @@ const STORAGE_KEY = 'goh_branding_v1';
  * `:root` beats any stylesheet rule, so a single remote colour applied to both
  * themes silently replaced it.
  */
-const DARK_MIN_LIGHTNESS = 46;
-
-/**
- * Saturation ceiling when a colour is lifted.
- *
- * Lightness alone is not enough. Burgundy raised from 25% to 46% at its own
- * 72% saturation is #CA2145 — a bright crimson, which is the colour this
- * palette was chosen to get away from. Damping saturation as it lifts keeps
- * it reading as a deep colour rather than a loud one.
- */
-const DARK_MAX_SATURATION = 50;
+const DARK_MIN_LIGHTNESS = 43;
 
 /**
  * The same colour, lifted just enough to survive a dark background.
  *
- * The target is both directions at once: white text on it for buttons, and it
- * as an icon or accent on the page behind. At 36% the first was comfortable
- * (7.9:1) and the second was not readable at all (2.4:1). This lands at
- * 5.8:1 and 3.2:1 — AA for text on the button, AA for a non-text element
- * against the page.
+ * Saturation is deliberately left alone. Damping it while raising lightness is
+ * the recipe for pink — a colour reads as pink precisely when it is light and
+ * unsaturated — and burgundy came out of that as #B03B54, which is not a
+ * colour this product would ship. Keeping the saturation and lifting less far
+ * gives a deep red: white on it 6.1:1 for a button, and 3.1:1 as an icon
+ * against the page, which is the floor a non-text element needs.
  */
 export function forDarkTheme(triplet: string): string {
   const m = /^(-?[\d.]+) ([\d.]+)% ([\d.]+)%$/.exec(triplet);
   if (!m) return triplet;
   const [, h, s, l] = m;
-  if (Number(l) >= DARK_MIN_LIGHTNESS) return triplet;
-  return `${h} ${Math.min(Number(s), DARK_MAX_SATURATION)}% ${DARK_MIN_LIGHTNESS}%`;
+  return Number(l) >= DARK_MIN_LIGHTNESS ? triplet : `${h} ${s}% ${DARK_MIN_LIGHTNESS}%`;
 }
 
 /**

@@ -196,7 +196,10 @@ export function ProfileMenuItem({
   return (
     <Link
       to={to}
-      className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 text-sm font-medium transition-colors hover:bg-accent"
+      // A row that goes somewhere, on a page of white cards on an off-white
+      // page. The darker control line and a border that answers on hover are
+      // what tell it apart from the text beside it.
+      className="flex items-center gap-3 rounded-xl border border-input bg-card px-4 py-3.5 text-sm font-medium transition-colors hover:border-primary/50 hover:bg-accent hover:text-accent-foreground"
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary [&_svg]:size-4">
         {icon}
