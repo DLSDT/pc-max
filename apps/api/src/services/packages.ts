@@ -25,6 +25,12 @@ export const PACKAGE_EXT = new Set([
   // destination is bounds-checked against the game folder, every byte is
   // hash-verified before it is written, and the originals are backed up.
   'asi',
+  // Plain-text licence notices that ship beside the binaries they cover —
+  // NVIDIA's Streamline set includes nvngx_dlss.license and reflex.license.
+  // Without this the folder cannot be uploaded whole: the admin picks a
+  // directory, two files are refused, and what publishes is a package missing
+  // exactly the notices the redistribution terms require to travel with it.
+  'license',
 ]);
 
 /**

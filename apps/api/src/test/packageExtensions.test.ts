@@ -53,4 +53,20 @@ describe('package extension allowlist', () => {
       expect(() => assertSafeDestination(good), good).not.toThrow();
     }
   });
+
+  it("accepts a folder uploaded whole, licence notices and nesting included", () => {
+    // What an admin actually picks: the OptiScaler directory, with the
+    // Streamline set in a subfolder of it. Two of those files are `.license`
+    // notices, and refusing them meant the folder could not be uploaded as it
+    // ships — the admin would get a partial package and no clear reason why.
+    for (const good of [
+      'OptiScaler/libxess.dll',
+      'OptiScaler/streamline/sl.interposer.dll',
+      'OptiScaler/streamline/nvngx_dlss.license',
+      'OptiScaler/streamline/reflex.license',
+    ]) {
+      expect(() => assertSafeFilename(good.split('/').pop()!), good).not.toThrow();
+      expect(() => assertSafeDestination(good), good).not.toThrow();
+    }
+  });
 });

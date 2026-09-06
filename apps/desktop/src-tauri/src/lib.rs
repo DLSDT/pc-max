@@ -311,6 +311,11 @@ pub(crate) const ALLOWED_EXT: &[&str] = &[
     // package file. (Keep quotation marks out of these comments: the
     // server/client parity test parses this list by scanning for quoted words.)
     "asi",
+    // Plain-text licence notices shipped beside the binaries they cover, as
+    // NVIDIA's Streamline set does. Refusing them meant a folder could not be
+    // uploaded whole. (Keep quotation marks out of these comments: the
+    // server/client parity test parses this list by scanning for quoted words.)
+    "license",
 ];
 
 /// Resolve `destination` relative to `game_dir`, rejecting any traversal or
