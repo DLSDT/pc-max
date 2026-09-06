@@ -59,7 +59,7 @@
     /* Lifted off the light-mode burgundy: #6E1226 on a near-black background
        is a shape, not a colour. This is the same hue with enough lightness to
        read as burgundy and still carry white text at 5:1. */
-    --primary: var(--brand-primary-dark, 347 56% 38%); /* #972B42 */
+    --primary: var(--brand-primary-dark, 347 48% 46%); /* #AE3D55 */
     --primary-foreground: 0 0% 100%;
     --secondary: 20 6% 16%;
     --secondary-foreground: 30 10% 92%;
@@ -71,7 +71,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 20 6% 20%;
     --input: 20 6% 20%;
-    --ring: var(--brand-primary-dark, 347 56% 38%);
+    --ring: var(--brand-primary-dark, 347 48% 46%);
   }
 
   /* --------------------------------------------------------------------
