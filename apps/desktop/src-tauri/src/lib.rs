@@ -316,6 +316,9 @@ pub(crate) const ALLOWED_EXT: &[&str] = &[
     // uploaded whole. (Keep quotation marks out of these comments: the
     // server/client parity test parses this list by scanning for quoted words.)
     "license",
+    // Same class as the entry above: a licence notice, in the other format
+    // AMD ships one in.
+    "md",
 ];
 
 /// Resolve `destination` relative to `game_dir`, rejecting any traversal or

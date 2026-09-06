@@ -31,6 +31,10 @@ export const PACKAGE_EXT = new Set([
   // directory, two files are refused, and what publishes is a package missing
   // exactly the notices the redistribution terms require to travel with it.
   'license',
+  // Licence notices ship as .txt beside most binaries and as .md beside AMD's
+  // FidelityFX. Refusing one of the two formats meant the Licenses folder
+  // could not be uploaded whole.
+  'md',
 ]);
 
 /**
