@@ -20,6 +20,7 @@ import { useWinOpt, computeScore, recommend, type Recommendation } from '@/store
 import { SubscriptionGate } from '@/components/SubscriptionGate';
 import { authorizeFeature, useFeatureAccess } from '@/hooks/useFeatureAccess';
 import { PROFILES, type Category, type Risk } from '@/lib/winopt';
+import { summarizeChanges } from '@/lib/changeSummary';
 import { Button, Badge, Spinner } from '@/components/ui';
 import RestorePanel from '@/components/RestorePanel';
 import { Section } from '@/components/Section';
@@ -61,6 +62,8 @@ export default function WindowsOptimizerPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [running, setRunning] = useState<string | null>(null); // step label while applying
   const [gateError, setGateError] = useState<string | null>(null);
+  /** The summary is shown first; the button below it is what applies. */
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     // Scanning only reads the system, so it is safe before the gate resolves —
@@ -76,6 +79,7 @@ export default function WindowsOptimizerPage() {
   const supported = scan?.supported === true;
 
   const recommendedIds = recommendations.map((r) => r.tweak.id);
+  const pending = useMemo(() => summarizeChanges(recommendations, selected), [recommendations, selected]);
 
   function toggle(id: string) {
     setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -85,6 +89,7 @@ export default function WindowsOptimizerPage() {
     const ids = selected.length ? selected : recommendedIds;
     if (!ids.length) return;
     setGateError(null);
+    setConfirming(false);
 
     // Ask the server immediately before touching the system. Everything this
     // feature does happens locally, so this call is the authorisation — it
@@ -202,12 +207,59 @@ export default function WindowsOptimizerPage() {
                   </p>
                 </div>
               </div>
-              <Button size="lg" onClick={() => void runOptimize()} disabled={running !== null || !recommendedIds.length} className="gap-2 shadow-soft">
+              <Button
+                size="lg"
+                onClick={() => setConfirming(true)}
+                disabled={running !== null || !recommendedIds.length || confirming}
+                className="gap-2 shadow-soft"
+              >
                 {running ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
                 {running ? t(running) : t('winopt.smartOptimize')}
               </Button>
             </div>
           </section>
+
+          {/* What is about to happen, before it happens.
+              The button used to apply twenty-odd changes to Windows on one
+              click with no statement of what they were. A snapshot was always
+              taken and Restore always worked — but a tool that edits your
+              system without saying what it is about to edit is the shape of
+              the ones people have learned not to trust, however good its
+              internals are. */}
+          {confirming && (
+            <section className="rounded-2xl border border-primary/30 bg-accent/40 p-5 sm:p-6">
+              <h2 className="text-base font-extrabold">{t('winopt.confirmTitle', { count: pending.count })}</h2>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {pending.risks.map((r) => (
+                  <Badge key={r.risk} variant="outline" className={RISK_STYLE[r.risk]}>
+                    {r.count} × {t(`winopt.risk.${r.risk}`)}
+                  </Badge>
+                ))}
+                {pending.needsRestart > 0 && (
+                  <Badge variant="outline">{t('winopt.confirmRestart', { count: pending.needsRestart })}</Badge>
+                )}
+                {pending.needsAdmin > 0 && (
+                  <Badge variant="outline">{t('winopt.confirmAdmin', { count: pending.needsAdmin })}</Badge>
+                )}
+              </div>
+
+              <p className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
+                <ShieldCheck aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
+                <span>{t('winopt.confirmReversible')}</span>
+              </p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Button onClick={() => void runOptimize()} className="gap-2">
+                  <Sparkles aria-hidden className="size-4" />
+                  {t('winopt.confirmApply', { count: pending.count })}
+                </Button>
+                <Button variant="outline" onClick={() => setConfirming(false)}>
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            </section>
+          )}
 
           {/* Profiles */}
           <Section title={t('winopt.profiles')}>
@@ -265,7 +317,13 @@ export default function WindowsOptimizerPage() {
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggle(r.tweak.id)}
-                        className="mt-0.5 size-4 accent-[hsl(355_83%_41%)]"
+                        // A token, not a literal. This checkbox had the crimson
+                        // from two palettes ago written into it directly, so
+                        // every tick on this page stayed bright red while the
+                        // rest of the app went burgundy — and nothing failed.
+                        // paletteLiterals.test.ts now scans for that, which is
+                        // why the old value is not quoted here either.
+                        className="mt-0.5 size-4 accent-primary"
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
