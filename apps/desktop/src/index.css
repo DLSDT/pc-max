@@ -10,30 +10,38 @@
 
 @layer base {
   :root {
-    /* Premium Light / White + Crimson — centralized design tokens.
-       Change the brand color in ONE place (--primary / --ring) and every
-       component across the app follows. All values are HSL triplets.
-       Palette (premium crimson language):
-         Primary Crimson #8B0000 · Deep Crimson #3A0000
-         Primary Red    #C1121F · Soft Red #FDECEC
-         Background #FFFFFF · Surface #F7F7F7 · Border #E5E7EB */
-    --background: 0 0% 100%; /* #FFFFFF */
-    --foreground: 0 0% 7%; /* #111111 */
-    --card: 0 0% 97%; /* #F7F7F7 surface */
-    --card-foreground: 0 0% 7%;
-    --primary: 355 83% 41%; /* #C1121F primary red — actions/CTA */
+    /* Burgundy + off-white. One place: change --primary here and every
+       button, ring, badge and active state in the app follows.
+
+       Off-white rather than #FFF, and white cards on top of it. That is what
+       carries depth in a premium layout — a card is lighter than the page it
+       sits on, so it needs no shadow to separate, and the page stops glaring.
+       Burgundy rather than the old #C1121F: a bright red reads as an alert,
+       a deep one reads as a brand. Greys are warm (a trace of the brand hue)
+       so nothing looks like it came from a different palette.
+
+         Burgundy #6E1226 · Ink #1A1A1A
+         Page #FAF9F7 · Card #FFFFFF · Line #E8E4E1 */
+    --background: 30 20% 98%; /* #FAF9F7 off-white */
+    --foreground: 0 0% 10%; /* #1A1A1A ink, not black */
+    --card: 0 0% 100%; /* white, lifted off the page */
+    --card-foreground: 0 0% 10%;
+    /* `var(--brand-primary, …)` so the admin panel can re-brand the app
+       without a release, while the value here stays the default rather than
+       something a hardcoded fallback in JS paints over on every boot. */
+    --primary: var(--brand-primary, 347 72% 25%); /* #6E1226 burgundy */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 95%;
-    --secondary-foreground: 0 0% 16%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 220 9% 46%; /* #6B7280 */
-    --accent: 0 82% 96%; /* #FDECEC soft red tint — active/hover */
-    --accent-foreground: 0 100% 27%; /* #8B0000 primary crimson */
-    --destructive: 0 72% 42%;
+    --secondary: 30 14% 95%;
+    --secondary-foreground: 0 0% 18%;
+    --muted: 30 14% 96%;
+    --muted-foreground: 25 6% 42%; /* warm grey, readable at 4.5:1 */
+    --accent: 347 34% 96%; /* the faintest burgundy tint for hover */
+    --accent-foreground: 347 72% 22%;
+    --destructive: 4 62% 42%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%; /* #E5E7EB */
-    --input: 220 13% 91%;
-    --ring: 355 83% 41%;
+    --border: 28 14% 89%; /* #E8E4E1 warm hairline */
+    --input: 28 14% 89%;
+    --ring: var(--brand-primary, 347 72% 25%);
     --radius: 0.75rem;
   }
 
@@ -44,23 +52,26 @@
      etc. utilities rather than `dark:` variants, so this block alone re-themes
      the whole app. */
   :root.dark {
-    --background: 0 0% 7%; /* #121212 */
-    --foreground: 0 0% 96%;
-    --card: 0 0% 11%;
-    --card-foreground: 0 0% 96%;
-    --primary: 355 78% 52%; /* brighter crimson for contrast on dark */
+    --background: 20 8% 7%; /* warm near-black, not a blue-grey */
+    --foreground: 30 12% 95%;
+    --card: 20 7% 11%;
+    --card-foreground: 30 12% 95%;
+    /* Lifted off the light-mode burgundy: #6E1226 on a near-black background
+       is a shape, not a colour. This is the same hue with enough lightness to
+       read as burgundy and still carry white text at 5:1. */
+    --primary: var(--brand-primary-dark, 347 56% 38%); /* #972B42 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 92%;
-    --muted: 0 0% 16%;
-    --muted-foreground: 220 9% 63%;
-    --accent: 355 45% 18%;
-    --accent-foreground: 355 90% 78%;
-    --destructive: 0 72% 51%;
+    --secondary: 20 6% 16%;
+    --secondary-foreground: 30 10% 92%;
+    --muted: 20 6% 16%;
+    --muted-foreground: 25 8% 62%;
+    --accent: 347 30% 17%;
+    --accent-foreground: 347 55% 76%;
+    --destructive: 4 60% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 21%;
-    --input: 0 0% 21%;
-    --ring: 355 78% 52%;
+    --border: 20 6% 20%;
+    --input: 20 6% 20%;
+    --ring: var(--brand-primary-dark, 347 56% 38%);
   }
 
   /* --------------------------------------------------------------------
@@ -110,19 +121,19 @@
   }
 
   .tool-accent-red {
-    --primary: 355 83% 41%;
+    --primary: 347 72% 25%;
     --primary-foreground: 0 0% 100%;
-    --accent: 0 82% 96%;
-    --accent-foreground: 0 100% 27%;
-    --ring: 355 83% 41%;
+    --accent: 347 34% 96%;
+    --accent-foreground: 347 72% 22%;
+    --ring: 347 72% 25%;
   }
 
   :root.dark .tool-accent-red {
-    --primary: 355 78% 52%;
+    --primary: 347 56% 38%;
     --primary-foreground: 0 0% 100%;
-    --accent: 355 45% 18%;
-    --accent-foreground: 355 90% 78%;
-    --ring: 355 78% 52%;
+    --accent: 347 30% 17%;
+    --accent-foreground: 347 55% 76%;
+    --ring: 347 56% 38%;
   }
 
   /* Smooth animated theme switch (spec requirement) — the variables above
@@ -172,26 +183,27 @@
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(220 13% 85%);
+  background: hsl(28 10% 84%);
   border-radius: 5px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(220 13% 75%);
+  background: hsl(28 10% 74%);
 }
 
-/* Subtle crimson glow used by the hero + detail pages (light) */
+/* A trace of warmth in the page behind the hero. Two per cent, from one
+   corner — enough that the background is not flat, far short of anything you
+   would call a glow. */
 .bg-glow {
   background:
-    radial-gradient(ellipse 60% 50% at 70% -10%, hsl(355 83% 41% / 0.05), transparent),
-    radial-gradient(ellipse 50% 40% at 10% 110%, hsl(0 100% 27% / 0.04), transparent),
+    radial-gradient(ellipse 70% 50% at 80% -15%, hsl(347 72% 25% / 0.025), transparent 70%),
     hsl(var(--background));
 }
 
-/* Deep crimson hero gradient — used sparingly for the primary CTA area */
+/* The CTA band. A single soft wash off one corner, at a third of what it
+   was — the old value read as a coloured panel rather than a surface with
+   depth. */
 .bg-crimson-hero {
-  background:
-    radial-gradient(ellipse 90% 70% at 85% -20%, hsl(355 83% 41% / 0.14), transparent),
-    linear-gradient(135deg, hsl(0 100% 27% / 0.06), transparent 55%);
+  background: radial-gradient(ellipse 90% 80% at 85% -25%, hsl(347 72% 25% / 0.05), transparent 70%);
 }
 
 /*

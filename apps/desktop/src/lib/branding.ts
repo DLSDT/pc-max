@@ -40,14 +40,40 @@ export function hexToHslTriplet(hex: string): string | null {
 
 const STORAGE_KEY = 'goh_branding_v1';
 
-/** Apply branding: CSS variables + persisted copy (used pre-sync on next boot). */
+/**
+ * The lightness a brand colour needs to still read as a colour on the dark
+ * theme's near-black background rather than as a dark shape.
+ *
+ * Burgundy is the case that forced this: #6E1226 is 25% light, which is
+ * correct on off-white and nearly invisible on #131110. The dark theme has
+ * always carried its own, lifted value — but an inline custom property on
+ * `:root` beats any stylesheet rule, so a single remote colour applied to both
+ * themes silently replaced it.
+ */
+const DARK_MIN_LIGHTNESS = 36;
+
+/** Same hue and saturation, lifted just enough to survive a dark background. */
+export function forDarkTheme(triplet: string): string {
+  const m = /^(-?[\d.]+) ([\d.]+)% ([\d.]+)%$/.exec(triplet);
+  if (!m) return triplet;
+  const l = Number(m[3]);
+  return l >= DARK_MIN_LIGHTNESS ? triplet : `${m[1]} ${m[2]}% ${DARK_MIN_LIGHTNESS}%`;
+}
+
+/**
+ * Apply branding: CSS variables + persisted copy (used pre-sync on next boot).
+ *
+ * Nothing is overridden when the config carries no colour. The stylesheet is
+ * the default, and it defines light and dark separately; a hardcoded fallback
+ * here meant the app shipped one brand colour in the CSS and quietly painted
+ * a different one over it on every boot.
+ */
 export function applyBranding(branding: Branding): void {
-  const color = branding.primary_color ?? '#E50914';
-  const triplet = hexToHslTriplet(color);
+  const triplet = branding.primary_color ? hexToHslTriplet(branding.primary_color) : null;
   if (triplet) {
     const root = document.documentElement;
-    root.style.setProperty('--primary', triplet);
-    root.style.setProperty('--ring', triplet);
+    root.style.setProperty('--brand-primary', triplet);
+    root.style.setProperty('--brand-primary-dark', forDarkTheme(triplet));
   }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...branding, appliedAt: new Date().toISOString() }));

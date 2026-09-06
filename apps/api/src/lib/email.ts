@@ -141,7 +141,10 @@ export async function deliverEmail(
 // Centralized PC MAX templates (single source, PC MAX branding).
 // ---------------------------------------------------------------------------
 
-const BRAND_RED = '#E50914';
+/** The brand burgundy. Kept in step with the app's --primary and the
+ *  branding default in admin-settings: an email in a different red than
+ *  the product it came from is the sort of thing customers notice. */
+const BRAND_RED = '#6E1226';
 
 function shell(html: string): string {
   return `<!doctype html>

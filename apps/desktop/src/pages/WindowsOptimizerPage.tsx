@@ -202,7 +202,7 @@ export default function WindowsOptimizerPage() {
                   </p>
                 </div>
               </div>
-              <Button size="lg" onClick={() => void runOptimize()} disabled={running !== null || !recommendedIds.length} className="gap-2 shadow-glow-sm">
+              <Button size="lg" onClick={() => void runOptimize()} disabled={running !== null || !recommendedIds.length} className="gap-2 shadow-soft">
                 {running ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Sparkles aria-hidden className="size-4" />}
                 {running ? t(running) : t('winopt.smartOptimize')}
               </Button>

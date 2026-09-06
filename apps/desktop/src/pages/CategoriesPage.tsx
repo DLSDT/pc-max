@@ -28,7 +28,7 @@ export default function CategoriesPage() {
             <Link
               key={c.id}
               to={`/games?genre=${encodeURIComponent(c.slug)}`}
-              className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-glow-sm"
+              className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft"
             >
               <div className="min-w-0">
                 <h2 className="truncate text-sm font-semibold transition-colors group-hover:text-primary">

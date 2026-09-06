@@ -488,9 +488,9 @@ export default function GameDetailPage() {
 
         <div className="relative flex flex-col gap-6 p-6 sm:flex-row sm:p-8">
           <div className="w-40 shrink-0 space-y-2 sm:w-52">
-          <div className="overflow-hidden rounded-xl border border-border shadow-glow-sm">
+          <div className="overflow-hidden rounded-xl border border-border shadow-soft">
             {heroImage ? (
-              <div className="flex aspect-[3/4] size-full items-center justify-center bg-gradient-to-br from-secondary via-card to-primary/15 p-6">
+              <div className="flex aspect-[3/4] size-full items-center justify-center bg-secondary p-6">
                 <img
                   src={heroImage}
                   alt={`${game.name} artwork`}
@@ -498,7 +498,7 @@ export default function GameDetailPage() {
                 />
               </div>
             ) : (
-              <div className="flex aspect-[3/4] items-center justify-center bg-gradient-to-br from-secondary to-primary/20">
+              <div className="flex aspect-[3/4] items-center justify-center bg-secondary">
                 <Gamepad2 aria-hidden className="size-12 text-foreground/15" />
               </div>
             )}
@@ -633,7 +633,7 @@ export default function GameDetailPage() {
                     className={cn(
                       'flex-col items-start rounded-lg border px-3.5 py-2 text-left text-sm font-medium transition-all',
                       selected?.id === p.id
-                        ? 'border-primary/40 bg-primary/10 text-primary shadow-glow-sm'
+                        ? 'border-primary/40 bg-primary/10 text-primary shadow-soft'
                         : 'border-border bg-card text-muted-foreground hover:bg-accent',
                     )}
                   >

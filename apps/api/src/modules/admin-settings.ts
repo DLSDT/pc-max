@@ -24,7 +24,11 @@ export const DEFAULT_SETTINGS: Record<string, unknown> = {
   // Phase 15 — remote branding/theme applied by clients without a rebuild.
   branding: {
     brand_name: 'PC MAX',
-    primary_color: '#E50914',
+    // The brand burgundy, matching the app's stylesheet. This value wins over
+    // the CSS on every client that fetches the config, so leaving the old
+    // #E50914 here would have shipped a palette nobody could see the effect of
+    // changing.
+    primary_color: '#6E1226',
     tagline: 'Premium PC Gaming Optimization',
     logo_url: null,
   },

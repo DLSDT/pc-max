@@ -82,7 +82,7 @@ export default function HomePage() {
       {/* Welcome */}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <img src="/icon.png" alt="" aria-hidden className="size-12 rounded-xl object-contain shadow-glow-sm" draggable={false} />
+          <img src="/icon.png" alt="" aria-hidden className="size-12 rounded-xl object-contain shadow-soft" draggable={false} />
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t('appName')}</h1>
             <p className="text-sm text-muted-foreground">{t('home.tagline')}</p>
@@ -125,7 +125,7 @@ export default function HomePage() {
             </div>
           </div>
           <Link to="/windows-optimizer">
-            <Button size="lg" className="gap-2 shadow-glow-sm">
+            <Button size="lg" className="gap-2 shadow-soft">
               <Zap aria-hidden className="size-4" />
               {t('dashboard.optimizeNow')}
               <ArrowRight aria-hidden className="size-4 rtl:rotate-180" />

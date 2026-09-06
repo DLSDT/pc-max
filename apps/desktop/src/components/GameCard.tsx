@@ -21,7 +21,7 @@ function Cover({ game }: { game: GameSummary }) {
     <div className="relative aspect-[3/4] w-full overflow-hidden bg-secondary">
       {icon ? (
         // Real bundled artwork — shown over the gradient tile.
-        <div className="flex size-full items-center justify-center bg-gradient-to-br from-secondary via-card to-primary/20 p-6">
+        <div className="flex size-full items-center justify-center bg-secondary p-6">
           <img
             src={icon}
             alt={`${game.name} icon`}
@@ -37,7 +37,7 @@ function Cover({ game }: { game: GameSummary }) {
           className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
-        <div className="flex size-full items-center justify-center bg-gradient-to-br from-secondary via-card to-primary/20">
+        <div className="flex size-full items-center justify-center bg-secondary">
           <span className="text-5xl font-bold text-foreground/15">{game.name.charAt(0)}</span>
           <Gamepad2 aria-hidden className="absolute size-10 text-foreground/10" />
         </div>
@@ -79,7 +79,7 @@ export default function GameCard({ game }: { game: GameSummary }) {
   return (
     <Link
       to={`/games/${game.slug}`}
-      className="group relative block overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group relative block overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {hasNewOptimization && (
         <Badge variant="warning" className="absolute right-2 top-10 z-10 shadow-lg">

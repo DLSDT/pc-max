@@ -62,8 +62,11 @@ export default function ProfileHeader() {
           beside the name and nothing in it. The subscription state moved up
           here instead: it is the other thing this page is opened to check, and
           it fills the space with something worth reading. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 bg-gradient-to-br from-primary via-primary/80 to-primary/50 px-5 py-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-background/90 text-base font-bold text-primary shadow-glow-sm">
+      {/* Flat burgundy, not a three-stop gradient fading to 50%. A gradient
+          across a header band has nothing to describe — no light source, no
+          depth — and the faded end read as a printing error. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border bg-primary px-6 py-5">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-background/90 text-base font-bold text-primary shadow-soft">
           {initialsOf(displayName)}
         </div>
         <div className="min-w-0 flex-1">
@@ -146,7 +149,10 @@ export default function ProfileHeader() {
             <div className="text-center sm:text-start">
               {active && remaining !== null ? (
                 <>
-                  <p className="text-xl font-extrabold tabular-nums leading-tight text-amber-500">
+                  {/* Ink, not amber. The palette is burgundy and off-white;
+                      a third colour here made a neutral fact look like a
+                      warning. */}
+                  <p className="text-xl font-extrabold tabular-nums leading-tight text-foreground">
                     {t('profile.daysValue', { count: remaining })}
                   </p>
                   <p className="text-xs text-muted-foreground">{t('profile.untilExpiry')}</p>

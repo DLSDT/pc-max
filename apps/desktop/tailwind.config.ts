@@ -49,8 +49,13 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        glow: '0 0 24px hsl(var(--primary) / 0.16)',
-        'glow-sm': '0 0 12px hsl(var(--primary) / 0.12)',
+        // Light falls from above, so a shadow sits below the thing casting it.
+        // These replace a pair of coloured glows — `0 0 24px` of the brand
+        // colour spreading evenly in every direction, which is a lit sign, not
+        // an object on a surface. Two layers each: a hairline contact shadow
+        // that seats the edge, and a wide soft one that lifts it.
+        soft: '0 1px 2px hsl(20 15% 10% / 0.04), 0 2px 8px -4px hsl(20 15% 10% / 0.06)',
+        lift: '0 1px 2px hsl(20 15% 10% / 0.05), 0 12px 28px -12px hsl(20 15% 10% / 0.14)',
       },
       keyframes: {
         'fade-up': {
