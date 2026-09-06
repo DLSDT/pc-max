@@ -113,8 +113,15 @@ async function existingFiles(pkgId) {
   const r = await api('GET', `/admin/packages/${pkgId}/files`);
   const rows = (r?.data ?? []).map((f) => ({
     id: f.id, component: f.component, variant: f.variant ?? '', filename: f.filename,
+    destination: f.destination,
   }));
-  const sameSlot = (f, variant, filename) => f.filename === filename && f.variant === (variant ?? '');
+  // Destination, not just filename: a directory payload can hold two files
+  // with the same name under different folders, and keying on the name alone
+  // would call the second one already-uploaded and skip it. It also means a
+  // row published to the WRONG destination no longer counts as present, so
+  // re-running repairs it instead of reporting nothing to do.
+  const sameSlot = (f, variant, filename, destination) =>
+    f.filename === filename && f.variant === (variant ?? '') && f.destination === destination;
   return {
     rows,
     // `component` belongs in this comparison. Without it a row that already
@@ -123,11 +130,11 @@ async function existingFiles(pkgId) {
     // one keeps driving an empty picker. That is what happened to OptiScaler's
     // six non-NATIVE orders, still tagged `installer` from an earlier upload:
     // the run reported success and changed nothing.
-    has: (component, variant, filename) =>
-      rows.some((f) => sameSlot(f, variant, filename) && f.component === component),
+    has: (component, variant, filename, destination) =>
+      rows.some((f) => sameSlot(f, variant, filename, destination) && f.component === component),
     /** Same slot, different component — superseded by this manifest. */
-    misfiled: (component, variant, filename) =>
-      rows.filter((f) => sameSlot(f, variant, filename) && f.component !== component),
+    misfiled: (component, variant, filename, destination) =>
+      rows.filter((f) => sameSlot(f, variant, filename, destination) && f.component !== component),
   };
 }
 
@@ -280,15 +287,36 @@ for (const v of manifest.variants ?? []) {
     console.error(`  ✗ variant "${v.name ?? '(base)'}": folder not found — ${dir}`);
     process.exit(1);
   }
+  // `recursive` walks subfolders and gives each file a destination built from
+  // its path inside `dir`, prefixed by `destPrefix`. Without it this read one
+  // level and assigned every file the same destination, which cannot express a
+  // payload that IS a directory tree — OptiScaler ships its backend libraries
+  // in a folder with `streamline/` and `D3D12_OptiScaler/` inside it, and
+  // eighteen of those files simply had no way to be published.
   const files = [];
-  for (const name of entries.sort()) {
-    const full = join(dir, name);
-    const st = await stat(full);
-    if (!st.isFile()) continue;
-    if (v.include && !v.include.includes(name)) continue;
-    if (v.exclude?.includes(name)) continue;
-    files.push({ path: full, size: st.size });
-  }
+  const walk = async (from, prefix) => {
+    for (const name of (await readdir(from)).sort()) {
+      const full = join(from, name);
+      const rel = prefix + name;
+      const st = await stat(full);
+      if (st.isDirectory()) {
+        if (v.recursive) await walk(full, `${rel}/`);
+        continue;
+      }
+      if (!st.isFile()) continue;
+      if (v.include && !v.include.includes(rel)) continue;
+      if (v.exclude?.includes(rel)) continue;
+      files.push({
+        path: full,
+        size: st.size,
+        // A flat variant keeps its single destination: every Plan writes one
+        // file under its own name and nothing about that changes here.
+        destination: v.recursive ? `${v.destPrefix ?? ''}${rel}` : (v.destination ?? name),
+      });
+    }
+  };
+  await walk(dir, '');
+  void entries;
   if (!files.length) {
     console.error(`  ✗ variant "${v.name ?? '(base)'}": no files in ${dir}`);
     process.exit(1);
@@ -301,7 +329,7 @@ const totalFiles = plan.reduce((n, v) => n + v.files.length, 0);
 for (const v of plan) {
   const mb = v.files.reduce((m, f) => m + f.size, 0) / 1048576;
   console.log(`  ${v.name ?? '(base)'} — ${v.files.length} file(s), ${mb.toFixed(1)} MB`);
-  for (const f of v.files) console.log(`      ${basename(f.path)}`);
+  for (const f of v.files) console.log(`      ${f.destination}`);
 }
 console.log(`\n  total: ${totalFiles} file(s), ${(totalBytes / 1048576).toFixed(1)} MB`);
 
@@ -341,7 +369,7 @@ for (const v of plan) {
     // component — that is the normal state after a half-fixed upload — and
     // checking "already present" first returns early and leaves the leftover
     // behind, silently doing nothing on the very run asked to clean it up.
-    const stale = already.misfiled(component, v.name, name);
+    const stale = already.misfiled(component, v.name, name, f.destination);
     if (stale.length) {
       if (fixComponents) {
         for (const st of stale) {
@@ -355,16 +383,35 @@ for (const v of plan) {
       }
     }
 
-    if (already.has(component, v.name, name)) {
+    if (already.has(component, v.name, name, f.destination)) {
       skipped++;
-      console.log(`  ○ ${v.name ?? '(base)'}/${name} already uploaded`);
+      console.log(`  ○ ${f.destination} already uploaded`);
       continue;
     }
-    process.stdout.write(`  ↑ ${v.name ?? '(base)'}/${basename(f.path)} (${(f.size / 1048576).toFixed(1)} MB) … `);
-    await uploadOne(pkg.id, f.path, { ...v, variant: v.name });
+    process.stdout.write(`  ↑ ${f.destination} (${(f.size / 1048576).toFixed(1)} MB) … `);
+    await uploadOne(pkg.id, f.path, { ...v, variant: v.name, destination: f.destination });
     uploaded++;
     process.stdout.write('ok\n');
   }
+}
+
+// Rows the server holds that this manifest says nothing about. Usually the
+// residue of an earlier build: OptiScaler shipped a standalone OptiScaler.dll
+// until V5 folded it into the Plans, and that row kept installing an older
+// copy of the DLL alongside the new backend libraries. Reported, never
+// deleted — the manifest describes one package, not the whole truth, and a
+// script that quietly removed anything it did not recognise would be a bad
+// thing to run twice.
+const covered = new Set(
+  plan.flatMap((v) => v.files.map((f) => `${v.component ?? 'installer'} ${v.name ?? ''} ${f.destination}`)),
+);
+const orphans = already.rows.filter(
+  (r) => !covered.has(`${r.component} ${r.variant} ${r.destination}`),
+);
+if (orphans.length) {
+  console.log(`\n  ${orphans.length} row(s) on the server are not in this manifest:`);
+  for (const o of orphans) console.log(`    ? [${o.component}${o.variant ? '/' + o.variant : ''}] ${o.destination}`);
+  console.log('    → left alone. Delete from the admin panel if they are from an older build.');
 }
 
 if (doPublish && uploaded > 0) {

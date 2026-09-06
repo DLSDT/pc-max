@@ -6,8 +6,17 @@
     "gpuVendor": "any",
     "arch": "any"
   },
-  "changeNote": "OPTI MFG-2X-6X-V5 — 8 plans and 12 orders",
+  "changeNote": "OPTI MFG-2X-6X-V5 — backend folder (with streamline), 8 plans, 12 orders",
   "variants": [
+    {
+      "_comment": "The shared base every install gets: OptiScaler's backend libraries, as a directory tree. `recursive` walks streamline/ and D3D12_OptiScaler/ and gives each file a destination under destPrefix, so the folder lands beside the game's executable with its shape intact.",
+      "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Scaler/OptiScaler",
+      "destPrefix": "OptiScaler/",
+      "recursive": true,
+      "role": "launcher",
+      "component": "installer",
+      "operation": "replace"
+    },
     {
       "name": "Plan - OptiScaler",
       "dir": "Untitled Folder/OPTI MFG-2X-6X-V5/OPTI Plan/Plan - OptiScaler",
