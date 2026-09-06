@@ -59,12 +59,18 @@ export interface SyncResult {
  * "api-unavailable". Only the former shows the Offline state — a reachable
  * internet connection with a down service must never be reported as offline.
  */
-export async function runSync(): Promise<SyncResult> {
+export async function runSync(onReachable?: () => void): Promise<SyncResult> {
   await ensureDeviceRegistered();
   const lastSync = cache.getLastSync();
 
   try {
     const [home, manifest] = await Promise.all([api.home(), api.sync(lastSync)]);
+
+    // The server answered, so connectivity is known NOW. Everything below is a
+    // background top-up of the offline cache, and the app spent the whole of it
+    // reporting "syncing" — on a first run that is hundreds of requests and
+    // most of a minute of the badge insisting the app was not online yet.
+    onReachable?.();
 
     cache.setHome(home);
     cache.upsertGames([...home.popular, ...home.recentlyAdded, ...home.featured]);
@@ -77,8 +83,19 @@ export async function runSync(): Promise<SyncResult> {
     // Refresh changed games (fetch full details — also warms the profiles).
     // Bounded concurrency: a fresh catalog sync can involve hundreds of
     // games, and firing them all at once trips the API's rate limiter.
+    // Only games whose details are ALREADY cached. The manifest lists the whole
+    // catalogue on a first sync — every game counts as changed because none is
+    // known yet — so this was not refreshing anything, it was downloading 313
+    // games' details and profiles before the app would admit to being online.
+    // Two requests each, eight at a time, on a link where a round trip is
+    // 300ms: twenty seconds at best, minutes with rate-limit backoff, all of it
+    // in front of someone who just opened the app.
+    //
+    // A game nobody has opened does not need its detail prefetched. The page
+    // that shows one fetches it, and from then on it refreshes here like any
+    // other cached game.
     let changedGames = 0;
-    const changed = manifest.games.filter((g) => !g.deleted);
+    const changed = manifest.games.filter((g) => !g.deleted && cache.getGame(g.slug) !== null);
     await runWithConcurrency(changed, 8, async (g) => {
       try {
         const [detail, profiles] = await Promise.all([

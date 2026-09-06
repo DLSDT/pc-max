@@ -159,7 +159,10 @@ export function useInitialSync() {
     queryKey: ['sync', 'initial'],
     queryFn: async () => {
       setSyncStatus('syncing');
-      const result = await runSync();
+      // Online the moment the server answers, not when the whole catalogue has
+      // finished topping up behind it. Those are different questions and only
+      // the first one is what the badge is asking.
+      const result = await runSync(() => setSyncStatus('online'));
       // Truthful connectivity: no internet = offline, service unreachable =
       // api-unavailable, anything else = online.
       setSyncStatus(result.offline ? 'offline' : result.apiUnavailable ? 'api-unavailable' : 'online');

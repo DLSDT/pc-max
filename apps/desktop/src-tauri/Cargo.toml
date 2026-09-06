@@ -1,6 +1,6 @@
 [package]
 name = "pc-max"
-version = "0.4.15"
+version = "0.4.16"
 description = "PC MAX — premium Windows gaming optimization"
 authors = ["PC MAX"]
 edition = "2021"
