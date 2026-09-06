@@ -936,6 +936,14 @@ void i18n.use(initReactI18next).init({
           closeConfirm: 'Enter your password to confirm',
           closeSubmit: 'Close account permanently',
         },
+          palette: {
+            title: 'Quick search',
+            placeholder: 'Search a page or a game…',
+            empty: 'Nothing matches that.',
+            hintKeys: '↑↓ to move · Enter to open · Esc to close',
+            count_one: '{{count}} result',
+            count_other: '{{count}} results',
+          },
         common: {
           loading: 'Loading…',
           error: 'Something went wrong.',
@@ -1849,6 +1857,14 @@ void i18n.use(initReactI18next).init({
           closeConfirm: 'برای تأیید، رمز عبورتان را وارد کنید',
           closeSubmit: 'بستن دائمی حساب',
         },
+          palette: {
+            title: 'جستجوی سریع',
+            placeholder: 'یک صفحه یا بازی را جستجو کن…',
+            empty: 'چیزی پیدا نشد.',
+            hintKeys: '↑↓ حرکت · Enter باز کردن · Esc بستن',
+            count_one: '{{count}} نتیجه',
+            count_other: '{{count}} نتیجه',
+          },
         common: {
           loading: 'در حال بارگذاری…',
           error: 'خطایی رخ داد.',

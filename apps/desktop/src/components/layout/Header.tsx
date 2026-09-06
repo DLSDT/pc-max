@@ -76,8 +76,14 @@ export default function Header() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('header.searchPlaceholder')}
           aria-label={t('header.searchPlaceholder')}
-          className="ps-9"
+          className="ps-9 pe-14"
         />
+        {/* A shortcut nobody is told about is a shortcut nobody uses. This is
+            the whole discovery mechanism, and it costs no layout: the field
+            already had empty space at that end. */}
+        <kbd className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 rounded border border-border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground md:block">
+          Ctrl K
+        </kbd>
       </form>
 
       <div className="ms-auto flex items-center gap-2 sm:gap-3">

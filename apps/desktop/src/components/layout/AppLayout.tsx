@@ -9,6 +9,7 @@ import { useInitialSync, useRefetchOnReconnect } from '@/hooks/useLibrary';
 import { useAppVersionCheck } from '@/hooks/useAppVersion';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import Sidebar from './Sidebar';
+import CommandPalette from '@/components/CommandPalette';
 import Header from './Header';
 import { Button } from '@/components/ui';
 import { installNativeUpdate, isTauriShell } from '@/lib/updater';
@@ -49,6 +50,7 @@ export default function AppLayout() {
           className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
         />
       )}
+      <CommandPalette />
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         {updateRequired && (
